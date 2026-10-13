@@ -18,8 +18,11 @@ road meshes with soft edges, ruin models for every building the app gives as dam
 the export's roofs for every other one; the ruin and home models are imported first when the project lacks
 them. Run it again after a new export: only the tiles that changed are rebuilt. Batch:
 Unity -batchmode -projectPath ... -executeMethod GeoWorld.Editor.GeoDefaults.BatchGenerate -geoExport <folder>.
-Tools > Geo World > Generator window opens the import window (every setting, one world or tiles).
-Tools > Geo World > Update Geo World... updates the package to its newest version (the console says when there is one).
+Tools > Geo World > Generator window: pick an export (the app's exports folder is listed, with a picture of the area,
+its size, roads, buildings and damage), choose a tiled world or one world and four switches, and generate; every other
+setting is under Advanced settings. It also rebuilds the selected world with its settings.
+Updates: once per editor session the newest version of the package is looked up; when there is one the console and the
+Scene view say so and the window shows an Update button (Tools > Geo World > Update Geo World... does the same).
 Samples/Chuhuiv is a real 800 x 800 metre crop of the app's Chuhuiv export (original coordinates and source
 rasters) and Samples/Lyman the whole of Lyman: build either with Generate world from export.
 

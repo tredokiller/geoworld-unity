@@ -33,10 +33,13 @@ keeps the commit it first downloaded, recorded in `Packages/packages-lock.json`,
 
 1. **Tools > Geo World > Set up rendering for large worlds** (GPU Resident Drawer, occlusion culling).
 2. **Tools > Geo World > Generate world from export...** and choose an unzipped Terrain & ground package of the
-   app (`exports/<area>_env`). **Generator window** has every setting.
+   app (`exports/<area>_env`). Or open **Tools > Geo World > Generator window**: pick an export from the list (with a
+   picture of the area, its size, roads, buildings and damage), choose a tiled world or one world and a few switches,
+   and press Generate; every other setting is under Advanced settings.
 
-**Tools > Geo World > Update Geo World...** updates the project to the newest version; once per editor session the
-console says when there is one.
+**Updates.** Once per editor session the newest version is looked up; when there is a newer one the console and the
+Scene view say so and the Geo World window shows an **Update** button. **Tools > Geo World > Update Geo World...**
+does the same on demand.
 
 The 25 ruin models and 38 home models come with the package (`Ruins`, `Homes`): nothing to import. Their textures are
 kept small (colour as JPEG, normal maps as 1024 px PNG; about 280 MB for the whole package). Everything the tools

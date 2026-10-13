@@ -1,0 +1,280 @@
+/* The Geo World window (GeoWorldWindow): cards on a quiet background, one accent colour. */
+
+.gw-dark {
+    --gw-card: #2f2f32;
+    --gw-card-border: #3c3c41;
+    --gw-text-dim: #a0a0a8;
+    --gw-chip: #3a3a40;
+    --gw-segment: #38383d;
+    --gw-segment-hover: #424248;
+}
+
+.gw-light {
+    --gw-card: #f6f6f8;
+    --gw-card-border: #d5d5da;
+    --gw-text-dim: #5f5f68;
+    --gw-chip: #e3e3e8;
+    --gw-segment: #e6e6eb;
+    --gw-segment-hover: #dadae0;
+}
+
+.gw-page .unity-scroll-view__content-container {
+    padding: 14px 14px 18px 14px;
+}
+
+/* header */
+
+.gw-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.gw-title {
+    font-size: 20px;
+    -unity-font-style: bold;
+}
+
+.gw-subtitle {
+    font-size: 11px;
+    color: var(--gw-text-dim);
+    margin-top: 2px;
+    white-space: normal;
+}
+
+.gw-chip {
+    font-size: 10px;
+    padding: 3px 9px;
+    border-radius: 10px;
+    background-color: var(--gw-chip);
+    color: var(--gw-text-dim);
+    margin-left: 8px;
+    flex-shrink: 0;
+}
+
+/* update banner */
+
+.gw-banner {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 8px 8px 12px;
+    margin-bottom: 12px;
+    border-radius: 8px;
+    border-left-width: 3px;
+    border-color: #f5c400;
+    background-color: rgba(245, 196, 0, 0.14);
+}
+
+.gw-banner-text {
+    -unity-font-style: bold;
+    white-space: normal;
+    flex-shrink: 1;
+}
+
+/* cards */
+
+.gw-card {
+    padding: 12px;
+    margin-bottom: 12px;
+    border-radius: 10px;
+    border-width: 1px;
+    border-color: var(--gw-card-border);
+    background-color: var(--gw-card);
+}
+
+.gw-card-head {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.gw-step {
+    width: 20px;
+    height: 20px;
+    border-radius: 10px;
+    margin-right: 8px;
+    background-color: #3d7eff;
+    color: #ffffff;
+    font-size: 11px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+}
+
+.gw-card-title {
+    font-size: 13px;
+    -unity-font-style: bold;
+}
+
+.gw-pick {
+    flex-direction: row;
+    align-items: center;
+}
+
+.gw-grow {
+    flex-grow: 1;
+    flex-shrink: 1;
+}
+
+.gw-preview {
+    height: 150px;
+    margin-top: 10px;
+    border-radius: 8px;
+    background-color: rgba(0, 0, 0, 0.18);
+}
+
+.gw-stats {
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin-top: 10px;
+}
+
+.gw-stat {
+    font-size: 11px;
+    padding: 3px 9px;
+    margin: 0 6px 6px 0;
+    border-radius: 10px;
+    background-color: var(--gw-chip);
+}
+
+.gw-stat-damage {
+    background-color: rgba(214, 72, 52, 0.28);
+}
+
+.gw-stat-muted {
+    color: var(--gw-text-dim);
+}
+
+.gw-hint {
+    font-size: 11px;
+    color: var(--gw-text-dim);
+    margin-top: 8px;
+    white-space: normal;
+}
+
+/* tiled / one world */
+
+.gw-segment {
+    flex-direction: row;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    background-color: var(--gw-segment);
+    padding: 3px;
+}
+
+.gw-segment > Button {
+    flex-grow: 1;
+    flex-basis: 0;
+    height: 30px;
+    margin: 0;
+    border-width: 0;
+    border-radius: 6px;
+    background-color: rgba(0, 0, 0, 0);
+    color: var(--gw-text-dim);
+}
+
+.gw-segment > Button:hover {
+    background-color: var(--gw-segment-hover);
+}
+
+.gw-segment > Button.gw-selected {
+    background-color: #3d7eff;
+    color: #ffffff;
+    -unity-font-style: bold;
+}
+
+/* switches */
+
+.gw-option {
+    flex-direction: row;
+    align-items: flex-start;
+    padding: 5px 0;
+}
+
+.gw-option-toggle {
+    margin: 2px 8px 0 0;
+}
+
+.gw-option-text {
+    flex-shrink: 1;
+    cursor: link;
+}
+
+.gw-option-name {
+    -unity-font-style: bold;
+}
+
+.gw-option-description {
+    font-size: 11px;
+    color: var(--gw-text-dim);
+    white-space: normal;
+}
+
+.gw-advanced {
+    margin-top: 8px;
+}
+
+/* actions */
+
+.gw-generate {
+    height: 42px;
+    margin: 2px 0 10px 0;
+    border-radius: 10px;
+    border-width: 0;
+    background-color: #3d7eff;
+    color: #ffffff;
+    font-size: 14px;
+    -unity-font-style: bold;
+}
+
+.gw-generate:hover {
+    background-color: #5590ff;
+}
+
+.gw-generate:active {
+    background-color: #2f6ae6;
+}
+
+.gw-generate:disabled {
+    opacity: 0.45;
+}
+
+.gw-accent {
+    border-width: 0;
+    border-radius: 6px;
+    padding: 4px 14px;
+    background-color: #3d7eff;
+    color: #ffffff;
+    -unity-font-style: bold;
+}
+
+.gw-accent:hover {
+    background-color: #5590ff;
+}
+
+.gw-more {
+    flex-direction: row;
+    margin-bottom: 8px;
+}
+
+.gw-status {
+    font-size: 11px;
+    color: var(--gw-text-dim);
+    white-space: normal;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background-color: var(--gw-chip);
+}
+
+.gw-subtle {
+    border-width: 0;
+    border-radius: 6px;
+    padding: 4px 10px;
+    background-color: rgba(0, 0, 0, 0);
+    color: var(--gw-text-dim);
+}
+
+.gw-subtle:hover {
+    background-color: var(--gw-chip);
+}

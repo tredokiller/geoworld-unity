@@ -1,141 +1,487 @@
 using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
+using System.Linq;
+using System.Text.RegularExpressions;
+using Newtonsoft.Json.Linq;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace GeoWorld.Editor
 {
+    // The Geo World window: pick an export of the Building Extractor app (a picture of the area, its size, roads,
+    // buildings and damage), choose tiles or one world and four switches, and generate; every other setting is under
+    // Advanced settings. The header shows the package's version and, when a newer one exists, an Update button.
     public class GeoWorldWindow : EditorWindow
     {
-        [SerializeField] string environmentPath="",buildingsPath="";
-        [SerializeField] GenerationSettings settings=new GenerationSettings();
-        [SerializeField] GeoWorldRoot replace;
-        [SerializeField] float tileSize=1000;
-        Vector2 scroll;
-        string message="Select an exported folder, or build the included riverside village.";
+        [SerializeField] string exportFolder = "";
+        [SerializeField] GenerationSettings settings = new GenerationSettings();
+        [SerializeField] bool tiled = true;
+        [SerializeField] float tileSize = GeoDefaults.TileSize;
+        [SerializeField] string message = "";
 
-        [MenuItem("Tools/Geo World/Generator window",false,1)]
-        public static void Open() { var window=GetWindow<GeoWorldWindow>("Geo World");window.minSize=new Vector2(400,580); }
+        // the folder whose <area>_env exports are listed, chosen once per computer
+        const string ExportsKey = "GeoWorld.ExportsFolder";
+        readonly List<string> exports = new List<string>();
+        DropdownField exportField;
+        Label hint, versionChip, bannerText, status;
+        VisualElement stats, banner;
+        Image preview;
+        Texture2D previewTexture;
+        Button updateButton, tiledButton, singleButton, generateButton, rebuildButton;
 
-        // the project's ruin and home libraries are the defaults once the models are imported
-        void OnEnable() { if(settings!=null)GeoDefaults.FillLibraries(settings,false); }
-
-        void OnGUI()
+        [MenuItem("Tools/Geo World/Generator window", false, 1)]
+        public static void Open()
         {
-            scroll=EditorGUILayout.BeginScrollView(scroll);
-            EditorGUILayout.Space(12);
-            GUILayout.Label("GEO WORLD",new GUIStyle(EditorStyles.boldLabel){fontSize=23});
-            GUILayout.Label("Roads, rivers & buildings from your map",EditorStyles.miniLabel);
-            EditorGUILayout.Space(10);
-            EditorGUILayout.HelpBox("Download Terrain & ground (.zip) from Building Extractor and unzip it. Select its folder below. All coordinates stay in metres: X east, Z north.",MessageType.Info);
-            if(GUILayout.Button("Choose export folder...",GUILayout.Height(32)))
-            {
-                string folder=EditorUtility.OpenFolderPanel("Select extracted terrain and ground package",InitialFolder(),"");
-                if(!string.IsNullOrEmpty(folder))
-                {
-                    environmentPath=File.Exists(Path.Combine(folder,"environment.json"))?Path.Combine(folder,"environment.json"):"";
-                    buildingsPath=File.Exists(Path.Combine(folder,"buildings.json"))?Path.Combine(folder,"buildings.json"):"";
-                    message=string.IsNullOrEmpty(environmentPath)?"No environment.json found. You can still select a buildings export.":"Export selected. Generate to create a new world.";
-                }
-            }
-            FileField("Environment JSON",ref environmentPath);
-            FileField("Buildings JSON",ref buildingsPath);
-            EditorGUILayout.Space(12);
-            GUILayout.Label("Generation",EditorStyles.boldLabel);
-            settings.heightResolution=EditorGUILayout.IntPopup("Heightmap resolution",settings.heightResolution,new[]{"257","513","1025"},new[]{257,513,1025});
-            settings.textureResolution=EditorGUILayout.IntPopup("Ground texture resolution",settings.textureResolution,new[]{"256","512","1024"},new[]{256,512,1024});
-            settings.roadPaintResolution=EditorGUILayout.IntPopup("Road paint detail",settings.roadPaintResolution,new[]{"1024","2048","4096"},new[]{1024,2048,4096});
-            EditorGUILayout.HelpBox("Ground roads and lines are painted directly on the terrain. Higher road detail gives sharper edges and uses more memory.",MessageType.None);
-            settings.pathStep=EditorGUILayout.Slider("Road segment length (m)",settings.pathStep,0.5f,8);
-            settings.roadShoulder=EditorGUILayout.Slider("Road shoulder (m)",settings.roadShoulder,0,8);
-            settings.junctionSnap=EditorGUILayout.Slider("Junction snap distance (m)",settings.junctionSnap,0,3);
-            settings.blendMetres=EditorGUILayout.Slider("Ground blend (m)",settings.blendMetres,0,10);
-            settings.riverDepth=EditorGUILayout.Slider("River depth (m)",settings.riverDepth,0.5f,5);
-            settings.gradeRoads=EditorGUILayout.Toggle("Grade terrain under roads",settings.gradeRoads);
-            settings.carveRivers=EditorGUILayout.Toggle("Carve river beds",settings.carveRivers);
-            settings.laneMarkings=EditorGUILayout.Toggle("Road centre markings",settings.laneMarkings);
-            settings.roadMeshes=EditorGUILayout.Toggle("Road meshes (sharp edges, markings)",settings.roadMeshes);
-            settings.buildings=EditorGUILayout.Toggle("Buildings",settings.buildings);
-            using(new EditorGUI.DisabledScope(!settings.buildings))
-            {
-                settings.buildingMode=(GeoBuildingMode)EditorGUILayout.EnumPopup("Building mode",settings.buildingMode);
-                settings.mergeAbove=EditorGUILayout.IntSlider("Merge above (buildings)",settings.mergeAbove,100,20000);
-                settings.chunkSize=EditorGUILayout.Slider("Merged chunk size (m)",settings.chunkSize,50,500);
-                settings.mergedColliders=EditorGUILayout.Toggle("Colliders on merged chunks",settings.mergedColliders);
-                settings.applyCondition=EditorGUILayout.Toggle("Draw war damage (condition)",settings.applyCondition);
-                settings.estimatedRoofs=EditorGUILayout.Toggle("Typical roofs where not mapped",settings.estimatedRoofs);
-                using(new EditorGUI.DisabledScope(!settings.applyCondition))
-                {
-                    settings.ruinModels=(GeoRuinUse)EditorGUILayout.EnumPopup("Ruin models for",settings.ruinModels);
-                    settings.ruinLibrary=(GeoRuinLibrary)EditorGUILayout.ObjectField("Ruin library",settings.ruinLibrary,typeof(GeoRuinLibrary),false);
-                    settings.ruinApron=EditorGUILayout.Slider("Ruin yard and debris (m)",settings.ruinApron,0,12);
-                    settings.reducedModels=EditorGUILayout.Toggle("Reduced models in a merged city",settings.reducedModels);
-                    settings.instancedHomes=EditorGUILayout.Toggle("Homes as model instances (merged)",settings.instancedHomes);
-                    if(!settings.ruinLibrary&&GUILayout.Button("Import ruin models (ruins/models)"))
-                        Run(()=>{GeoRuinImporter.ImportMenu();settings.ruinLibrary=GeoRuinImporter.Library;});
-                }
-            }
-            EditorGUILayout.HelpBox("Editable: one object per building, for villages and edits. Merged: buildings baked into chunks of mesh, for a city (Auto merges above the limit). Damage comes from the export's building condition; unknown buildings are drawn intact. Roofs come from the export's roof block: mapped and reviewed values always, and values estimated for the kind of building (not observed) unless you turn them off. Damaged buildings are drawn with the ruin library's destroyed-building models where one fits (fitted to the footprint by whole bays and storeys), the rest with procedural damage.",MessageType.None);
-            settings.groundTextures=EditorGUILayout.Toggle("Photographic ground textures",settings.groundTextures);
-            if(settings.groundTextures&&!GeoTerrainTextures.Available&&GUILayout.Button("Import ground textures from the Godot project"))GeoTerrainTextures.ImportMenu();
-            settings.satelliteImagery=EditorGUILayout.Toggle("Satellite imagery on terrain",settings.satelliteImagery);
-            if(settings.satelliteImagery)
-                using(new EditorGUI.IndentLevelScope())
-                {
-                    settings.satelliteResolution=EditorGUILayout.IntPopup("Texture size",settings.satelliteResolution,new[]{"Auto (0.4 m a texel)","1024","2048","4096","8192"},new[]{0,1024,2048,4096,8192});
-                    settings.satelliteMaxZoom=EditorGUILayout.IntSlider("Deepest tile zoom",settings.satelliteMaxZoom,1,22);
-                    settings.satelliteTiles=EditorGUILayout.TextField("Tile URL {z}/{x}/{y}",settings.satelliteTiles);
-                    if(GUILayout.Button("Esri World Imagery",GUILayout.Width(160)))settings.satelliteTiles=GeoSatellite.EsriWorldImagery;
-                    EditorGUILayout.HelpBox("Replaces the blended ground layers with one texture resampled from map tiles (downloaded once, cached in Library/GeoWorld/SatelliteTiles). "+GeoSatellite.Attribution(settings.satelliteTiles)+". Check the tile server's terms before storing or shipping the imagery. Roads are seen only in the imagery unless Road meshes is on.",MessageType.None);
-                }
-            settings.trees=EditorGUILayout.Toggle("Mapped trees",settings.trees);
-            settings.mappedProps=EditorGUILayout.Toggle("Mapped street props / fences",settings.mappedProps);
-            settings.vegetation=EditorGUILayout.Toggle("Vegetation from map / rows",settings.vegetation);
-            settings.streetDecoration=EditorGUILayout.Toggle("Generated street decoration",settings.streetDecoration);
-            settings.propCatalog=(GeoPropCatalog)EditorGUILayout.ObjectField("Prop prefab catalog",settings.propCatalog,typeof(GeoPropCatalog),false);
-            settings.treeSpacing=EditorGUILayout.Slider("Tree spacing (m)",settings.treeSpacing,3,25);
-            settings.vegetationDensity=EditorGUILayout.Slider("Vegetation density",settings.vegetationDensity,0,1);
-            settings.decorationSeed=EditorGUILayout.IntField("Decoration seed",settings.decorationSeed);
-            settings.maxProps=EditorGUILayout.IntSlider("Maximum props",settings.maxProps,100,200000);
-            settings.mergeProps=EditorGUILayout.Toggle("Bake props in a merged city",settings.mergeProps);
-            EditorGUILayout.HelpBox("Mapped objects use source positions. Vegetation from coverage and tree rows has generated positions. Assign a prop catalog to use your prefabs; otherwise preview models are used. Select a prop and enable Keep On Rebuild to retain edits. Editable worlds stop at 20 000 props; a merged city bakes props into chunks and can hold far more, but they are no longer separate objects.",MessageType.None);
-            EditorGUILayout.Space(8);
-            replace=(GeoWorldRoot)EditorGUILayout.ObjectField("Replace generated world",replace,typeof(GeoWorldRoot),true);
-            EditorGUILayout.HelpBox("Replacement keeps edited road widths and nodes, and rebuilds from the original terrain. Ctrl+Z restores the previous world. Leave empty to add a separate world.",MessageType.None);
-            using(new EditorGUI.DisabledScope(Application.isPlaying||(string.IsNullOrEmpty(environmentPath)&&string.IsNullOrEmpty(buildingsPath))))
-                if(GUILayout.Button(replace==null?"Generate world":"Rebuild selected world",GUILayout.Height(38)))
-                    Run(()=> {replace=GeoGenerator.Generate(environmentPath,buildingsPath,settings,replace);message=replace.report;Frame(replace);});
-            EditorGUILayout.Space(12);
-            GUILayout.Label("Large area: tiles",EditorStyles.boldLabel);
-            tileSize=EditorGUILayout.Slider("Tile size (m)",tileSize,250,4000);
-            EditorGUILayout.HelpBox("Cuts the area into square tiles, each with its own terrain, roads, buildings and props, in a scene and asset of its own (Assets/GeoWorld/Tiled/<export>). Heights, roads and lakes are worked out for the whole export, so tiles meet without steps. Rebuilding skips tiles whose export and settings did not change. The resolutions above are per tile.",MessageType.None);
-            using(new EditorGUI.DisabledScope(Application.isPlaying||string.IsNullOrEmpty(environmentPath)))
-                if(GUILayout.Button("Generate tiled world",GUILayout.Height(32)))
-                    Run(()=>{if(!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())return;var world=GeoTiles.Generate(environmentPath,buildingsPath,settings,tileSize);message=world.report;});
-            EditorGUILayout.Space(12);
-            GUILayout.Label("Sample",EditorStyles.boldLabel);
-            using(new EditorGUI.DisabledScope(Application.isPlaying))
-                if(GUILayout.Button("Create / open riverside sample scene",GUILayout.Height(32))) Run(()=>GeoSample.CreateScene());
-            EditorGUILayout.HelpBox(message,MessageType.Info);
-            EditorGUILayout.EndScrollView();
+            var window = GetWindow<GeoWorldWindow>();
+            window.titleContent = new GUIContent("Geo World", EditorGUIUtility.IconContent(EditorGUIUtility.isProSkin ? "d_Terrain Icon" : "Terrain Icon").image);
+            window.minSize = new Vector2(380, 520);
         }
 
-        string InitialFolder()=>string.IsNullOrEmpty(environmentPath)?Application.dataPath:Path.GetDirectoryName(environmentPath);
-        static void FileField(string label,ref string path)
+        void OnEnable()
         {
-            EditorGUILayout.BeginHorizontal();path=EditorGUILayout.TextField(label,path);
-            if(GUILayout.Button("...",GUILayout.Width(28)))
-            {string chosen=EditorUtility.OpenFilePanel(label,Application.dataPath,"json");if(!string.IsNullOrEmpty(chosen))path=chosen;}
-            EditorGUILayout.EndHorizontal();
+            if (settings != null) GeoDefaults.FillLibraries(settings, false);
+            GeoUpdate.Changed += ShowUpdate;
+            Selection.selectionChanged += ShowSelection;
         }
+
+        void OnDisable()
+        {
+            GeoUpdate.Changed -= ShowUpdate;
+            Selection.selectionChanged -= ShowSelection;
+            if (previewTexture) DestroyImmediate(previewTexture);
+        }
+
+        public void CreateGUI()
+        {
+            var root = rootVisualElement;
+            var sheet = AssetDatabase.LoadAssetAtPath<StyleSheet>(GeoPaths.Package + "/Editor/GeoWorldWindow.uss");
+            if (sheet) root.styleSheets.Add(sheet);
+            root.AddToClassList(EditorGUIUtility.isProSkin ? "gw-dark" : "gw-light");
+            var page = new ScrollView();
+            page.AddToClassList("gw-page");
+            root.Add(page);
+
+            var header = Row("gw-header");
+            var titles = new VisualElement();
+            titles.Add(Text("Geo World", "gw-title"));
+            titles.Add(Text("Worlds of any area of Ukraine from the Building Extractor app", "gw-subtitle"));
+            header.Add(titles);
+            versionChip = Text("", "gw-chip");
+            header.Add(versionChip);
+            page.Add(header);
+
+            banner = Row("gw-banner");
+            bannerText = Text("", "gw-banner-text");
+            banner.Add(bannerText);
+            updateButton = new Button(GeoUpdate.UpdateNow) { text = "Update" };
+            updateButton.AddToClassList("gw-accent");
+            banner.Add(updateButton);
+            page.Add(banner);
+
+            var exportCard = Card(page, "1", "Export");
+            var pick = Row("gw-pick");
+            exportField = new DropdownField();
+            exportField.AddToClassList("gw-grow");
+            exportField.RegisterValueChangedCallback(e => SelectExport(exportField.index));
+            pick.Add(exportField);
+            pick.Add(new Button(Browse) { text = "Browse…" });
+            exportCard.Add(pick);
+            preview = new Image { scaleMode = ScaleMode.ScaleAndCrop };
+            preview.AddToClassList("gw-preview");
+            exportCard.Add(preview);
+            stats = Row("gw-stats");
+            exportCard.Add(stats);
+            hint = Text("", "gw-hint");
+            exportCard.Add(hint);
+
+            var worldCard = Card(page, "2", "World");
+            var segment = Row("gw-segment");
+            tiledButton = new Button(() => SetTiled(true)) { text = "Tiled  ·  towns, streams" };
+            singleButton = new Button(() => SetTiled(false)) { text = "One world  ·  small areas" };
+            segment.Add(tiledButton);
+            segment.Add(singleButton);
+            worldCard.Add(segment);
+            worldCard.Add(Option("Satellite imagery", "Imagery of the area draped over the terrain",
+                () => settings.satelliteImagery, v => settings.satelliteImagery = v));
+            worldCard.Add(Option("Damage from the app", "Ruin models wherever the export says a building is damaged",
+                () => settings.applyCondition, v => settings.applyCondition = v));
+            worldCard.Add(Option("Roads as meshes", "Road surfaces with soft edges over the imagery",
+                () => settings.roadMeshes, v => settings.roadMeshes = v));
+            worldCard.Add(Option("Trees and vegetation", "Mapped trees, tree rows and green areas",
+                () => settings.trees && settings.vegetation, v => { settings.trees = v; settings.vegetation = v; }));
+            var advanced = new Foldout { text = "Advanced settings", value = false };
+            advanced.AddToClassList("gw-advanced");
+            advanced.Add(new IMGUIContainer(DrawAdvanced));
+            worldCard.Add(advanced);
+
+            generateButton = new Button(Generate);
+            generateButton.AddToClassList("gw-generate");
+            page.Add(generateButton);
+
+            var more = Row("gw-more");
+            rebuildButton = new Button(RebuildSelected) { text = "Rebuild the selected world with these settings" };
+            rebuildButton.AddToClassList("gw-grow");
+            more.Add(rebuildButton);
+            var sample = new Button(() => Run(GeoSample.CreateScene)) { text = "Sample scene", tooltip = "A small made-up riverside village" };
+            sample.AddToClassList("gw-subtle");
+            more.Add(sample);
+            page.Add(more);
+            status = Text("", "gw-status");
+            status.selection.isSelectable = true;
+            page.Add(status);
+
+            ListExports();
+            SetTiled(tiled);
+            ShowUpdate();
+            ShowSelection();
+            ShowStatus(message);
+            if (GeoUpdate.State == GeoUpdate.Status.Unknown) GeoUpdate.Check();
+        }
+
+        // ---------------------------------------------------------------- export
+
+        string ExportsFolder
+        {
+            get
+            {
+                string chosen = EditorPrefs.GetString(ExportsKey, "");
+                return Directory.Exists(chosen) ? chosen : Directory.Exists(GeoDefaults.ExportsFolder) ? GeoDefaults.ExportsFolder : "";
+            }
+        }
+
+        void ListExports()
+        {
+            exports.Clear();
+            string folder = ExportsFolder;
+            if (folder != "")
+                exports.AddRange(Directory.GetDirectories(folder).Where(d => File.Exists(Path.Combine(d, "environment.json")))
+                    .OrderByDescending(Directory.GetLastWriteTimeUtc));
+            if (File.Exists(Path.Combine(exportFolder ?? "", "environment.json")) && !exports.Contains(exportFolder)) exports.Insert(0, exportFolder);
+            var labels = new List<string>();
+            foreach (var path in exports)
+            {
+                string label = Describe(path), unique = label;
+                for (int n = 2; labels.Contains(unique); n++) unique = label + " (" + n + ")";
+                labels.Add(unique);
+            }
+            exportField.choices = labels;
+            int index = Math.Max(0, exports.IndexOf(exportFolder));
+            if (exports.Count == 0)
+            {
+                exportField.SetValueWithoutNotify("No exports found");
+                SelectExport(-1);
+                return;
+            }
+            exportField.SetValueWithoutNotify(labels[index]);
+            SelectExport(index);
+        }
+
+        // "lyman_48.9850N_37.8050E_20261012-104423_env" -> "Lyman  ·  12 Oct 2026, 10:44"
+        static string Describe(string folder)
+        {
+            string name = Path.GetFileName(folder);
+            var m = Regex.Match(name, @"^(.*?)_(\d+\.\d+)N_(\d+\.\d+)E_(\d{8})-(\d{4})");
+            if (!m.Success) return name;
+            string area = m.Groups[1].Value == "buildings" ? m.Groups[2].Value + " N, " + m.Groups[3].Value + " E"
+                : CultureInfo.InvariantCulture.TextInfo.ToTitleCase(m.Groups[1].Value.Replace('_', ' ').Replace('-', ' '));
+            string when = DateTime.TryParseExact(m.Groups[4].Value + m.Groups[5].Value, "yyyyMMddHHmm", CultureInfo.InvariantCulture, DateTimeStyles.None, out var t)
+                ? t.ToString("d MMM yyyy, HH:mm", CultureInfo.InvariantCulture) : m.Groups[4].Value;
+            return area + "  ·  " + when + (name.Contains("_condition_") ? "  ·  damage" : "");
+        }
+
+        void SelectExport(int index)
+        {
+            exportFolder = index >= 0 && index < exports.Count ? exports[index] : "";
+            stats.Clear();
+            if (previewTexture) DestroyImmediate(previewTexture);
+            previewTexture = null;
+            preview.image = null;
+            preview.style.display = DisplayStyle.None;
+            if (exportFolder == "")
+            {
+                hint.text = ExportsFolder == ""
+                    ? "Browse for the app's exports folder, or for an unzipped Terrain & ground package (<area>_env)."
+                    : "No Terrain & ground exports in " + ExportsFolder + ". Export one from the app, or browse for another folder.";
+                hint.style.display = DisplayStyle.Flex;
+                UpdateGenerate();
+                return;
+            }
+            hint.style.display = DisplayStyle.None;
+            try
+            {
+                var env = JObject.Parse(File.ReadAllText(Path.Combine(exportFolder, "environment.json")));
+                if (env["bounds"] is JObject b)
+                    Stat(Km((float)b["maxX"] - (float)b["minX"]) + " × " + Km((float)b["maxZ"] - (float)b["minZ"]) + " km");
+                var roads = env.SelectToken("summary.roads.km");
+                if (roads != null) Stat(((float)roads).ToString("N0", CultureInfo.InvariantCulture) + " km of roads");
+                var condition = env.SelectToken("conditionLayer.summary");
+                if (condition != null)
+                {
+                    Stat(((int)condition["buildings"]).ToString("N0", CultureInfo.InvariantCulture) + " buildings");
+                    int damaged = (int?)condition["withCondition"] ?? 0;
+                    Stat(damaged.ToString("N0", CultureInfo.InvariantCulture) + " damaged", damaged > 0 ? "gw-stat-damage" : null);
+                }
+                else Stat("no damage data: drawn whole", "gw-stat-muted");
+            }
+            catch (Exception e) when (e is IOException || e is Newtonsoft.Json.JsonException || e is InvalidCastException || e is FormatException)
+            {
+                Stat("environment.json could not be read", "gw-stat-damage");
+            }
+            foreach (var image in new[] { "materials_preview.png", "hillshade.png" })
+            {
+                string path = Path.Combine(exportFolder, image);
+                if (!File.Exists(path)) continue;
+                previewTexture = new Texture2D(2, 2) { hideFlags = HideFlags.HideAndDontSave };
+                if (previewTexture.LoadImage(File.ReadAllBytes(path)))
+                {
+                    preview.image = previewTexture;
+                    preview.style.display = DisplayStyle.Flex;
+                    break;
+                }
+                DestroyImmediate(previewTexture);
+                previewTexture = null;
+            }
+            UpdateGenerate();
+        }
+
+        static string Km(float metres) => (metres / 1000f).ToString("0.0", CultureInfo.InvariantCulture);
+
+        void Stat(string text, string extra = null)
+        {
+            var label = Text(text, "gw-stat");
+            if (extra != null) label.AddToClassList(extra);
+            stats.Add(label);
+        }
+
+        void Browse()
+        {
+            string start = exportFolder != "" ? Path.GetDirectoryName(exportFolder) : ExportsFolder;
+            string chosen = EditorUtility.OpenFolderPanel("The app's exports folder, or one export (<area>_env)", start, "");
+            if (string.IsNullOrEmpty(chosen)) return;
+            if (File.Exists(Path.Combine(chosen, "environment.json")))
+            {
+                exportFolder = chosen;
+                chosen = Path.GetDirectoryName(chosen);
+            }
+            EditorPrefs.SetString(ExportsKey, chosen);
+            ListExports();
+        }
+
+        // ---------------------------------------------------------------- world
+
+        void SetTiled(bool on)
+        {
+            tiled = on;
+            tiledButton.EnableInClassList("gw-selected", on);
+            singleButton.EnableInClassList("gw-selected", !on);
+            UpdateGenerate();
+        }
+
+        void UpdateGenerate()
+        {
+            if (generateButton == null) return;
+            generateButton.text = tiled ? "Generate tiled world" : "Generate world";
+            generateButton.SetEnabled(exportFolder != "" && !EditorApplication.isPlaying);
+        }
+
+        void Generate()
+        {
+            string environment = Path.Combine(exportFolder, "environment.json"), buildings = Path.Combine(exportFolder, "buildings.json");
+            if (!File.Exists(buildings)) buildings = "";
+            Run(() =>
+            {
+                if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
+                GeoTerrainTextures.EnsureImported();
+                if (!GeoRoadPhotos.Available) GeoRoadTextures.EnsureGenerated();
+                GeoDefaults.FillLibraries(settings, true);
+                if (tiled) ShowStatus(GeoTiles.Generate(environment, buildings, settings, tileSize).report);
+                else
+                {
+                    var world = GeoGenerator.Generate(environment, buildings, settings, null);
+                    ShowStatus(world.report);
+                    Frame(world);
+                }
+            });
+        }
+
+        // The selected world (one world, or a whole tiled world) generated again from its export with these settings.
+        void RebuildSelected()
+        {
+            var go = Selection.activeGameObject;
+            var tiledWorld = go ? go.GetComponentInParent<GeoTiledWorld>() : null;
+            var world = go ? go.GetComponentInParent<GeoWorldRoot>() : null;
+            Run(() =>
+            {
+                if (tiledWorld) ShowStatus(GeoTiles.Generate(tiledWorld.environmentPath, tiledWorld.buildingsPath, settings, tiledWorld.tileSize, tiledWorld.folder).report);
+                else if (world && !world.tile)
+                {
+                    world = GeoGenerator.Generate(world.environmentPath, world.buildingsPath, settings, world);
+                    ShowStatus(world.report);
+                    Frame(world);
+                }
+            });
+        }
+
+        void ShowSelection()
+        {
+            if (rebuildButton == null) return;
+            var go = Selection.activeGameObject;
+            var world = go ? go.GetComponentInParent<GeoWorldRoot>() : null;
+            bool any = go && (go.GetComponentInParent<GeoTiledWorld>() || (world && !world.tile));
+            rebuildButton.style.display = any ? DisplayStyle.Flex : DisplayStyle.None;
+        }
+
+        void DrawAdvanced()
+        {
+            EditorGUIUtility.labelWidth = 200;
+            Section("Terrain and roads");
+            if (tiled) tileSize = EditorGUILayout.Slider("Tile size (m)", tileSize, 250, 4000);
+            settings.heightResolution = EditorGUILayout.IntPopup(tiled ? "Heightmap resolution (a tile)" : "Heightmap resolution", settings.heightResolution, new[] { "257", "513", "1025" }, new[] { 257, 513, 1025 });
+            settings.textureResolution = EditorGUILayout.IntPopup("Ground texture resolution", settings.textureResolution, new[] { "256", "512", "1024" }, new[] { 256, 512, 1024 });
+            settings.roadPaintResolution = EditorGUILayout.IntPopup("Road paint detail", settings.roadPaintResolution, new[] { "1024", "2048", "4096" }, new[] { 1024, 2048, 4096 });
+            settings.pathStep = EditorGUILayout.Slider("Road segment length (m)", settings.pathStep, 0.5f, 8);
+            settings.roadShoulder = EditorGUILayout.Slider("Road shoulder (m)", settings.roadShoulder, 0, 8);
+            settings.junctionSnap = EditorGUILayout.Slider("Junction snap distance (m)", settings.junctionSnap, 0, 3);
+            settings.blendMetres = EditorGUILayout.Slider("Ground blend (m)", settings.blendMetres, 0, 10);
+            settings.riverDepth = EditorGUILayout.Slider("River depth (m)", settings.riverDepth, 0.5f, 5);
+            settings.gradeRoads = EditorGUILayout.Toggle("Grade terrain under roads", settings.gradeRoads);
+            settings.carveRivers = EditorGUILayout.Toggle("Carve river beds", settings.carveRivers);
+            settings.laneMarkings = EditorGUILayout.Toggle("Road centre markings", settings.laneMarkings);
+            settings.groundTextures = EditorGUILayout.Toggle("Photographic ground textures", settings.groundTextures);
+            if (settings.satelliteImagery)
+            {
+                Section("Satellite imagery");
+                settings.satelliteResolution = EditorGUILayout.IntPopup("Texture size", settings.satelliteResolution, new[] { "Auto (0.4 m a texel)", "1024", "2048", "4096", "8192" }, new[] { 0, 1024, 2048, 4096, 8192 });
+                settings.satelliteMaxZoom = EditorGUILayout.IntSlider("Deepest tile zoom", settings.satelliteMaxZoom, 1, 22);
+                settings.satelliteTiles = EditorGUILayout.TextField("Tile URL {z}/{x}/{y}", settings.satelliteTiles);
+                EditorGUILayout.HelpBox(GeoSatellite.Attribution(settings.satelliteTiles) + ". Tiles are cached in Library/GeoWorld/SatelliteTiles; check the server's terms before shipping the imagery.", MessageType.None);
+            }
+            Section("Buildings");
+            settings.buildings = EditorGUILayout.Toggle("Buildings", settings.buildings);
+            using (new EditorGUI.DisabledScope(!settings.buildings))
+            {
+                settings.buildingMode = (GeoBuildingMode)EditorGUILayout.EnumPopup("Building mode", settings.buildingMode);
+                settings.mergeAbove = EditorGUILayout.IntSlider("Merge above (buildings)", settings.mergeAbove, 100, 20000);
+                settings.chunkSize = EditorGUILayout.Slider("Merged chunk size (m)", settings.chunkSize, 50, 500);
+                settings.mergedColliders = EditorGUILayout.Toggle("Colliders on merged chunks", settings.mergedColliders);
+                settings.estimatedRoofs = EditorGUILayout.Toggle("Typical roofs where not mapped", settings.estimatedRoofs);
+                using (new EditorGUI.DisabledScope(!settings.applyCondition))
+                {
+                    settings.ruinModels = (GeoRuinUse)EditorGUILayout.EnumPopup("Ruin models for", settings.ruinModels);
+                    settings.ruinApron = EditorGUILayout.Slider("Ruin yard and debris (m)", settings.ruinApron, 0, 12);
+                }
+                settings.homeModels = (GeoHomeUse)EditorGUILayout.EnumPopup("Home models for", settings.homeModels);
+                settings.reducedModels = EditorGUILayout.Toggle("Reduced models in a merged city", settings.reducedModels);
+                settings.instancedHomes = EditorGUILayout.Toggle("Homes as model instances", settings.instancedHomes);
+                settings.ruinLibrary = (GeoRuinLibrary)EditorGUILayout.ObjectField("Ruin library", settings.ruinLibrary, typeof(GeoRuinLibrary), false);
+                settings.homeLibrary = (GeoHomeLibrary)EditorGUILayout.ObjectField("Home library", settings.homeLibrary, typeof(GeoHomeLibrary), false);
+            }
+            Section("Props");
+            settings.mappedProps = EditorGUILayout.Toggle("Mapped street props, fences", settings.mappedProps);
+            settings.streetDecoration = EditorGUILayout.Toggle("Generated street decoration", settings.streetDecoration);
+            settings.propCatalog = (GeoPropCatalog)EditorGUILayout.ObjectField("Prop prefab catalog", settings.propCatalog, typeof(GeoPropCatalog), false);
+            settings.treeSpacing = EditorGUILayout.Slider("Tree spacing (m)", settings.treeSpacing, 3, 25);
+            settings.vegetationDensity = EditorGUILayout.Slider("Vegetation density", settings.vegetationDensity, 0, 1);
+            settings.decorationSeed = EditorGUILayout.IntField("Decoration seed", settings.decorationSeed);
+            settings.maxProps = EditorGUILayout.IntSlider("Maximum props", settings.maxProps, 100, 200000);
+            settings.mergeProps = EditorGUILayout.Toggle("Bake props in a merged city", settings.mergeProps);
+            EditorGUILayout.Space(4);
+            if (GUILayout.Button("Reset to the standard settings", GUILayout.Width(220)))
+            {
+                settings = GeoDefaults.Settings();
+                EditorApplication.delayCall += () => { rootVisualElement.Clear(); CreateGUI(); };
+            }
+        }
+
+        static void Section(string title)
+        {
+            EditorGUILayout.Space(6);
+            EditorGUILayout.LabelField(title, EditorStyles.boldLabel);
+        }
+
+        // ---------------------------------------------------------------- update and status
+
+        void ShowUpdate()
+        {
+            if (versionChip == null) return;
+            var state = GeoUpdate.State;
+            versionChip.text = "v" + GeoUpdate.Installed + (state == GeoUpdate.Status.Developing ? "  ·  development" :
+                state == GeoUpdate.Status.UpToDate ? "  ·  up to date" : state == GeoUpdate.Status.Checking ? "  ·  checking…" : "");
+            versionChip.tooltip = state == GeoUpdate.Status.Failed ? "The update check failed: " + GeoUpdate.Error : "";
+            bool show = state == GeoUpdate.Status.Available || state == GeoUpdate.Status.Updating;
+            banner.style.display = show ? DisplayStyle.Flex : DisplayStyle.None;
+            bannerText.text = state == GeoUpdate.Status.Updating ? "Updating to Geo World " + GeoUpdate.Latest + "…" : "Geo World " + GeoUpdate.Latest + " is available";
+            updateButton.SetEnabled(state == GeoUpdate.Status.Available);
+        }
+
+        void ShowStatus(string text)
+        {
+            message = text ?? "";
+            if (status == null) return;
+            status.text = message.Length > 1500 ? message.Substring(0, 1500) + "…" : message;
+            status.style.display = message == "" ? DisplayStyle.None : DisplayStyle.Flex;
+        }
+
         void Run(Action action)
-        {try{action();}catch(OperationCanceledException e){message=e.Message;}catch(Exception e){message=e.Message;Debug.LogException(e);}}
+        {
+            try { action(); }
+            catch (OperationCanceledException e) { ShowStatus(e.Message); }
+            catch (Exception e) { ShowStatus(e.Message); Debug.LogException(e); }
+        }
+
+        // ---------------------------------------------------------------- building blocks
+
+        static VisualElement Row(string className)
+        {
+            var row = new VisualElement();
+            row.AddToClassList(className);
+            return row;
+        }
+
+        static Label Text(string text, string className)
+        {
+            var label = new Label(text);
+            label.AddToClassList(className);
+            return label;
+        }
+
+        static VisualElement Card(VisualElement parent, string step, string title)
+        {
+            var card = Row("gw-card");
+            var head = Row("gw-card-head");
+            head.Add(Text(step, "gw-step"));
+            head.Add(Text(title, "gw-card-title"));
+            card.Add(head);
+            parent.Add(card);
+            return card;
+        }
+
+        // A switch with its name and a line on what it does; the text toggles it too.
+        static VisualElement Option(string name, string description, Func<bool> get, Action<bool> set)
+        {
+            var row = Row("gw-option");
+            var toggle = new Toggle { value = get() };
+            toggle.AddToClassList("gw-option-toggle");
+            toggle.RegisterValueChangedCallback(e => set(e.newValue));
+            var text = new VisualElement();
+            text.AddToClassList("gw-option-text");
+            text.Add(Text(name, "gw-option-name"));
+            text.Add(Text(description, "gw-option-description"));
+            text.RegisterCallback<ClickEvent>(e => toggle.value = !toggle.value);
+            row.Add(toggle);
+            row.Add(text);
+            return row;
+        }
+
         public static void Frame(GeoWorldRoot world)
         {
-            if(world.terrain==null||SceneView.lastActiveSceneView==null)return;
-            Vector3 size=world.terrain.terrainData.size;
-            SceneView.lastActiveSceneView.LookAt(world.terrain.transform.position+size*0.5f,Quaternion.Euler(55,-25,0),Mathf.Max(size.x,size.z)*0.65f);
+            if (world.terrain == null || SceneView.lastActiveSceneView == null) return;
+            Vector3 size = world.terrain.terrainData.size;
+            SceneView.lastActiveSceneView.LookAt(world.terrain.transform.position + size * 0.5f, Quaternion.Euler(55, -25, 0), Mathf.Max(size.x, size.z) * 0.65f);
         }
     }
 

@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.0
+
+- A simpler, nicer Geo World window: pick an export with a picture of the area, tiled or one world, four switches, Advanced settings for the rest
+- Update notifications: console, Scene view and an Update button in the window when a newer version exists
+
 ## 1.2.0
 
 - Tools > Geo World holds only Generate world from export..., Generator window, Set up rendering for large worlds and Update Geo World...
