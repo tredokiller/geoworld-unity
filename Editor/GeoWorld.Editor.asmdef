@@ -1,0 +1,7 @@
+{
+  "name": "GeoWorld.Editor",
+  "references": ["GeoWorld.Runtime"],
+  "overrideReferences": true,
+  "precompiledReferences": ["Newtonsoft.Json.dll"],
+  "includePlatforms": ["Editor"]
+}

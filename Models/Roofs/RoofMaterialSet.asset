@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2262928469b851240930694c95a5b9af, type: 3}
+  m_Name: RoofMaterialSet
+  m_EditorClassIdentifier: GeoWorld.Runtime::GeoWorld.GeoRoofMaterialSet
+  entries:
+  - kind: metal_tile
+    material: {fileID: 2100000, guid: 5730a17731c1b6a4ba88133486e6ead4, type: 2}
+  - kind: metal_sheet
+    material: {fileID: 2100000, guid: 67f05b764a6413642bf57a097cdb2a31, type: 2}
+  - kind: asbestos_cement
+    material: {fileID: 2100000, guid: f81dac73fa99c9a4ca003bb63b19ffb2, type: 2}
+  - kind: clay_tiles
+    material: {fileID: 2100000, guid: e42dd35b0a4d11b4db64f1f4465de138, type: 2}
+  - kind: slate
+    material: {fileID: 2100000, guid: c78717460d904fc438f497354b5f6b89, type: 2}
+  - kind: bitumen
+    material: {fileID: 2100000, guid: 63784b81e8e04764daf481e51218939a, type: 2}
+  - kind: shingles
+    material: {fileID: 2100000, guid: f16cc7f062c2be34ba24d6cd3661300d, type: 2}
+  - kind: thatch
+    material: {fileID: 2100000, guid: f80a1b6a13f6a0f41ae71f9e12c70cc6, type: 2}

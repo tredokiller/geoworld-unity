@@ -1,0 +1,94 @@
+{
+  "tileMeters": 2.1,
+  "size": 1024,
+  "note": "albedo is a neutral luminance map: multiply by the roof colour (URP/Lit _BaseColor). Repeat wrap, 1 UV = tileMeters m.",
+  "kinds": {
+    "metal_tile": {
+      "albedo": "metal_tile_albedo.png",
+      "normal": "metal_tile_normal.png",
+      "appMaterials": [
+        "metal",
+        "metal_tile",
+        "metal_tiles",
+        "tile_metal"
+      ]
+    },
+    "metal_sheet": {
+      "albedo": "metal_sheet_albedo.png",
+      "normal": "metal_sheet_normal.png",
+      "appMaterials": [
+        "metal_sheet",
+        "corrugated_iron",
+        "steel",
+        "iron",
+        "profiled_sheet",
+        "zinc",
+        "tin",
+        "copper"
+      ]
+    },
+    "asbestos_cement": {
+      "albedo": "asbestos_cement_albedo.png",
+      "normal": "asbestos_cement_normal.png",
+      "appMaterials": [
+        "asbestos_cement",
+        "asbestos",
+        "eternit",
+        "fibre_cement",
+        "concrete_sheet"
+      ]
+    },
+    "clay_tiles": {
+      "albedo": "clay_tiles_albedo.png",
+      "normal": "clay_tiles_normal.png",
+      "appMaterials": [
+        "clay_tiles",
+        "roof_tiles",
+        "tiles",
+        "tile",
+        "ceramic",
+        "terracotta"
+      ]
+    },
+    "slate": {
+      "albedo": "slate_albedo.png",
+      "normal": "slate_normal.png",
+      "appMaterials": [
+        "slate",
+        "stone"
+      ]
+    },
+    "bitumen": {
+      "albedo": "bitumen_albedo.png",
+      "normal": "bitumen_normal.png",
+      "appMaterials": [
+        "bitumen",
+        "tar_paper",
+        "roofing_felt",
+        "felt",
+        "concrete",
+        "membrane",
+        "glass",
+        "plastic"
+      ]
+    },
+    "shingles": {
+      "albedo": "shingles_albedo.png",
+      "normal": "shingles_normal.png",
+      "appMaterials": [
+        "shingles",
+        "asphalt_shingles",
+        "bitumen_shingles"
+      ]
+    },
+    "thatch": {
+      "albedo": "thatch_albedo.png",
+      "normal": "thatch_normal.png",
+      "appMaterials": [
+        "thatch",
+        "straw",
+        "reed"
+      ]
+    }
+  }
+}

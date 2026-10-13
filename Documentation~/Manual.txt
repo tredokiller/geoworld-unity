@@ -1,0 +1,442 @@
+GEO WORLD GENERATOR — SAMPLE VERSION
+Unity 6000.3 / Universal Render Pipeline
+
+START HERE
+Tools > Geo World > Create Riverside Sample makes a small demo scene (Assets/GeoWorld/Scenes/RiversideSample.unity);
+press Play.
+Right-drag orbits, mouse wheel zooms, middle-drag pans. WASD moves,
+Q/E changes height, Shift speeds up movement, Home resets the view.
+F flies (no clip): the mouse looks around (Esc frees the cursor, a click catches it again), WASD flies where
+you look, Space/E and Ctrl/Q go up and down, Shift is 4x and Alt slow, the wheel sets the speed; nothing stops
+the camera, it goes through terrain and buildings. F again orbits the point you look at; a tiled world streams
+its tiles around the camera wherever it flies.
+
+Tools > Geo World > Generate world from export... is the main way to make a world of any area: choose the
+unzipped Terrain & ground package of the Building Extractor app (exports/<area>_env next to this project).
+It builds a tiled world (1 km tiles that stream around the camera) with satellite imagery on the terrain,
+road meshes with soft edges, ruin models for every building the app gives as damaged and home models with
+the export's roofs for every other one; the ruin and home models are imported first when the project lacks
+them. Run it again after a new export: only the tiles that changed are rebuilt. Batch:
+Unity -batchmode -projectPath ... -executeMethod GeoWorld.Editor.GeoDefaults.BatchGenerate -geoExport <folder>.
+Tools > Geo World Generator opens the import window (every setting, one world or tiles).
+Samples/Chuhuiv is a real 800 x 800 metre crop of the app's Chuhuiv export (original coordinates and source
+rasters) and Samples/Lyman the whole of Lyman: build either with Generate world from export.
+
+IMPORT YOUR APP'S DATA
+1. In Building Extractor select an area and enable Terrain heightmap and Ground map.
+2. Download Terrain & ground (.zip), then extract the ZIP.
+3. Tools > Geo World > Generate world from export... and choose the extracted folder (done), or, to change
+   settings first, open Tools > Geo World Generator, choose the folder there and check the Environment JSON
+   and Buildings JSON paths. Click Generate world (one world) or Generate tiled world.
+5. Save your scene. Generated terrain, meshes, textures and materials are already
+   saved under Assets/GeoWorld/Generated, so they survive restarting the editor.
+
+The importer reads geo-environment v1 and geo-buildings v1 directly.
+Required package files: environment.json, plus any heightmap.r16 and materials.png
+referenced in it. buildings.json is optional. Buildings-only import is supported;
+it produces a flat terrain and editable footprint buildings, but has no road or river data.
+Keep source package files available if you want to rebuild later. Copy the export
+inside Assets if you want the source package to travel with the Unity project.
+
+EDIT ROADS AND RIVERS
+Expand the generated world's Roads or Rivers group and select a path.
+Drag its numbered nodes in Scene view. Change Width or Surface in the Inspector.
+Insert node in longest segment adds another editable point; the Points list also
+supports adding/removing points. Click Apply path & rebuild world to grade the ground,
+paint roads/markings/shoulders and rebuild bridges and rivers. Node Y is sampled automatically.
+Ground paths are selected from the Hierarchy: their visible surface belongs to Terrain.
+Keep the world root and path transforms at their original transforms; edit nodes
+instead of moving the GameObject. Rebuild reads paths in world-space metres.
+
+The root Inspector exposes generation settings and Rebuild roads, rivers and terrain.
+Replacement in the import window preserves paths by source ID. Leave that field
+empty to add a separate world. Replacement only touches the selected generated root.
+Rebuild is undoable with Ctrl+Z, and malformed input leaves the old world intact.
+Each build saves a new World asset so Undo can restore the old meshes and terrain.
+Old World assets are retained deliberately; delete unused generations manually only
+after saving and checking which asset is referenced by each scene.
+
+EDIT BUILDINGS
+Click a building in Scene view, or expand Buildings and select its parent
+(the object with Geo Building). Scene picking selects the whole building.
+Change Height, Floors, Roof, Roof Height, Roof Direction, windows or entrance.
+Height is the total height including the roof; changing floors changes facade rows,
+not total height. Flat, gabled, hipped and single-slope (skillion) roofs follow the
+outline, including concave shapes.
+Click Edit footprint in Scene view to show numbered corners. Drag, insert or remove
+corners, then click Rebuild this building. An invalid outline reports an error and
+leaves the previous geometry in place. Rebuild and corner edits support Undo.
+Move/rotate a building normally; positive scale and Y rotation are supported.
+Rebuild samples terrain again and fits a foundation to the complete footprint.
+
+Rebuild buildings only on the world Inspector upgrades/reimports all buildings
+without regenerating roads or terrain. Edits are kept by source ID on both this
+operation and full world rebuilds. Custom child objects/components are preserved.
+The owned Generated building geometry child is replaced; attach authored details
+directly to the building parent, not inside that generated child.
+GameObject > Geo World > Editable building creates a manual building. When a world
+is selected it goes in that world's Buildings group and survives later rebuilds.
+
+The app's footprint is an outer ring of east/north offsets from (x,z). Offsets are
+already oriented; the importer converts them to local corners without applying the
+JSON rotation twice. Exported height and levels are used; roof/window arrangements
+are editable procedural defaults, not surveyed details. Missing or invalid source
+footprints fall back to the exported box, with a warning on that building.
+
+BUILDING STYLES AND EXTENSIONS
+Assets/GeoWorld/BuildingStyles contains House, Apartments and Industrial styles.
+Each is a GeoBuildingStyle asset with shared wall, roof, foundation, glass and door
+materials. Assign another style on a building; Rebuild this building applies it.
+Wall Material and Roof Material provide per-building overrides. Apply style's roof
+and window defaults copies its geometry settings without changing footprint/height.
+Material edits affect all buildings using that material; geometry default or module
+edits need a rebuild. Create > Geo World > Building style creates another preset.
+
+GeoBuilding holds editable data; GeoPolygon validates and triangulates outlines;
+GeoBuildingGeometry produces foundation, walls, roof and facade parts;
+GeoBuildingBuilder handles terrain placement, assets, replacement and Undo.
+To extend generation, subclass GeoBuildingModule and implement Build(context, output).
+Use context.outline, eaves and RoofHeight(point); add a local-space mesh/material
+with output.Add(name, mesh, material, collider). Add the module asset to a style's
+Modules list. Do not mutate scenes or save assets in a module: the builder owns that.
+GeoBuildingBand is a working example; the Apartments style uses it for facade trim.
+Buildings-only and individual rebuilds save new assets so earlier versions remain
+available for Undo. Unused old generations can be cleaned up manually after saving.
+
+WHAT THIS SAMPLE GENERATES
+- Unity Terrain from rectangular 16-bit little-endian heightmaps, resampled to a
+  supported square resolution without reversing north/south or changing X/Z extents.
+- Ten terrain layers: grass, forest floor, soil, sand/banks, gravel, paving, crops,
+  rock, asphalt and road paint. The app's material IDs map into these groups. Weights
+  blend across boundaries; settings control blend distance and road shoulders.
+- Ground roads and dashed centre lines are painted directly into Unity Terrain.
+  There is no ground-road mesh, vertical lift or separate road collider. Road paint
+  follows the terrain's exact surface at every LOD, and TerrainCollider is the ground.
+  Roads follow JSON points and widths with rounded paint joins and terrain grading.
+- Connected T-junctions and crossings, including crossings without shared JSON nodes.
+  They are painted as one terrain surface. Asphalt takes precedence over paving,
+  gravel and dirt; equal materials use width then source ID to make the output
+  independent of JSON array order. No intersection mesh can overlap or float.
+- Editable dirt/gravel/paved paths. Junctions suppress centre lines, and duplicate
+  roads cannot create duplicate surface geometry or duplicate markings.
+- Junction snap distance (default 0.75 m) connects nearby endpoints to centrelines.
+  Set it to zero to keep exact endpoint coordinates. Bridges and separate source layers
+  are excluded from ground junctions. Layer-only roads have an estimated 5 m per layer
+  height offset, reported after import; this is a placeholder rather than surveyed height.
+- River ribbons and carved channels, plus approximate rasterized water-body surfaces
+  with islands excluded. Water has a simple opaque material, without fluid simulation.
+- Basic raised bridge decks/parapets. Tunnels and culverts are skipped.
+- Editable buildings extruded from the exported footprint, including L-shaped and
+  other concave outlines. Flat/gabled/hipped/single-slope roofs and static mesh collision follow the same
+  polygon. Foundations sample edges/interiors; windows and entrances follow each wall.
+- Reusable building styles, per-building material overrides and geometry modules.
+- Mapped street objects, fences, walls, hedges and trees with a replaceable prefab catalog.
+- Repeatable vegetation from canopy.png and tree rows, with clearance from buildings,
+  roads, paths, water, railways, entrances and other objects.
+
+PROPS AND VEGETATION
+Use Rebuild props and vegetation only on the world Inspector to refresh decoration
+without rebuilding terrain or buildings. It uses the current building outlines and
+edited road paths for clearance. Undo restores the previous prop group.
+
+Create > Geo World > Prop catalog makes an asset for assigning prefabs to kinds such
+as tree, hedge, fence, wall, gate, street_lamp, bench, bus_stop, shelter, waste_basket,
+waste_disposal, bicycle_parking, bollard, power_pole, traffic_signals or post_box.
+Assign it in the import window or world Settings. Prefabs use a ground pivot, +Z forward,
+and their authored scale multiplied by Scale. Fence/wall/hedge prefabs run along +Z;
+Segment Length specifies their authored length, which is stretched to match each line
+segment. Clearance Radius reserves ground space around custom props. Preview models
+are shared meshes with simple materials when no prefab is assigned.
+
+Mapped objects keep their source locations; their visual style and missing dimensions
+are still defaults. A Geo Placed Prop component records source ID, placement source,
+evidence and orientation source. Tree-row and canopy positions are generated, not
+individually surveyed trees. Generated street decoration is optional and adds plausible
+lamps along built-up roads and benches on park paths. It respects explicit lit=no tags.
+Entrance points reserve space and do not spawn another door. Mapped gates leave gaps
+in fence/hedge segments. Keep On Rebuild preserves a prop and its children after editing.
+
+PHOTO REFERENCES
+Reviewed building visualDetails in an export can set facade/roof colors and flat,
+gabled, hipped or skillion roof shape when a building is first imported. Unknown fields keep
+the style defaults. Colors tint separate saved materials; shared styles are untouched.
+Observed floor count and wall surface material remain reference metadata and do not
+replace imported height or floor count. These are approximate exterior styles, not
+photogrammetric reconstructions. Hipped roofs follow an oriented bounding envelope;
+complex roof sections still need manual editing or a custom generator.
+
+The building Inspector shows the observation, capture date (or unknown), confidence,
+wall surface and observed floors. Full linked observation lists, photo licenses,
+attribution, descriptive style notes and provenance stay on the saved Geo Building.
+Per-building color controls are editable; explicit wall/roof materials take precedence.
+Rebuilds preserve existing building edits and do not reapply changed photo observations.
+To import a revised observation from scratch, remove that building before regenerating.
+
+Props with source photo_reference and placementSource manual_photo retain their user
+chosen map coordinates and appear under Photo reference objects. Their photo ID,
+observation ID, source URL, capture date, confidence and description are saved on the
+Geo Placed Prop component. The photo's location is not an object's surveyed position.
+An explicit manual orientation is retained; missing orientation is estimated from roads.
+Historic capture dates describe references and do not assert present-day conditions.
+
+Tree Spacing, Vegetation Density and Decoration Seed control repeatable scattering.
+Maximum Props bounds automatic generation (kept edits remain in addition): 20 000 objects in
+an editable world; a merged city bakes props into chunks (see Merged city) and takes up to
+200 000. When the canopy allows more trees than the limit, they are thinned evenly over the
+whole map, and fences and hedges take the share trees leave, so a limit never empties one
+side of the map. The report states when the limit is reached. Older exports without detail
+arrays still work; no canopy mask means no canopy scattering. Re-extract to obtain street details.
+
+COORDINATES AND QUALITY
+X is east, Z is north, units are metres; source origins must match. Heightmap sea-level
+elevation is offset by originGround. Building bases are snapped to generated terrain.
+Generated worlds stay at identity transforms; edit geometry using the path controls.
+Use a small area first. 1025 height samples help narrow roads on large selections;
+the source DEM itself is still about 30 m. Resampling cannot add missing survey detail.
+Blend distance is limited by the terrain splatmap resolution and a 12-texel radius.
+Road paint detail is separate from landscape blend resolution: 2048 by default,
+up to 4096 for sharper road edges and centre lines. Paint is applied after landscape
+blending so the ground-blend distance does not blur asphalt across its shoulders.
+At 800 m, 4096 gives about 0.20 m per texel. Fine lines use partial texel coverage;
+they become softer on large exports. Build large areas as a tiled world (below) for close-up detail.
+Paint maps are rasterized in blocks and uploaded once. Terrain layers
+remain standard editable Unity assets; no special road shader is required.
+
+PROTOTYPE LIMITS
+No rounded curb corners, turn lanes, traffic logic, engineered road grades,
+runtime streaming of tiles, level of detail, bridge piers or tunnel interiors yet.
+Building footprints currently support one simple outer ring (the app's schema),
+not courtyard holes or separate stacked building parts. Roofs support flat, gabled, hipped
+and single-slope profiles; complex roofs need another module/generator. Buildings are exterior shells:
+windows and doors are decorative surfaces, without cut-out openings or interiors.
+Road boundaries have texture-resolution antialiasing; shoulders blend.
+Source road widths and centreline shapes are retained. Junction detection between
+two separate road features is supported; a self-crossing loop is painted continuously
+but is not classified as a junction for markings.
+Very coarse terrain grids can make road elevation less smooth. Rivers follow
+sampled ground and are not a hydraulic model. Lake shores approximate the polygon
+on a grid; very small features can disappear. Rail meshes, crop-row rotation and fine
+road-wear metadata are not generated. Ground classes are grouped
+into terrain layers instead of preserving every exported material as a separate layer.
+Each editable building is several GameObjects; large exports use a merged city and a tiled world.
+The importer's area limit is 20 km per side.
+
+TILED WORLDS (LARGE AREAS)
+Tools > Geo World > Generate world from export... (or Geo World window > Large area: tiles > Generate tiled world)
+cuts the export into square tiles (1 km by default). Each tile is an ordinary generated world (terrain,
+roads, buildings, props) in a scene and asset of its own under Assets/GeoWorld/Tiled/<export>/Tiles; the
+main scene <export>.unity holds the index (GeoTiledWorld), the sun and the camera. The resolutions in the
+window are per tile, so 1025 height samples on 1 km tiles are about 1 m apart.
+Seams: road and river heights (bridges included), lake levels and the terrain height scale are worked out
+once for the whole export; every tile is built with a 96 m margin on a height grid shared by all tiles, so
+neighbours have the same ground at their common edge (Unity stitches the terrains: one grouping ID).
+Roads, junctions and markings are cut where tiles meet; a building, tree or prop belongs to the tile its
+centre is on. Memory stays flat however many tiles there are.
+Rebuilding: the GeoTiledWorld Inspector rebuilds changed tiles (export files or settings changed) or all
+of them, and opens/closes tile scenes around the Scene view; a tile's own Inspector rebuilds that tile
+from the whole export. Edited buildings and kept props survive a tile rebuild; edited road nodes do not
+(a road is cut into tiles). Tiled worlds are not committed (.gitignore): rebuild them in the editor.
+Size: baked chunks (buildings, props, roads) store a vertex in 24 bytes instead of 48 (8-bit normals and
+tangents, 16-bit texture coordinates; positions stay 32-bit), and a merged world's trees are Unity terrain
+trees (Models/Trees: four greens, culled when a few pixels tall) instead of copies of a mesh. With road
+meshes on, a tile's road paint is no finer than its ground texture. A merged city draws its homes as
+instances (Homes as model instances): a home model is only stretched to its footprint, never cut, so each home
+is an object whose renderers use the home library's own meshes with a transform (a plain plinth fills the gap on
+sloping ground) instead of a baked copy of about 100 KB. Ruins, which are cut to fit, and procedural buildings are
+baked, ruins from reduced copies (Reduced models in a merged city: GeoMeshSimplifier, about 15% fewer triangles
+with the same outlines, hard edges and texture seams). Lyman as 56 tiles of 1 km (513 height samples, 512 ground
+and paint): 0.78 GB, built in 5 minutes; an empty tile is about 6 MB, a dense town tile about 33 MB (22 MB asset,
+11 MB scene with about 1 500 homes).
+
+FRAME RATE (LARGE WORLDS)
+Streaming: the main scene of a tiled world has a Geo tile streamer, which loads the tiles within Load Radius
+(2 km) of the camera while playing and unloads those beyond Unload Radius. A tile scene does not hold its homes: they
+are a list in the tile's asset (Geo Home Set), and a Geo Home Instances on each "Homes x_y" group makes their objects
+when the tile loads, 2 ms worth per frame for all tiles together while playing (at once in the editor; they are never
+saved with the scene). Saved as objects, a town tile's 2,000 homes were 8,000 objects and 20 MB of scene, read and
+switched on in one frame: flying over Lyman froze the editor for 100 to 620 ms at every dense tile. Now the worst
+frame of the same flight is about 80 ms, and only in the editor, whose Game view waits for the asset reader while a
+tile loads (GeoBenchmarks.RunFlight flies a straight line and lists every slow frame with what took the time). A player build needs the tile scenes
+in the Build Settings (GeoTiledWorld Inspector > Add tile scenes to Build Settings).
+Drawing: Tools > Geo World > Set up rendering for large worlds turns on the GPU Resident Drawer and GPU occlusion
+culling in the render pipeline asset (Forward+ renderer) and keeps their shader variants in builds. Homes are left
+out once they are tiny on screen (an LOD group each), fences and street props beyond about a kilometre, and a merged
+world's trees are GPU instances (GeoInstancedMeshes: a few dozen calls a tile) instead of Unity terrain trees,
+which draw every tree in a call of its own. Terrains are drawn instanced, trees to 1.5 km.
+Measuring: Tools > Geo World > Benchmark the open world puts the camera at four views around a point (street,
+roofs, town, horizon), waits for the streamer, and reports frame time, CPU and GPU time and draw calls; for real
+numbers run it in a player (GeoBenchmarks.BuildPlayer, then the player with -geoBenchmark request.json), since the
+editor slows play mode down while it is in the background. Lyman, 56 tiles, RTX 5060, 1920 x 1080, streaming 2 km:
+105 to 154 fps in all four views, no frame over 16.7 ms (all tiles drawn as terrain trees and home renderers
+before: 20 to 42 fps, up to 150 000 draw calls).
+
+SATELLITE IMAGERY ON THE TERRAIN
+Satellite imagery is the default way of generating (the made-up riverside sample keeps the blended ground).
+Texture Size Auto, the default, sizes the texture to the area: the power of two nearest to 0.4 m a texel, the
+imagery's own detail (zoom 18 is 0.4 m a pixel across Ukraine), from 1024 to 8192: 2048 for a 1 km tile (zoom 18),
+8192 for a whole town in one world (a 7.5 km town gets 0.9 m, zoom 17). Satellite imagery on terrain (window, or
+the world's settings) drapes one texture of map tiles over the terrain instead of the blended ground layers: XYZ (Web Mercator) tiles from the tile URL (default Esri
+World Imagery), reprojected from the export's local ENU coordinates, downloaded once and cached in
+Library/GeoWorld/SatelliteTiles. Where the server has no imagery at a zoom ("Map data not yet available",
+or 404 with blankTile=false) the next coarser zoom is used; the world's report says which. Roads are then
+only seen in the imagery unless Road meshes is on. Check the tile server's terms before storing or
+shipping the imagery: Esri's terms restrict offline use, and the URL can point at your own imagery.
+
+SOFT ROAD EDGES
+Road and junction meshes are drawn with GeoWorld/Road (Assets/GeoWorld/Shaders/GeoRoad.shader):
+lit like URP Lit, but transparent, fading out over the last metre or so of each side along a slightly broken line,
+so a road lies on the ground (or the imagery) instead of ending in a hard border. Each road vertex carries its
+offset from the centreline and the road's half width in TexCoord1 (GeoMeshes.RoadEdges/JunctionEdges). The
+materials ("... (soft edges)" in the world's asset) take Opacity, Edge fade (metres; at most about a third of a
+narrow lane's width), Edge break-up and Break-up size: change them in the Inspector to taste.
+
+DAMAGED OR NOT: FROM THE APP
+Which buildings are damaged, and how badly, comes only from the app: each building's condition in buildings.json
+(intact, damaged, heavily damaged, destroyed, or none). Unity draws it as it is and decides nothing about it: which
+evidence counts (radar estimates, reports, reviews, OpenStreetMap) is set in the app before the export. Every building
+the app gives as damaged is drawn damaged, with a ruin model that depicts its condition where one fits (Ruin Models For:
+All Damage) and procedural damage otherwise; every other building (intact, or no condition) is a home model with the
+export's roof material and colour, fitted to its footprint and height (Home Models: Intact And Unknown). Buildings no
+model fits (L-shaped houses, odd halls) keep the style's walls and roof. Draw War Damage off draws every building whole.
+An area the app has no condition for is drawn whole: that is not a claim that it is undamaged.
+Example: Samples/Lyman is the app's Terrain & ground package of Lyman, Donetsk oblast (6.4 x 7.5 km, 21 000 buildings,
+with condition). Built as one merged world (60 000 props, road paint 4096) it took about a minute in a batch test with procedural buildings and about three minutes in the editor with the
+home and ruin models, and the generated asset is about 2.2 GB (the models put about 60 million vertices into the
+building chunks): a town is better as a tiled world (above: 0.78 GB, and it streams). Unity compiles the shaders for
+the distant terrain over the first frames: a screenshot taken in the same frame as the generation shows that part
+magenta.
+
+Building condition. buildings.json may carry "condition" per building: state (intact, damaged, heavily_damaged,
+destroyed), basis (observed, reported, mapped, estimated), confidence, the date it applies to and the sources. A building
+without it is unknown and drawn intact; that is not a claim. The renderer draws:
+  damaged          the building as it was, soot on walls and roof (about half of the damaged buildings have a
+                   scorched, almost black part of the roof), most windows dark holes (small houses have no windows
+                   in a merged city, so there only the soot and the roof show it)
+  heavily damaged  no roof, walls broken down to a ragged edge with the windows that are left dark, rubble inside
+  destroyed        low wall stumps with a few standing fragments, a mound of rubble
+With a ruin library (see Ruin models below) a damaged building is drawn with a destroyed-building model instead,
+wherever one depicts its condition and fits its kind and shape; the drawings above remain for the rest. Ruin Models For
+says which states get one: by default every damaged building (All Damage). Home Models: All Standing would draw
+damaged buildings as homes without their soot instead, against the app's condition.
+Damage is procedural and deterministic per building ID: a rebuild changes nothing. Draw war damage off draws every
+building whole. The Inspector of an editable building shows the evidence. Estimates from satellite radar are low
+confidence and say where a district is hit, not that a given house is; the app's condition.json lists every source.
+
+Ruin models. The destroyed-building models of ../ruins/models (25 low-poly ruins made by the ruins pipeline: panel and
+brick blocks, houses, a garage row, schools, halls, a church ...) replace the procedural damage where one fits. Tools > Geo
+World > Import ruin models brings them into Assets/GeoWorld/Ruins (the GLB's mesh in Unity's axes, the baked albedo and
+normal map, a URP material, a prefab, and a Geo Ruin Model asset per model) and makes Assets/GeoWorld/Ruins/Ruin library.asset;
+Generate world from export imports them by itself. Settings: Ruin Models For (Off, Heavily Damaged And Destroyed, All Damage), Ruin Library
+(empty: procedural damage only) and Ruin Yard And Debris (metres of the model's yard and rubble kept around the footprint).
+  Choosing. A model must depict the building's condition (each says the lightest and heaviest it shows) and stand for its
+  category, or carry its OpenStreetMap tag (school, church, garages ...; a one-of-a-kind model is used only on a tag). Among
+  those the one needing the least stretching wins, with some variety between near equals. Footprints far from a rectangle
+  (an L or U) keep the procedural damage. The pick depends only on the building's ID, so a rebuild changes nothing.
+  Fitting. A model is a type, never one size: it is fitted to the footprint's smallest rectangle, its long side along the
+  footprint's. Each model is cut at joints along its length, depth and height (in the middle of a pier between window bays,
+  at a party wall, between storeys); regular bays, boxes and storeys are repeated for a bigger building or left out for a
+  smaller one, the damage itself and the end walls are kept, and the rest is stretched (a garage row becomes one box for a
+  shed; a 9-storey block loses four storeys for a 5-storey one). The walls are fitted to the building's eaves and what stands
+  above them to its roof rise (a flat-roofed model keeps its parapets and roof rooms). A model without joints along its length
+  is stretched, and repeated whole for a building more than 1.5 times as long, every other copy turned end for end so they
+  meet end wall to end wall; one-of-a-kind models (church, theatre, mine, silo bank: Keep Proportions) are never repeated and
+  their heights follow the plan. A model deeper than wide (the theatre) runs its depth along the footprint, its front at an
+  end. The front (door, porch, entrances) faces the nearest street. Yard and debris further out than the apron are left out
+  (a loose chunk, slab or door leaf stays or goes whole, nothing floats), and what lies on the ground follows the terrain.
+  Every model asset shows its joints and a Fit preview in the Inspector (Render fit preview): edit Joints and Segments
+  (C cap, F feature, R repeat) there to change how it is cut; Import ruin models keeps your edits, and the asset's context menu
+  resets them.
+  Editable buildings. Ruin Mode Auto lets the generator pick (again on every rebuild); choosing a Ruin by hand sets Model
+  (kept), Procedural draws the procedural damage. Ruin Mirror, Ruin Turn and Ruin Apron change how it is placed. The Inspector
+  shows the model and how it was fitted (bays and storeys added or left out, the stretch that remained).
+  Merged city. Buildings drawn with a ruin model keep its textures: each model used in a chunk is one more sub-mesh with the
+  model's material. Each Geo City Chunk entry names its ruin model.
+  A world generated before the models were imported has no Ruin Library: its Inspector offers the project's, then Rebuild
+  buildings only redraws the buildings with ruins.
+  What fits where today: houses B09-B12 (lightly damaged B09/B11, heavy B09/B10, destroyed B10/B12), sheds and garages B13
+  (one box or a run of boxes) and B12, apartment blocks B01-B08 (storeys added or left out), halls B19-B21, public buildings
+  B14, B15, B17, B18; B16, B22-B25 only on a matching tag. Damaged industrial and commercial buildings have no lightly
+  damaged model and keep the procedural damage. More models in ruins/models (with an entry in GeoRuinDefaults, or tuned on
+  the asset) widen the choice.
+A ruin model is a composite of documented damage patterns, not a picture of the building: it shows that the condition
+layer says the building is damaged, and how, not what this house looks like.
+
+Home models for sheds and industrial buildings. Besides houses and apartment blocks the kit (intact/models) has N31-N34
+for outbuildings (a plank woodshed, a silicate-brick saray, a board summer kitchen, a long row of barn, coal shed and
+woodshed; the row also takes the long narrow outlines the app guesses to be houses) and N35-N38 for industrial buildings
+(a brick warehouse with a loading platform, a brick production hall, a two-storey office and workshop block, a steel
+warehouse in profiled sheet). Tools > Geo World > Import home models brings them in with the rest. Choosing: a model with
+the building's number of storeys wins at equal size (a two-storey block gets the office, not the hall). A height the
+export only estimates (no height tag; a storey counts 3 m, which makes a one-storey warehouse 3 m high) may be as low as
+half the model's walls: the model then keeps its lowest walls (three quarters of its own) under the roof, so it stands
+a little taller than the estimate. A mapped height must fit as before.
+
+Merged city. One object per building does not scale to a city. Building Mode Auto switches to Merged above Merge Above
+buildings (2500): buildings are built with the same code as editable ones (footprint, roof, facade, damage) and baked into
+chunks of mesh (Chunk Size 200 m), colours through one palette texture, small buildings without window geometry. Each chunk
+is one object with a Geo City Chunk component listing its buildings, their positions and states (TryFind gives the
+building near a point). Editable mode keeps one object per building for villages and edits; manually added buildings
+survive merged rebuilds. Merged chunks have no mesh colliders unless Colliders On Merged Chunks is on; the terrain
+collides.
+Props in a merged city (trees, fences, walls, hedges, street furniture) are baked into chunks of mesh the same
+way (Bake Props In A Merged City, on by default): a tree is a 31-vertex low-poly model in its own shade of green,
+a fence or wall is built in real metres in 8 m pieces. They share the buildings' palette material and have no
+colliders and no Geo Placed Prop objects; props from a prop catalog or from photo references stay objects.
+Rebuild props and vegetation replaces the baked chunks.
+
+FILES
+Runtime/: saved scene components and the preview camera.
+Editor/: JSON reader, terrain/mesh generation, import window, path handles and demo.
+Tests/Editor/: EditMode checks for map orientation, material IDs/blending, mesh normals,
+islands, bridge grading, invalid input, origin validation, generation persistence,
+T-junction/crossing coverage, material ownership, shared heights, endpoint snapping,
+separate levels, duplicate surfaces and junction markings. Terrain-road checks cover
+material priority, normalized weights, T-junctions, bridge exclusion, thin-line coverage,
+tile seams, persistence, and the absence of any ground-road renderer or mesh collider.
+Building checks cover concave roof area/normals/collision, oriented footprint import,
+invalid outlines, module extensions, all real Chuhuiv outlines, saved geometry,
+individual rebuilds, building-only rebuilds and preserved edits/custom children.
+Ruin checks cover planning the cuts (bays repeated, left out, a row cropped to one box,
+whole models repeated), cutting without lost or doubled surface, fitting to a turned
+footprint and its heights (mirrored and turned), trimming and draping the yard, choosing
+a model, ruin modes, editable and merged drawing, and reading GLB files in Unity's axes.
+Samples/RiversideVillage/: self-contained synthetic export in the app's format.
+Samples/Chuhuiv/: real data crop; see its README for source attribution.
+Tools/prepare-chuhuiv-sample.cjs (project root): reproduces that crop from the sibling app.
+
+MAPPED BUILDING APPEARANCE
+Optional mappedAppearance records keep OpenStreetMap roof and wall tags, source,
+license and attribution. Initial import applies supported flat/gabled/hipped roofs,
+roof height, direction and normalized colors after style defaults. Reviewed photo
+fields then override only the fields they supply. Retained user edits win on rebuild.
+Roof height stays inside the existing total height, leaving at least 2 m for walls;
+the original mapped value remains available. Downslope compass bearings are converted
+to the building's local roof axis; along/across orientations are used when no valid
+downslope bearing is supplied. Unknown roof shapes remain in the metadata and produce
+an explicit renderer note; their geometry uses the style defaults. Material names,
+roof angle/levels, architecture and minimum levels/heights remain reference metadata.
+They do not invent textures or alter source floor counts or building dimensions.
+
+ROOFS FROM THE EXPORT
+A building's "roof" block (shape, ridge, pitch, rise, material, colour) merges what the app
+knows, and every value says where it came from: reviewed (a person checked imagery), mapped
+(an OpenStreetMap roof:* tag) or estimated (typical for that kind of building in Ukraine; never
+an observation, low confidence). OSM maps roofs for almost no buildings, so without the
+estimates every house would keep the style's single roof.
+Initial import applies the block as a baseline, then the raw mappedAppearance and reviewed
+visualDetails above it win where they differ:
+- Shape: flat, gabled, hipped or skillion (one slope). A shape the renderer cannot draw (onion,
+  mansard, ...) is drawn as the export's nearest simple one (renderAs) with an import note; with no
+  nearest shape the style decides.
+- Rise (roof height above the eaves) is limited to leave 2 m of wall; total height never changes.
+- Ridge direction: the exported bearing is turned into Roof Direction for the building's own axes
+  (along the long side is 0, across is 90). A skillion drains to its mapped downhill bearing; when
+  that is unknown it faces one of two sides, picked from the building id so it never changes between
+  runs and a row of sheds does not all slope the same way.
+- Colour: the exported colour tints the roof like a reviewed colour (separate saved material in an
+  editable world, the palette texture in a merged city).
+Generation settings > "Typical roofs where not mapped" turns the estimated values off; mapped and
+reviewed roof data stay. The building Inspector shows each roof value with its source. Rebuilds keep
+your edits. Older exports have no roof block and import exactly as before.
+
+Run GeoWorld.Tests using Window > General > Test Runner > EditMode.

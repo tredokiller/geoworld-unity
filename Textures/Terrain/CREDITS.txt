@@ -1,0 +1,22 @@
+Ground textures from Poly Haven (https://polyhaven.com), CC0 1.0.
+
+grass      forrest_ground_01        Rob Tuytel
+cropland   farm_furrows             Amal Kumar
+forest     leafy_grass              Charlotte Baglioni
+scrub      withered_grass           Charlotte Baglioni
+bare       dirt                     Charlotte Baglioni
+sand       sand_01                  Rob Tuytel
+rock       gray_rocks               Dimitrios Savva
+wetland    brown_mud_leaves_01      Rob Tuytel
+water      ganges_river_pebbles     Amal Kumar
+urban      concrete_floor_01        Rob Tuytel
+asphalt    asphalt_02               Rob Tuytel
+paving     concrete_pavement_02     Charlotte Baglioni
+gravel     gravel_road              Amal Kumar
+dirt_road  dirt_floor               eye-candy.xyz
+path       grass_path_2             Rob Tuytel
+rail       gravel_stones            Amal Kumar
+building   concrete                 Rob Tuytel
+snow       snow_02                  Rob Tuytel
+orchard    grass_ground             Charlotte Baglioni
+cliff      rock_face_03             Dario Barresi, Rico Cilliers
