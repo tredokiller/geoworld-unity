@@ -37,7 +37,7 @@ namespace GeoWorld.Editor
         public static bool HasLayer(int layer) => layer >= 0 && layer < Names.Length && Names[layer] != null && GeoPaths.Exists(DiffusePath(layer)) && GeoPaths.Exists(NormalPath(layer));
         public static bool Available => HasLayer(0) && HasLayer(11) && GeoPaths.Exists(Stamp) && File.ReadAllText(GeoPaths.Disk(Stamp)).Trim() == Version.ToString();
 
-        [MenuItem("Tools/Geo World/Import ground textures (from the Godot project)")]
+        // the Geo World window offers it when the textures are missing (they ship with the package)
         public static void ImportMenu()
         {
             string source = DefaultSource;

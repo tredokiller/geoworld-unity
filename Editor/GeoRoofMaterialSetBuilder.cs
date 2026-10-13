@@ -4,23 +4,12 @@ using UnityEngine;
 
 namespace GeoWorld.Editor
 {
-    // Tools > Geo World > Create roof material set: select the folder holding <kind>_albedo.png / <kind>_normal.png
-    // (the kit's "roofs" folder) and this creates one material per kind plus a GeoRoofMaterialSet asset next to them.
+    // The roof material set of the home models: one material per roof kind, from <kind>_albedo.png / <kind>_normal.png in
+    // a folder (the kit's "roofs" folder, Models/Roofs of the package), plus a GeoRoofMaterialSet asset next to them.
+    // It ships with the package; the home importer makes it only where the package is developed and it is missing.
     public static class GeoRoofMaterialSetBuilder
     {
         static readonly string[] Kinds = { "metal_tile", "metal_sheet", "asbestos_cement", "clay_tiles", "slate", "bitumen", "shingles", "thatch" };
-
-        [MenuItem("Tools/Geo World/Create roof material set")]
-        public static void Create()
-        {
-            string folder = AssetDatabase.GetAssetPath(Selection.activeObject);
-            if (string.IsNullOrEmpty(folder) || !AssetDatabase.IsValidFolder(folder))
-            {
-                EditorUtility.DisplayDialog("Roof material set", "Select the folder with the roof textures first (<kind>_albedo.png, <kind>_normal.png).", "OK");
-                return;
-            }
-            Selection.activeObject = CreateIn(folder);
-        }
 
         // Makes (or updates) the materials and the set in a folder holding <kind>_albedo.png / <kind>_normal.png.
         public static GeoRoofMaterialSet CreateIn(string folder)

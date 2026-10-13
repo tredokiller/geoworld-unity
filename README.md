@@ -33,7 +33,10 @@ keeps the commit it first downloaded, recorded in `Packages/packages-lock.json`,
 
 1. **Tools > Geo World > Set up rendering for large worlds** (GPU Resident Drawer, occlusion culling).
 2. **Tools > Geo World > Generate world from export...** and choose an unzipped Terrain & ground package of the
-   app (`exports/<area>_env`).
+   app (`exports/<area>_env`). **Generator window** has every setting.
+
+**Tools > Geo World > Update Geo World...** updates the project to the newest version; once per editor session the
+console says when there is one.
 
 The 25 ruin models and 38 home models come with the package (`Ruins`, `Homes`): nothing to import. Their textures are
 kept small (colour as JPEG, normal maps as 1024 px PNG; about 280 MB for the whole package). Everything the tools
@@ -43,8 +46,9 @@ to the export's colours); the package itself is read-only.
 ## Developing the package
 
 It lives in `terrain-generator/Packages/com.tredokiller.geoworld` of the Building Extractor repository, where the
-Unity project uses it directly. **Import ruin models** / **Import home models** rebuild its libraries from
-`ruins/models` and `intact/models` there (they ask once for the folders and remember them).
+Unity project uses it directly. That project defines `GEOWORLD_DEVELOPMENT`, which adds **Tools > Geo World >
+Developer**: **Import ruin models** / **Import home models** rebuild the package's libraries from `ruins/models` and
+`intact/models` (they ask once for the folders and remember them), **Reduce library models again**, and the benchmark.
 `py -3 tools/publish_unity_package.py <version> "<what changed>"` publishes a version for the other projects.
 
 ## More

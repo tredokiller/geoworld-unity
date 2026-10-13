@@ -15,7 +15,7 @@ namespace GeoWorld.Editor
         Vector2 scroll;
         string message="Select an exported folder, or build the included riverside village.";
 
-        [MenuItem("Tools/Geo World Generator")]
+        [MenuItem("Tools/Geo World/Generator window",false,1)]
         public static void Open() { var window=GetWindow<GeoWorldWindow>("Geo World");window.minSize=new Vector2(400,580); }
 
         // the project's ruin and home libraries are the defaults once the models are imported

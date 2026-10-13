@@ -59,7 +59,9 @@ namespace GeoWorld.Editor
 
         public static GeoHomeLibrary Library => AssetDatabase.LoadAssetAtPath<GeoHomeLibrary>(GeoHomeLibrary.DefaultPath);
 
-        [MenuItem("Tools/Geo World/Import home models")]
+#if GEOWORLD_DEVELOPMENT // only where the package is developed (its project defines this)
+        [MenuItem("Tools/Geo World/Developer/Import home models")]
+#endif
         public static void ImportMenu()
         {
             if (GeoDefaults.RefuseImportHere("home models")) return;

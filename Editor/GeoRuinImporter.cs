@@ -36,7 +36,9 @@ namespace GeoWorld.Editor
             }
         }
 
-        [MenuItem("Tools/Geo World/Import ruin models")]
+#if GEOWORLD_DEVELOPMENT // only where the package is developed (its project defines this)
+        [MenuItem("Tools/Geo World/Developer/Import ruin models")]
+#endif
         public static void ImportMenu()
         {
             if (GeoDefaults.RefuseImportHere("ruin models")) return;

@@ -14,7 +14,7 @@ namespace GeoWorld.Editor
     {
         public const string Folder=GeoPaths.Project+"/Samples/RiversideVillage";
         public const string ScenePath=GeoPaths.Project+"/Scenes/RiversideSample.unity";
-        [MenuItem("Tools/Geo World/Create Riverside Sample")]
+        // the Geo World window's sample button
         public static void CreateScene()
         {
             if(Application.isPlaying)throw new InvalidOperationException("Stop Play mode before creating the sample.");

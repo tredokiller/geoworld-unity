@@ -14,7 +14,7 @@ namespace GeoWorld.Editor
     // keeps its shader variants only with BatchRendererGroup stripping set to Keep All.
     public static class GeoRenderingSetup
     {
-        [MenuItem("Tools/Geo World/Set up rendering for large worlds")]
+        [MenuItem("Tools/Geo World/Set up rendering for large worlds", false, 20)]
         public static void ApplyMenu() => Debug.Log(Apply());
 
         public static string Apply()

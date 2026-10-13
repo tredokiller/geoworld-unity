@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.0
+
+- Tools > Geo World holds only Generate world from export..., Generator window, Set up rendering for large worlds and Update Geo World...
+- Update Geo World... updates the project to the newest version; the console says when there is one
+- Tools for developing the package are in Tools > Geo World > Developer, only where GEOWORLD_DEVELOPMENT is defined
+
 ## 1.1.0
 
 - The 25 ruin and 38 home models come with the package: nothing to import in a project

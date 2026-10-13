@@ -18,7 +18,9 @@ namespace GeoWorld.Editor
         public const string AssetPath = GeoPaths.Project + "/Models/Reduced models.asset";
         public const float Ratio = 0.5f;
 
-        [MenuItem("Tools/Geo World/Reduce library models again")]
+#if GEOWORLD_DEVELOPMENT // only where the package is developed (its project defines this)
+        [MenuItem("Tools/Geo World/Developer/Reduce library models again")]
+#endif
         static void ReduceAgainMenu()
         {
             var set = AssetDatabase.LoadAssetAtPath<GeoReducedModels>(AssetPath);

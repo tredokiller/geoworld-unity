@@ -35,9 +35,6 @@ namespace GeoWorld.Editor
             return Mathf.Clamp(Mathf.FloorToInt(wear * Variants + jitter * 1.6f), 0, Variants - 1);
         }
 
-        [MenuItem("Tools/Geo World/Generate Ukrainian road textures")]
-        public static void GenerateMenu() { Generate(); Debug.Log("[GeoWorld] road textures made in " + Folder); }
-
         public static void EnsureGenerated() { if (!Available) Generate(); }
 
         public static void Generate()

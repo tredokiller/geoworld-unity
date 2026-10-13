@@ -2,8 +2,8 @@ GEO WORLD GENERATOR — SAMPLE VERSION
 Unity 6000.3 / Universal Render Pipeline
 
 START HERE
-Tools > Geo World > Create Riverside Sample makes a small demo scene (Assets/GeoWorld/Scenes/RiversideSample.unity);
-press Play.
+The Geo World window (Tools > Geo World > Generator window) makes a small demo scene with its sample button
+(Assets/GeoWorld/Scenes/RiversideSample.unity); press Play.
 Right-drag orbits, mouse wheel zooms, middle-drag pans. WASD moves,
 Q/E changes height, Shift speeds up movement, Home resets the view.
 F flies (no clip): the mouse looks around (Esc frees the cursor, a click catches it again), WASD flies where
@@ -18,7 +18,8 @@ road meshes with soft edges, ruin models for every building the app gives as dam
 the export's roofs for every other one; the ruin and home models are imported first when the project lacks
 them. Run it again after a new export: only the tiles that changed are rebuilt. Batch:
 Unity -batchmode -projectPath ... -executeMethod GeoWorld.Editor.GeoDefaults.BatchGenerate -geoExport <folder>.
-Tools > Geo World Generator opens the import window (every setting, one world or tiles).
+Tools > Geo World > Generator window opens the import window (every setting, one world or tiles).
+Tools > Geo World > Update Geo World... updates the package to its newest version (the console says when there is one).
 Samples/Chuhuiv is a real 800 x 800 metre crop of the app's Chuhuiv export (original coordinates and source
 rasters) and Samples/Lyman the whole of Lyman: build either with Generate world from export.
 
@@ -26,7 +27,7 @@ IMPORT YOUR APP'S DATA
 1. In Building Extractor select an area and enable Terrain heightmap and Ground map.
 2. Download Terrain & ground (.zip), then extract the ZIP.
 3. Tools > Geo World > Generate world from export... and choose the extracted folder (done), or, to change
-   settings first, open Tools > Geo World Generator, choose the folder there and check the Environment JSON
+   settings first, open Tools > Geo World > Generator window, choose the folder there and check the Environment JSON
    and Buildings JSON paths. Click Generate world (one world) or Generate tiled world.
 5. Save your scene. Generated terrain, meshes, textures and materials are already
    saved under Assets/GeoWorld/Generated, so they survive restarting the editor.
@@ -263,7 +264,7 @@ culling in the render pipeline asset (Forward+ renderer) and keeps their shader 
 out once they are tiny on screen (an LOD group each), fences and street props beyond about a kilometre, and a merged
 world's trees are GPU instances (GeoInstancedMeshes: a few dozen calls a tile) instead of Unity terrain trees,
 which draw every tree in a call of its own. Terrains are drawn instanced, trees to 1.5 km.
-Measuring: Tools > Geo World > Benchmark the open world puts the camera at four views around a point (street,
+Measuring (where the package is developed): Tools > Geo World > Developer > Benchmark the open world puts the camera at four views around a point (street,
 roofs, town, horizon), waits for the streamer, and reports frame time, CPU and GPU time and draw calls; for real
 numbers run it in a player (GeoBenchmarks.BuildPlayer, then the player with -geoBenchmark request.json), since the
 editor slows play mode down while it is in the background. Lyman, 56 tiles, RTX 5060, 1920 x 1080, streaming 2 km:
@@ -323,10 +324,10 @@ building whole. The Inspector of an editable building shows the evidence. Estima
 confidence and say where a district is hit, not that a given house is; the app's condition.json lists every source.
 
 Ruin models. The destroyed-building models of ../ruins/models (25 low-poly ruins made by the ruins pipeline: panel and
-brick blocks, houses, a garage row, schools, halls, a church ...) replace the procedural damage where one fits. Tools > Geo
-World > Import ruin models brings them into Assets/GeoWorld/Ruins (the GLB's mesh in Unity's axes, the baked albedo and
-normal map, a URP material, a prefab, and a Geo Ruin Model asset per model) and makes Assets/GeoWorld/Ruins/Ruin library.asset;
-Generate world from export imports them by itself. Settings: Ruin Models For (Off, Heavily Damaged And Destroyed, All Damage), Ruin Library
+brick blocks, houses, a garage row, schools, halls, a church ...) replace the procedural damage where one fits. They come with the
+package (Ruins); where the package is developed, Tools > Geo World > Developer > Import ruin models brings them in (the GLB's mesh in Unity's axes, the baked albedo and
+normal map, a URP material, a prefab, and a Geo Ruin Model asset per model) and makes Ruins/Ruin library.asset.
+Settings: Ruin Models For (Off, Heavily Damaged And Destroyed, All Damage), Ruin Library
 (empty: procedural damage only) and Ruin Yard And Debris (metres of the model's yard and rubble kept around the footprint).
   Choosing. A model must depict the building's condition (each says the lightest and heaviest it shows) and stand for its
   category, or carry its OpenStreetMap tag (school, church, garages ...; a one-of-a-kind model is used only on a tag). Among
@@ -365,7 +366,7 @@ Home models for sheds and industrial buildings. Besides houses and apartment blo
 for outbuildings (a plank woodshed, a silicate-brick saray, a board summer kitchen, a long row of barn, coal shed and
 woodshed; the row also takes the long narrow outlines the app guesses to be houses) and N35-N38 for industrial buildings
 (a brick warehouse with a loading platform, a brick production hall, a two-storey office and workshop block, a steel
-warehouse in profiled sheet). Tools > Geo World > Import home models brings them in with the rest. Choosing: a model with
+warehouse in profiled sheet). They come with the package (Homes; Tools > Geo World > Developer > Import home models where it is developed). Choosing: a model with
 the building's number of storeys wins at equal size (a two-storey block gets the office, not the hall). A height the
 export only estimates (no height tag; a storey counts 3 m, which makes a one-storey warehouse 3 m high) may be as low as
 half the model's walls: the model then keeps its lowest walls (three quarters of its own) under the roof, so it stands

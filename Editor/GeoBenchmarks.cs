@@ -46,7 +46,9 @@ namespace GeoWorld.Editor
                 report.summary.result + ": " + report.summary.totalErrors + " errors";
         }
 
-        [MenuItem("Tools/Geo World/Benchmark the open world (play mode)")]
+#if GEOWORLD_DEVELOPMENT // only where the package is developed (its project defines this)
+        [MenuItem("Tools/Geo World/Developer/Benchmark the open world (play mode)")]
+#endif
         static void RunMenu()
         {
             var world = Object.FindFirstObjectByType<GeoTiledWorld>();
