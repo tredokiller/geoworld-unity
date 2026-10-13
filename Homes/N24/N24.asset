@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c41e103a5605a314c97d5c494335f867, type: 3}
+  m_Name: N24
+  m_EditorClassIdentifier: GeoWorld.Runtime::GeoWorld.GeoHomeModelAsset
+  id: N24
+  label: 5-storey large-panel khrushchyovka, two-entrance section (1-464-type)
+  categories:
+  - apartments
+  tags: []
+  tagOnly: 0
+  floors: 5
+  length: 35.2
+  width: 11.8
+  eaveHeight: 13.5
+  rise: 2.2
+  body: {fileID: 4300000, guid: 81a03276f1b1e514c8b16ead9abbf464, type: 2}
+  roofFixed: {fileID: 4300000, guid: 26c2a48b193034246854d2b4a5baa9e8, type: 2}
+  variantNames:
+  - flat
+  - gabled_across
+  - gabled_along
+  - half_hipped
+  - hipped
+  - skillion
+  variants:
+  - {fileID: 4300000, guid: 5b4e1796841847149a6c2bc172c7c19a, type: 2}
+  - {fileID: 4300000, guid: b4ae13fc2f1e0264fbe12888a115cdb6, type: 2}
+  - {fileID: 4300000, guid: a30fb39f385218745b4a660f3dedf906, type: 2}
+  - {fileID: 4300000, guid: 4eb1a909f87ac45409a68a39546533f1, type: 2}
+  - {fileID: 4300000, guid: f2f54d42bf4ff884c9e0d1270ae38e17, type: 2}
+  - {fileID: 4300000, guid: ebedb50dd09ceae4eb503d989ec2f556, type: 2}
+  defaultVariant: flat
+  defaultRoofMaterial: bitumen
+  defaultRoofColor: '#2e2e30'
+  material: {fileID: 2100000, guid: 875a06bef6cf16144b72e974bfcdee7d, type: 2}

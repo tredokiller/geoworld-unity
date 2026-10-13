@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c41e103a5605a314c97d5c494335f867, type: 3}
+  m_Name: N32
+  m_EditorClassIdentifier: GeoWorld.Runtime::GeoWorld.GeoHomeModelAsset
+  id: N32
+  label: Silicate-brick shed (saray) with plank door and small window (Donbas-type)
+  categories:
+  - garage
+  - shed
+  tags: []
+  tagOnly: 0
+  floors: 1
+  length: 5
+  width: 3.6
+  eaveHeight: 2.3
+  rise: 0.6
+  body: {fileID: 4300000, guid: bd5b419f31dc59c4eba6c5ed858e9a68, type: 2}
+  roofFixed: {fileID: 0}
+  variantNames:
+  - flat
+  - gabled_across
+  - gabled_along
+  - half_hipped
+  - hipped
+  - skillion
+  variants:
+  - {fileID: 4300000, guid: 568a5e3932f155347a889a523b9f504a, type: 2}
+  - {fileID: 4300000, guid: 09e57f623c44d4945b93fa5fa2ba6e9b, type: 2}
+  - {fileID: 4300000, guid: 75fc154908ed4be409fb0607280f56a4, type: 2}
+  - {fileID: 4300000, guid: be52c186ba0b92c43b7ac2e98730b062, type: 2}
+  - {fileID: 4300000, guid: 4c376db46477065449c7a66a5e1a63dd, type: 2}
+  - {fileID: 4300000, guid: 71ffd108cb5c1984295854e85d3bc578, type: 2}
+  defaultVariant: skillion
+  defaultRoofMaterial: asbestos_cement
+  defaultRoofColor: '#6f706a'
+  material: {fileID: 2100000, guid: bfdafbb4ecb2c3e40a44b92a6d54e9a3, type: 2}

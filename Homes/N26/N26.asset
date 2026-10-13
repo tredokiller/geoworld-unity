@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c41e103a5605a314c97d5c494335f867, type: 3}
+  m_Name: N26
+  m_EditorClassIdentifier: GeoWorld.Runtime::GeoWorld.GeoHomeModelAsset
+  id: N26
+  label: 2-storey plastered workers' block, 8-flat two-entrance section (mining-town-type)
+  categories:
+  - apartments
+  tags: []
+  tagOnly: 0
+  floors: 2
+  length: 24
+  width: 11.6
+  eaveHeight: 6
+  rise: 2.7
+  body: {fileID: 4300000, guid: 708ad9b0dc47229448c9c677243416a8, type: 2}
+  roofFixed: {fileID: 4300000, guid: 14fbacaee17bf044c8df7630ef6cdd65, type: 2}
+  variantNames:
+  - flat
+  - gabled_across
+  - gabled_along
+  - half_hipped
+  - hipped
+  - skillion
+  variants:
+  - {fileID: 4300000, guid: fa47fa410f9de6849bf3b8ad1cff2f68, type: 2}
+  - {fileID: 4300000, guid: 42b37858cd525cf41bf3f37472e43821, type: 2}
+  - {fileID: 4300000, guid: 7cd51349131ce8c41861eba3c4278ccd, type: 2}
+  - {fileID: 4300000, guid: 9d4f9788765783b4ab80dc86bdf6d254, type: 2}
+  - {fileID: 4300000, guid: 2bb2264fecd8bb2458e5ed3303a45a24, type: 2}
+  - {fileID: 4300000, guid: fbdc9b2eae122db40818911c917aa988, type: 2}
+  defaultVariant: gabled_along
+  defaultRoofMaterial: asbestos_cement
+  defaultRoofColor: '#898981'
+  material: {fileID: 2100000, guid: 92b9d3185b228ec4d961fe078cbdd23d, type: 2}

@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c41e103a5605a314c97d5c494335f867, type: 3}
+  m_Name: N30
+  m_EditorClassIdentifier: GeoWorld.Runtime::GeoWorld.GeoHomeModelAsset
+  id: N30
+  label: Six-box garage row with steel gates (cooperative-type)
+  categories:
+  - garage
+  tags:
+  - garage
+  - garages
+  - carport
+  tagOnly: 0
+  floors: 1
+  length: 22.8
+  width: 6.2
+  eaveHeight: 2.7
+  rise: 0.7
+  body: {fileID: 4300000, guid: ab75f46b9ff90d14aa08da52592e9a1e, type: 2}
+  roofFixed: {fileID: 0}
+  variantNames:
+  - flat
+  - gabled_across
+  - gabled_along
+  - half_hipped
+  - hipped
+  - skillion
+  variants:
+  - {fileID: 4300000, guid: 4b91056cfe386d64289c209c21db0cab, type: 2}
+  - {fileID: 4300000, guid: 9c992587c7195304c863bf13a64c6e8a, type: 2}
+  - {fileID: 4300000, guid: 9d48b42c73126d848ae844021beb28f0, type: 2}
+  - {fileID: 4300000, guid: a805fb39fcaca854e9994cc6a6372f3f, type: 2}
+  - {fileID: 4300000, guid: 87f10753b167d094fa6c22e4a3fea528, type: 2}
+  - {fileID: 4300000, guid: f9c9187f328036544b99ffd6c8ad332f, type: 2}
+  defaultVariant: skillion
+  defaultRoofMaterial: bitumen
+  defaultRoofColor: '#737375'
+  material: {fileID: 2100000, guid: 1d99abe5cb507f747ac3d908b6b6d640, type: 2}

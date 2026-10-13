@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c41e103a5605a314c97d5c494335f867, type: 3}
+  m_Name: N09
+  m_EditorClassIdentifier: GeoWorld.Runtime::GeoWorld.GeoHomeModelAsset
+  id: N09
+  label: Straw-yellow house with carved blue platbands, shutters and open porch (Dnipro-type)
+  categories:
+  - house
+  tags: []
+  tagOnly: 0
+  floors: 1
+  length: 9
+  width: 6.2
+  eaveHeight: 2.7
+  rise: 1.9
+  body: {fileID: 4300000, guid: 456963c5e86396846ae0318ef8653a5b, type: 2}
+  roofFixed: {fileID: 4300000, guid: 71122cd5fbd175e4985d335307e96bb7, type: 2}
+  variantNames:
+  - flat
+  - gabled_across
+  - gabled_along
+  - half_hipped
+  - hipped
+  - skillion
+  variants:
+  - {fileID: 4300000, guid: 9e23fe55691c1c34fb6aa7ff5b70ea68, type: 2}
+  - {fileID: 4300000, guid: fb9df87d12d409d46b811a7ce846cc8c, type: 2}
+  - {fileID: 4300000, guid: eca4f081072b1a04c883717bc76c7bae, type: 2}
+  - {fileID: 4300000, guid: 127be407d582e564c83489331b2586e6, type: 2}
+  - {fileID: 4300000, guid: f7b754b77084b1542acf47ed6b76dea5, type: 2}
+  - {fileID: 4300000, guid: d0bf1be1ea2a7134e9333e7a9a033d20, type: 2}
+  defaultVariant: gabled_along
+  defaultRoofMaterial: asbestos_cement
+  defaultRoofColor: '#703731'
+  material: {fileID: 2100000, guid: 4daeef5f7a2129b41b2ac7774f3e0c79, type: 2}

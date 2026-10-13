@@ -15,6 +15,25 @@ namespace GeoWorld.Editor
     {
         public const float TileSize = 1000;
 
+        // True when the package's own files can be written: it is developed here (embedded or a local folder), not
+        // installed from git. The ruin and home libraries come with the package and are only imported where it is developed.
+        public static bool PackageWritable
+        {
+            get
+            {
+                var info = UnityEditor.PackageManager.PackageInfo.FindForAssembly(typeof(GeoDefaults).Assembly);
+                return info == null || info.source == UnityEditor.PackageManager.PackageSource.Embedded || info.source == UnityEditor.PackageManager.PackageSource.Local;
+            }
+        }
+
+        internal static bool RefuseImportHere(string what)
+        {
+            if (PackageWritable) return false;
+            EditorUtility.DisplayDialog("Geo World", "The " + what + " come with the Geo World package and are up to date with it: there is nothing to import in this project. " +
+                                        "They are imported where the package is developed (its embedded copy in the Building Extractor repository).", "OK");
+            return true;
+        }
+
         // the app's exports next to this project (buildings-extractor/exports), where a "Terrain & ground" package is <area>_env
         public static string ExportsFolder => Path.GetFullPath(Path.Combine(Application.dataPath, "..", "..", "exports"));
 
@@ -40,7 +59,7 @@ namespace GeoWorld.Editor
         {
             if (!settings.ruinLibrary) settings.ruinLibrary = GeoRuinImporter.Library;
             if (!settings.homeLibrary) settings.homeLibrary = GeoHomeImporter.Library;
-            if (!import) return;
+            if (!import || !PackageWritable) return;
             if (!settings.ruinLibrary && File.Exists(Path.Combine(GeoRuinImporter.DefaultSource, "INDEX.json")))
                 settings.ruinLibrary = GeoRuinImporter.Import(GeoRuinImporter.DefaultSource);
             string homes = GeoHomeImporter.DefaultSource;

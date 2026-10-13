@@ -12,7 +12,7 @@ namespace GeoWorld
     [CreateAssetMenu(menuName = "Geo World/Home library")]
     public class GeoHomeLibrary : ScriptableObject
     {
-        public const string DefaultPath = GeoPaths.Project + "/Homes/Home library.asset";
+        public const string DefaultPath = GeoPaths.Package + "/Homes/Home library.asset";
         // how far a model may be stretched to a footprint (and its walls to the building's eaves)
         public const float MinStretch = 0.72f, MaxStretch = 1.4f;
         // what a storey more or less than the building's floor count costs a model, in the same units as the log stretch

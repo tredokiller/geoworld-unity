@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c41e103a5605a314c97d5c494335f867, type: 3}
+  m_Name: N03
+  m_EditorClassIdentifier: GeoWorld.Runtime::GeoWorld.GeoHomeModelAsset
+  id: N03
+  label: Plank-clad house with centred low-gable veranda (Rivne/Volyn-type)
+  categories:
+  - house
+  tags: []
+  tagOnly: 0
+  floors: 1
+  length: 10.4
+  width: 7
+  eaveHeight: 3
+  rise: 2.3
+  body: {fileID: 4300000, guid: 04ecdfefbfb962d419bf966a78f3528d, type: 2}
+  roofFixed: {fileID: 4300000, guid: 77d8ab5b7364aeb4791a91c24bbd9973, type: 2}
+  variantNames:
+  - flat
+  - gabled_across
+  - gabled_along
+  - half_hipped
+  - hipped
+  - skillion
+  variants:
+  - {fileID: 4300000, guid: 8217e6b848adc9244a6b44b67d7173d5, type: 2}
+  - {fileID: 4300000, guid: ced9fa3cf25d85948a53b374dde3066a, type: 2}
+  - {fileID: 4300000, guid: b879838b80f341a48b6947174a9ca77f, type: 2}
+  - {fileID: 4300000, guid: b6c82f09b1060f247b1bce0d90b129fd, type: 2}
+  - {fileID: 4300000, guid: 6c2e7072239b3df48aecd81d275bb6b0, type: 2}
+  - {fileID: 4300000, guid: 0d3a157270bcd0345bfe99a82d385bcf, type: 2}
+  defaultVariant: gabled_along
+  defaultRoofMaterial: metal_sheet
+  defaultRoofColor: '#7a2e2e'
+  material: {fileID: 2100000, guid: 7ac125a3278b13342bdad7406d15a76f, type: 2}

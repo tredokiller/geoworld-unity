@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c41e103a5605a314c97d5c494335f867, type: 3}
+  m_Name: N08
+  m_EditorClassIdentifier: GeoWorld.Runtime::GeoWorld.GeoHomeModelAsset
+  id: N08
+  label: Red-brick gable house with brick tambour and shutters (Slobozhanshchyna-type)
+  categories:
+  - house
+  tags: []
+  tagOnly: 0
+  floors: 1
+  length: 12.4
+  width: 7.2
+  eaveHeight: 2.8
+  rise: 2.2
+  body: {fileID: 4300000, guid: d5098babf4b91bb43805cd4fd18d35bf, type: 2}
+  roofFixed: {fileID: 4300000, guid: 11fc34fc0ce62cf498d7bf3888150940, type: 2}
+  variantNames:
+  - flat
+  - gabled_across
+  - gabled_along
+  - half_hipped
+  - hipped
+  - skillion
+  variants:
+  - {fileID: 4300000, guid: ddfe025a90168104c91bddfc42a36a8e, type: 2}
+  - {fileID: 4300000, guid: b3fab8fd198496547863ce0ff833cce0, type: 2}
+  - {fileID: 4300000, guid: 55fdf76e5b6bb4b4e9701758ea9b963a, type: 2}
+  - {fileID: 4300000, guid: c587eac56d907834f936711bf66411d7, type: 2}
+  - {fileID: 4300000, guid: 8a0c4978b61130b428cd25a54d8610cb, type: 2}
+  - {fileID: 4300000, guid: a6dfc8a6bb3188446b002794e3be7187, type: 2}
+  defaultVariant: gabled_along
+  defaultRoofMaterial: asbestos_cement
+  defaultRoofColor: '#4e6b52'
+  material: {fileID: 2100000, guid: 2e7e25fc90bb0ce4bad8eef000665872, type: 2}

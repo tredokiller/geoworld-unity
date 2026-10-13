@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c41e103a5605a314c97d5c494335f867, type: 3}
+  m_Name: N18
+  m_EditorClassIdentifier: GeoWorld.Runtime::GeoWorld.GeoHomeModelAsset
+  id: N18
+  label: Attic (mansard-style) house with beige textured plaster, corner porch and
+    half-hip roof (post-1991-type)
+  categories:
+  - house
+  tags: []
+  tagOnly: 0
+  floors: 2
+  length: 12
+  width: 8.2
+  eaveHeight: 4
+  rise: 3.3
+  body: {fileID: 4300000, guid: ac8e5a126eeb216489117f65b4edeb68, type: 2}
+  roofFixed: {fileID: 4300000, guid: 0371bea00db6ce14eb4148266ebcb7e2, type: 2}
+  variantNames:
+  - flat
+  - gabled_across
+  - gabled_along
+  - half_hipped
+  - hipped
+  - skillion
+  variants:
+  - {fileID: 4300000, guid: 1bcb883a7664b8b4b85961ec5ffba7db, type: 2}
+  - {fileID: 4300000, guid: 81ceb97b38df43d4d9b7ed28e7084939, type: 2}
+  - {fileID: 4300000, guid: f6f81882983015340bb5cace43368bea, type: 2}
+  - {fileID: 4300000, guid: e0e7070ab5caf184da50af4b35752478, type: 2}
+  - {fileID: 4300000, guid: affa144014e1d84438bf4cb40cce9f4a, type: 2}
+  - {fileID: 4300000, guid: 8fb26b7d1898c064bba3402d9a78e35f, type: 2}
+  defaultVariant: half_hipped
+  defaultRoofMaterial: metal_tile
+  defaultRoofColor: '#4a342b'
+  material: {fileID: 2100000, guid: 519f6dd7751d1584cb59e519eedab7d1, type: 2}

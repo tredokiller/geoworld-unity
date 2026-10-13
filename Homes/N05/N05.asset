@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c41e103a5605a314c97d5c494335f867, type: 3}
+  m_Name: N05
+  m_EditorClassIdentifier: GeoWorld.Runtime::GeoWorld.GeoHomeModelAsset
+  id: N05
+  label: Board-clad dacha with glazed veranda and rear terrace (garden-house-type,
+    seasonal)
+  categories:
+  - house
+  tags: []
+  tagOnly: 0
+  floors: 1
+  length: 6.4
+  width: 5.4
+  eaveHeight: 2.6
+  rise: 1.9
+  body: {fileID: 4300000, guid: 1b3f2adca11411f47927b609afe69158, type: 2}
+  roofFixed: {fileID: 4300000, guid: 80ffca673ab77db4b8b51b7942c2363c, type: 2}
+  variantNames:
+  - flat
+  - gabled_across
+  - gabled_along
+  - half_hipped
+  - hipped
+  - skillion
+  variants:
+  - {fileID: 4300000, guid: 56ef81c3a48bc7d4b9e8b5d4f7c23db5, type: 2}
+  - {fileID: 4300000, guid: 0cb7c436746bf11468b9e5abe4e954fd, type: 2}
+  - {fileID: 4300000, guid: 978bbd04ce55b6547af1e824c4e9e1a3, type: 2}
+  - {fileID: 4300000, guid: f62bb7cddb32bb646884d8eccb600af9, type: 2}
+  - {fileID: 4300000, guid: a0ddaf450291acc40b4ecd9e61fe478b, type: 2}
+  - {fileID: 4300000, guid: 4bb117fd5fc9afb4faef11157b8604d9, type: 2}
+  defaultVariant: gabled_across
+  defaultRoofMaterial: metal_sheet
+  defaultRoofColor: '#a5a8a6'
+  material: {fileID: 2100000, guid: 6b8ead59bec1f444bb039294c0ff0681, type: 2}

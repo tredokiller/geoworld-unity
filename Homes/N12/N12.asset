@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c41e103a5605a314c97d5c494335f867, type: 3}
+  m_Name: N12
+  m_EditorClassIdentifier: GeoWorld.Runtime::GeoWorld.GeoHomeModelAsset
+  id: N12
+  label: Limewashed house with blue trim and in-line summer kitchen and woodshed
+    (village-type)
+  categories:
+  - house
+  tags: []
+  tagOnly: 0
+  floors: 1
+  length: 10.4
+  width: 6.8
+  eaveHeight: 2.8
+  rise: 2.2
+  body: {fileID: 4300000, guid: d19a538fe3f9ea348b2bfc017d7ff334, type: 2}
+  roofFixed: {fileID: 4300000, guid: e0a281cd94980814a926b82f013ab29b, type: 2}
+  variantNames:
+  - flat
+  - gabled_across
+  - gabled_along
+  - half_hipped
+  - hipped
+  - skillion
+  variants:
+  - {fileID: 4300000, guid: 0a2fb6d9f271ccd458098d76afc44a0b, type: 2}
+  - {fileID: 4300000, guid: b46b50068da1c5b49b20a92688ec4ac8, type: 2}
+  - {fileID: 4300000, guid: e1fdafe389bd53c4dbb3026ec1145da3, type: 2}
+  - {fileID: 4300000, guid: 24dc396b843e5b64380cd6e55b63f198, type: 2}
+  - {fileID: 4300000, guid: 7ca5e5bc39442874186c951e28c3ccb5, type: 2}
+  - {fileID: 4300000, guid: 91ab0bb6a9552394ca3c163dba3ddb84, type: 2}
+  defaultVariant: gabled_along
+  defaultRoofMaterial: asbestos_cement
+  defaultRoofColor: '#6b3a2e'
+  material: {fileID: 2100000, guid: a5de0cb891bc2b444be651068f8f6e59, type: 2}

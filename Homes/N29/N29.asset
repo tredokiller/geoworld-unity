@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c41e103a5605a314c97d5c494335f867, type: 3}
+  m_Name: N29
+  m_EditorClassIdentifier: GeoWorld.Runtime::GeoWorld.GeoHomeModelAsset
+  id: N29
+  label: One-storey village kindergarten with two entrance porches (1960s-80s-type)
+  categories:
+  - public
+  tags:
+  - kindergarten
+  tagOnly: 1
+  floors: 1
+  length: 24
+  width: 11
+  eaveHeight: 3.3
+  rise: 2.5
+  body: {fileID: 4300000, guid: fdbb3b9ed225bb04c8da5b27e7aa799e, type: 2}
+  roofFixed: {fileID: 4300000, guid: f721e8d6a6ec4a5489fcaa21fa5e2dd3, type: 2}
+  variantNames:
+  - flat
+  - gabled_across
+  - gabled_along
+  - half_hipped
+  - hipped
+  - skillion
+  variants:
+  - {fileID: 4300000, guid: b81fe7bb18e14c04d8f8fd1767e04ee4, type: 2}
+  - {fileID: 4300000, guid: 197693fed64ca694e9a05b9addf0d320, type: 2}
+  - {fileID: 4300000, guid: 4fd678b603d93634b9e91c86549d96c5, type: 2}
+  - {fileID: 4300000, guid: 4da5fcb935ee7b848b9324d0f0a326db, type: 2}
+  - {fileID: 4300000, guid: 59065f0503e888141b90d37d52199d90, type: 2}
+  - {fileID: 4300000, guid: b3b43c719ff0e11438b5c5079d5ca5c8, type: 2}
+  defaultVariant: gabled_along
+  defaultRoofMaterial: asbestos_cement
+  defaultRoofColor: '#9a9a94'
+  material: {fileID: 2100000, guid: f3597ae51c8b3ef45ac0f1612f6e9cd4, type: 2}

@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c41e103a5605a314c97d5c494335f867, type: 3}
+  m_Name: N10
+  m_EditorClassIdentifier: GeoWorld.Runtime::GeoWorld.GeoHomeModelAsset
+  id: N10
+  label: Elongated plastered house with full-front glazed veranda (Kyiv-region-type)
+  categories:
+  - house
+  tags: []
+  tagOnly: 0
+  floors: 1
+  length: 9.4
+  width: 6
+  eaveHeight: 3
+  rise: 1.75
+  body: {fileID: 4300000, guid: 449f390bd91260f41bdd2baf46e23e4c, type: 2}
+  roofFixed: {fileID: 4300000, guid: a031fd000032a90428e7e42855921e90, type: 2}
+  variantNames:
+  - flat
+  - gabled_across
+  - gabled_along
+  - half_hipped
+  - hipped
+  - skillion
+  variants:
+  - {fileID: 4300000, guid: b0a0d768d03d0bf4a9389d9e4289b9b1, type: 2}
+  - {fileID: 4300000, guid: b1b56350b03dfff498cef0b94e421780, type: 2}
+  - {fileID: 4300000, guid: 72e2f46a405d1a24da79fd6dce1840c0, type: 2}
+  - {fileID: 4300000, guid: 40ae9b2c8d7ea8c4ca9e05041bf3971d, type: 2}
+  - {fileID: 4300000, guid: 7f8b48d916f1acf41886f4e31997a895, type: 2}
+  - {fileID: 4300000, guid: 2c8b9d0c1e3c5584da681f9c21201980, type: 2}
+  defaultVariant: gabled_along
+  defaultRoofMaterial: metal_sheet
+  defaultRoofColor: '#9da19f'
+  material: {fileID: 2100000, guid: 22263ba1ab12ed64c8b10a1cbb0074a5, type: 2}

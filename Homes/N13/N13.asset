@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c41e103a5605a314c97d5c494335f867, type: 3}
+  m_Name: N13
+  m_EditorClassIdentifier: GeoWorld.Runtime::GeoWorld.GeoHomeModelAsset
+  id: N13
+  label: L-plan yellow-brick house with rear wing and glazed veranda (1970s-90s-type)
+  categories:
+  - house
+  tags: []
+  tagOnly: 0
+  floors: 1
+  length: 11
+  width: 6.4
+  eaveHeight: 2.8
+  rise: 2.1
+  body: {fileID: 4300000, guid: 56052e5bb01ca1a468c4f9d183599b1e, type: 2}
+  roofFixed: {fileID: 4300000, guid: d448ba067c184ba499808a24bcb644ae, type: 2}
+  variantNames:
+  - flat
+  - gabled_across
+  - gabled_along
+  - half_hipped
+  - hipped
+  - skillion
+  variants:
+  - {fileID: 4300000, guid: a7b2714569f974340977c7beec78aaa4, type: 2}
+  - {fileID: 4300000, guid: e8a4d3a5956b1324e802c1d900c28799, type: 2}
+  - {fileID: 4300000, guid: 031e9e0bac5aeed46a5976bdd3d7c536, type: 2}
+  - {fileID: 4300000, guid: 80b7a3a01e9e9df4dbed27f45aab120b, type: 2}
+  - {fileID: 4300000, guid: 0e97dca328d58e24dbc77f36aa8d0115, type: 2}
+  - {fileID: 4300000, guid: 7314c2e5ecddc4f4382b14dd0edb4511, type: 2}
+  defaultVariant: gabled_along
+  defaultRoofMaterial: metal_tile
+  defaultRoofColor: '#4a4343'
+  material: {fileID: 2100000, guid: f532c01df3053354fb70f63c19a4b81c, type: 2}

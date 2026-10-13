@@ -20,7 +20,8 @@ namespace GeoWorld.Editor
     // resets them).
     public static class GeoRuinImporter
     {
-        public const string Folder = GeoPaths.Project + "/Ruins";
+        // the library ships in the package (imported here while the package is developed)
+        public const string Folder = GeoPaths.Package + "/Ruins";
 
         // ruins/models of the Building Extractor repository: the folder chosen on this computer (remembered for every
         // project that uses the package), else the one beside this Unity project
@@ -38,6 +39,7 @@ namespace GeoWorld.Editor
         [MenuItem("Tools/Geo World/Import ruin models")]
         public static void ImportMenu()
         {
+            if (GeoDefaults.RefuseImportHere("ruin models")) return;
             string source = DefaultSource;
             if (!File.Exists(Path.Combine(source, "INDEX.json")))
             {
@@ -81,12 +83,14 @@ namespace GeoWorld.Editor
                 }
                 progress?.Invoke("Copying " + id, 0.3f * i / index.Count);
                 Directory.CreateDirectory(Folder + "/" + id);
-                textures.Add(Copy(from + "_albedo.png", Folder + "/" + id + "/" + id + "_albedo.png"));
-                textures.Add(Copy(from + "_normal.png", Folder + "/" + id + "/" + id + "_normal.png"));
+                string albedo = Folder + "/" + id + "/" + GeoTextureFiles.AlbedoName(id), normal = Folder + "/" + id + "/" + GeoTextureFiles.NormalName(id);
+                if (GeoTextureFiles.Stale(from + "_albedo.png", albedo)) GeoTextureFiles.Write(from + "_albedo.png", albedo, false);
+                if (GeoTextureFiles.Stale(from + "_normal.png", normal)) GeoTextureFiles.Write(from + "_normal.png", normal, true);
+                textures.Add(albedo); textures.Add(normal);
                 entries.Add(entry);
             }
             AssetDatabase.Refresh();
-            foreach (var path in textures) Configure(path);
+            foreach (var path in textures) GeoTextureFiles.Configure(path, true);
 
             var models = new List<GeoRuinModel>();
             for (int i = 0; i < entries.Count; i++)
@@ -127,33 +131,6 @@ namespace GeoWorld.Editor
         }
 
         static bool SafeName(string id) => !string.IsNullOrEmpty(id) && id.Length <= 40 && id.IndexOfAny(Path.GetInvalidFileNameChars()) < 0 && !id.Contains("..");
-
-        // Copies a file into the project unless the same file is there already. Returns the project path.
-        static string Copy(string from, string to)
-        {
-            var source = new FileInfo(from);
-            var target = new FileInfo(to);
-            if (!target.Exists || target.Length != source.Length || target.LastWriteTimeUtc < source.LastWriteTimeUtc) File.Copy(from, to, true);
-            return to;
-        }
-
-        static void Configure(string path)
-        {
-            var importer = AssetImporter.GetAtPath(path) as TextureImporter;
-            if (importer == null) return;
-            bool normal = path.EndsWith("_normal.png", StringComparison.Ordinal);
-            var type = normal ? TextureImporterType.NormalMap : TextureImporterType.Default;
-            if (importer.textureType == type && importer.sRGBTexture == !normal && importer.maxTextureSize == 2048 && importer.anisoLevel == 4) return;
-            importer.textureType = type;
-            importer.sRGBTexture = !normal;
-            importer.alphaSource = TextureImporterAlphaSource.None;
-            importer.mipmapEnabled = true;
-            importer.wrapMode = TextureWrapMode.Clamp;
-            importer.anisoLevel = 4;
-            importer.maxTextureSize = 2048;
-            importer.textureCompression = TextureImporterCompression.CompressedHQ;
-            importer.SaveAndReimport();
-        }
 
         // The model asset of one ruin: mesh (a sub-asset), material and prefab next to it. Fitting values are written
         // only when the asset is new.
@@ -200,7 +177,7 @@ namespace GeoWorld.Editor
         {
             string path = folder + "/" + id + ".mat";
             var material = AssetDatabase.LoadAssetAtPath<Material>(path);
-            var albedo = AssetDatabase.LoadAssetAtPath<Texture2D>(folder + "/" + id + "_albedo.png");
+            var albedo = AssetDatabase.LoadAssetAtPath<Texture2D>(folder + "/" + GeoTextureFiles.AlbedoName(id));
             var normal = AssetDatabase.LoadAssetAtPath<Texture2D>(folder + "/" + id + "_normal.png");
             if (material)
             {

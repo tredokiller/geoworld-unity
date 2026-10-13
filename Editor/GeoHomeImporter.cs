@@ -15,7 +15,9 @@ namespace GeoWorld.Editor
     [InitializeOnLoad]
     public static class GeoHomeImporter
     {
-        public const string Folder = GeoPaths.Project + "/Homes";
+        // the library ships in the package (imported here while the package is developed); roofs tinted on demand go into the project
+        public const string Folder = GeoPaths.Package + "/Homes";
+        public const string TintedFolder = GeoPaths.Project + "/Homes/Roofs";
         public const string RoofTextures = GeoPaths.Package + "/Models/Roofs";
 
         static readonly Dictionary<string, Material> tinted = new Dictionary<string, Material>();
@@ -60,6 +62,7 @@ namespace GeoWorld.Editor
         [MenuItem("Tools/Geo World/Import home models")]
         public static void ImportMenu()
         {
+            if (GeoDefaults.RefuseImportHere("home models")) return;
             string source = DefaultSource;
             if (source == null)
             {
@@ -105,6 +108,9 @@ namespace GeoWorld.Editor
             foreach (var model in models)
             {
                 string dir = Folder + "/" + model.id;
+                // after the editing batch: inside it the textures are not imported yet and their settings would be lost
+                GeoTextureFiles.Configure(dir + "/" + GeoTextureFiles.AlbedoName(model.id), false);
+                GeoTextureFiles.Configure(dir + "/" + GeoTextureFiles.NormalName(model.id), false);
                 model.material = MaterialFor(model.id, dir);
                 EditorUtility.SetDirty(model);
             }
@@ -176,8 +182,9 @@ namespace GeoWorld.Editor
         {
             string folder = Folder + "/" + id;
             EnsureFolder(folder);
-            Copy(from + "_albedo.png", folder + "/" + id + "_albedo.png");
-            Copy(from + "_normal.png", folder + "/" + id + "_normal.png");
+            string albedo = folder + "/" + GeoTextureFiles.AlbedoName(id), normal = folder + "/" + GeoTextureFiles.NormalName(id);
+            if (GeoTextureFiles.Stale(from + "_albedo.png", albedo)) GeoTextureFiles.Write(from + "_albedo.png", albedo, false);
+            if (GeoTextureFiles.Stale(from + "_normal.png", normal)) GeoTextureFiles.Write(from + "_normal.png", normal, true);
             var parts = ReadParts(from + ".glb");
             string path = folder + "/" + id + ".asset";
             var model = AssetDatabase.LoadAssetAtPath<GeoHomeModelAsset>(path);
@@ -212,21 +219,6 @@ namespace GeoWorld.Editor
             return mesh;   // inside an asset-editing batch the asset cannot be loaded back yet
         }
 
-        static void Copy(string from, string to)
-        {
-            string full = Path.GetFullPath(Path.Combine(Application.dataPath, "..", to));
-            if (File.Exists(full) && new FileInfo(full).Length == new FileInfo(from).Length) return;
-            File.Copy(from, full, true);
-            AssetDatabase.ImportAsset(to, ImportAssetOptions.ForceSynchronousImport);
-            var importer = AssetImporter.GetAtPath(to) as TextureImporter;
-            if (importer == null) return;
-            bool normal = to.EndsWith("_normal.png", StringComparison.Ordinal);
-            importer.textureType = normal ? TextureImporterType.NormalMap : TextureImporterType.Default;
-            importer.sRGBTexture = !normal;
-            importer.mipmapEnabled = true; importer.anisoLevel = 4; importer.maxTextureSize = 4096;
-            importer.SaveAndReimport();
-        }
-
         static Material MaterialFor(string id, string folder)
         {
             string path = folder + "/" + id + ".mat";
@@ -234,7 +226,7 @@ namespace GeoWorld.Editor
             var material = AssetDatabase.LoadAssetAtPath<Material>(path);
             bool create = !material;
             if (create) material = new Material(shader) { name = id };
-            var albedo = AssetDatabase.LoadAssetAtPath<Texture2D>(folder + "/" + id + "_albedo.png");
+            var albedo = AssetDatabase.LoadAssetAtPath<Texture2D>(folder + "/" + GeoTextureFiles.AlbedoName(id));
             var normal = AssetDatabase.LoadAssetAtPath<Texture2D>(folder + "/" + id + "_normal.png");
             if (material.HasProperty("_BaseMap")) material.SetTexture("_BaseMap", albedo); else material.mainTexture = albedo;
             if (normal && material.HasProperty("_BumpMap")) { material.SetTexture("_BumpMap", normal); material.EnableKeyword("_NORMALMAP"); }
@@ -251,7 +243,7 @@ namespace GeoWorld.Editor
         {
             string key = AssetDatabase.GetAssetPath(source) + "#" + ColorUtility.ToHtmlStringRGB(color);
             if (tinted.TryGetValue(key, out var found) && found) return found;
-            string dir = Folder + "/Roofs";
+            string dir = TintedFolder;
             EnsureFolder(dir);
             string path = dir + "/" + source.name + "_" + ColorUtility.ToHtmlStringRGB(color) + ".mat";
             var material = AssetDatabase.LoadAssetAtPath<Material>(path);

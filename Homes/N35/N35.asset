@@ -1,0 +1,49 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c41e103a5605a314c97d5c494335f867, type: 3}
+  m_Name: N35
+  m_EditorClassIdentifier: GeoWorld.Runtime::GeoWorld.GeoHomeModelAsset
+  id: N35
+  label: Single-storey brick warehouse (sklad) with loading gates and ramp
+  categories:
+  - industrial
+  tags:
+  - industrial
+  - warehouse
+  - manufacture
+  - service
+  tagOnly: 0
+  floors: 1
+  length: 28
+  width: 12
+  eaveHeight: 3.2
+  rise: 1.4
+  body: {fileID: 4300000, guid: cb42a36e4f1ee5440a716236c41c8630, type: 2}
+  roofFixed: {fileID: 4300000, guid: 08fe257a60a5b6042b19321b4660a7b1, type: 2}
+  variantNames:
+  - flat
+  - gabled_across
+  - gabled_along
+  - half_hipped
+  - hipped
+  - skillion
+  variants:
+  - {fileID: 4300000, guid: d0fc2d3a1dde61f47b49c43fb26e6b9b, type: 2}
+  - {fileID: 4300000, guid: 30d797dec90d2e747ab3c6c3cd4e4e6b, type: 2}
+  - {fileID: 4300000, guid: 59ff85ef959881c458a18b67e72feec0, type: 2}
+  - {fileID: 4300000, guid: ef8d905aad227c545ae9b1b7805a43b0, type: 2}
+  - {fileID: 4300000, guid: 8aeb8f084a5f2e140929230e1ec45460, type: 2}
+  - {fileID: 4300000, guid: 44ede86dc663cd64caad638e99a13a23, type: 2}
+  defaultVariant: gabled_along
+  defaultRoofMaterial: asbestos_cement
+  defaultRoofColor: '#8a8a85'
+  material: {fileID: 2100000, guid: 0486a2b56d72a4d4c9d7923ecc0ba162, type: 2}

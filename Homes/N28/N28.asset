@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c41e103a5605a314c97d5c494335f867, type: 3}
+  m_Name: N28
+  m_EditorClassIdentifier: GeoWorld.Runtime::GeoWorld.GeoHomeModelAsset
+  id: N28
+  label: 3-storey brick school with entrance projection and hipped roof (1950s-60s-type)
+  categories:
+  - public
+  tags:
+  - school
+  tagOnly: 1
+  floors: 3
+  length: 39.6
+  width: 12
+  eaveHeight: 9.9
+  rise: 3
+  body: {fileID: 4300000, guid: 8352e2eb59bde6641a36aa6ea8515aa4, type: 2}
+  roofFixed: {fileID: 4300000, guid: 857cead2e3af62d44ab4a138486d0987, type: 2}
+  variantNames:
+  - flat
+  - gabled_across
+  - gabled_along
+  - half_hipped
+  - hipped
+  - skillion
+  variants:
+  - {fileID: 4300000, guid: a5a93df21bda82341b5d8e1cac92f4bc, type: 2}
+  - {fileID: 4300000, guid: d8e6e73f7250221449ff7088ec524072, type: 2}
+  - {fileID: 4300000, guid: 616d24be15f35764e8a03210ecfc6be6, type: 2}
+  - {fileID: 4300000, guid: 235a88ea2f457b84b83d5e4b228c905e, type: 2}
+  - {fileID: 4300000, guid: 80e3e84ec94645749817a52c3a6558a0, type: 2}
+  - {fileID: 4300000, guid: b33c829028b92274cad854f38179e6b5, type: 2}
+  defaultVariant: hipped
+  defaultRoofMaterial: asbestos_cement
+  defaultRoofColor: '#8a8a85'
+  material: {fileID: 2100000, guid: 8a4e2bb25a9c7b54790c4135c06d4573, type: 2}

@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c41e103a5605a314c97d5c494335f867, type: 3}
+  m_Name: N15
+  m_EditorClassIdentifier: GeoWorld.Runtime::GeoWorld.GeoHomeModelAsset
+  id: N15
+  label: Blue-grey plastered house with moulded surrounds and corner pilasters (South-Ukraine-type)
+  categories:
+  - house
+  tags: []
+  tagOnly: 0
+  floors: 1
+  length: 10.8
+  width: 6.2
+  eaveHeight: 2.8
+  rise: 2
+  body: {fileID: 4300000, guid: c6d270b377a9c1f4a9744e18cc86f536, type: 2}
+  roofFixed: {fileID: 0}
+  variantNames:
+  - flat
+  - gabled_across
+  - gabled_along
+  - half_hipped
+  - hipped
+  - skillion
+  variants:
+  - {fileID: 4300000, guid: c633e8730df065f4f96775780cabc284, type: 2}
+  - {fileID: 4300000, guid: 940220ea250f5634cb0cd7d715be55a7, type: 2}
+  - {fileID: 4300000, guid: 758206ab245559d4887a685267be5d93, type: 2}
+  - {fileID: 4300000, guid: 5d78de3f305535542b320faf79651931, type: 2}
+  - {fileID: 4300000, guid: 84fe19fc7a132d7498f3d19b5e7376e6, type: 2}
+  - {fileID: 4300000, guid: c2dd5e07ec7834943af274287f49f36e, type: 2}
+  defaultVariant: gabled_along
+  defaultRoofMaterial: metal_sheet
+  defaultRoofColor: '#8f4e35'
+  material: {fileID: 2100000, guid: 170795f9590c31f42abdebcd4c9c8203, type: 2}

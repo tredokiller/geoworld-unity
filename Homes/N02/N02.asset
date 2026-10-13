@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c41e103a5605a314c97d5c494335f867, type: 3}
+  m_Name: N02
+  m_EditorClassIdentifier: GeoWorld.Runtime::GeoWorld.GeoHomeModelAsset
+  id: N02
+  label: Log house with blue carved platbands and sini porch (Polissia-type)
+  categories:
+  - house
+  tags: []
+  tagOnly: 0
+  floors: 1
+  length: 11.6
+  width: 6.4
+  eaveHeight: 2.7
+  rise: 2.1
+  body: {fileID: 4300000, guid: ae8d0de327c7ea74b82564fca521fa1e, type: 2}
+  roofFixed: {fileID: 4300000, guid: 9f8deb2c8e49a844eb6dc49f338d7c6f, type: 2}
+  variantNames:
+  - flat
+  - gabled_across
+  - gabled_along
+  - half_hipped
+  - hipped
+  - skillion
+  variants:
+  - {fileID: 4300000, guid: 8359a503c7c5fd64bbed5e3d035a7c2d, type: 2}
+  - {fileID: 4300000, guid: 25a9a7e976b06d34c99ab7b363c698c8, type: 2}
+  - {fileID: 4300000, guid: 783a080acd729d442bf23b5f0ede53a0, type: 2}
+  - {fileID: 4300000, guid: dadc451b20ba6074b9830b4dc8bcc8f8, type: 2}
+  - {fileID: 4300000, guid: c9b9ddf4ca2022c479c089234edaaabf, type: 2}
+  - {fileID: 4300000, guid: f879caaa6438203459bc0817e1b832f0, type: 2}
+  defaultVariant: gabled_along
+  defaultRoofMaterial: asbestos_cement
+  defaultRoofColor: '#6f706a'
+  material: {fileID: 2100000, guid: af1f498a655bdb446a6aa4441765afcc, type: 2}

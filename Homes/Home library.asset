@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f5b2a42ea9ba41f4ea98e9eb8a2b16fa, type: 3}
+  m_Name: Home library
+  m_EditorClassIdentifier: GeoWorld.Runtime::GeoWorld.GeoHomeLibrary
+  models:
+  - {fileID: 11400000, guid: d89937bbc6b12f94eba0603ddeafa51c, type: 2}
+  - {fileID: 11400000, guid: 5b1fc820ffc961b4aaa3e702e4655e7f, type: 2}
+  - {fileID: 11400000, guid: 9ec9fed8a87737b45b79ec40356b83f4, type: 2}
+  - {fileID: 11400000, guid: a90d170f2ce363d47818168439f07459, type: 2}
+  - {fileID: 11400000, guid: dc498822f68aca2478b4432693d1867f, type: 2}
+  - {fileID: 11400000, guid: 71504c12b0cee32418ff01725ec1a2a1, type: 2}
+  - {fileID: 11400000, guid: 92ebcb4c8d359694e892d3ed6cca6220, type: 2}
+  - {fileID: 11400000, guid: b6709fad9984ecb44804cc0e028a60b4, type: 2}
+  - {fileID: 11400000, guid: 348d0733441c33941be47b78a6e17556, type: 2}
+  - {fileID: 11400000, guid: 9f777a240a361e04aaed0ae88d06cd67, type: 2}
+  - {fileID: 11400000, guid: a0d44c4fbff7fde44b4fe0dcaf303aa1, type: 2}
+  - {fileID: 11400000, guid: 117e856897cf13e42946ffe65d9adf4e, type: 2}
+  - {fileID: 11400000, guid: ac8f201a08b97bc45a55b9bb55660ee0, type: 2}
+  - {fileID: 11400000, guid: 54a07d59f5cfd2145b9fe05952c1c793, type: 2}
+  - {fileID: 11400000, guid: f306872fdb8d20c439e7a35f72b2a2a3, type: 2}
+  - {fileID: 11400000, guid: 5d9084db2dba89e4b8a658578155a1c0, type: 2}
+  - {fileID: 11400000, guid: 14473381054be1c4cb6bbf64a31213da, type: 2}
+  - {fileID: 11400000, guid: 06938a638602ed84f950f064741f5fbc, type: 2}
+  - {fileID: 11400000, guid: 1b63658723e42204db5c3a9b18560916, type: 2}
+  - {fileID: 11400000, guid: da43347164307a84fb5602cea718c276, type: 2}
+  - {fileID: 11400000, guid: 51a52a38c0e1a98419a16b37e0cf9573, type: 2}
+  - {fileID: 11400000, guid: b48154144987ac841bc2e2f17a35d4dd, type: 2}
+  - {fileID: 11400000, guid: bf2debb488197fe4999d40e6107f98f8, type: 2}
+  - {fileID: 11400000, guid: 5c5ac4c03c1133643a8289faaf9381ae, type: 2}
+  - {fileID: 11400000, guid: 22d2d95617296614da20afc233179f39, type: 2}
+  - {fileID: 11400000, guid: 0235063fd8ac827408202eaf3e619467, type: 2}
+  - {fileID: 11400000, guid: 47b0ad12be2d48941ba945897724d3fa, type: 2}
+  - {fileID: 11400000, guid: 99494122213ea42479c3da62aec14d0e, type: 2}
+  - {fileID: 11400000, guid: 195cf2170b8a87b47885f0dc90c94d80, type: 2}
+  - {fileID: 11400000, guid: 97b59427adf8dea4ea742c6adcf03154, type: 2}
+  - {fileID: 11400000, guid: 294ad306560860444aa5a8f13f25cffc, type: 2}
+  - {fileID: 11400000, guid: 37722192c7ae7f942a27901b312ae6b3, type: 2}
+  - {fileID: 11400000, guid: 9bc82310e4ae66d4cb5d7014dc12beca, type: 2}
+  - {fileID: 11400000, guid: fa2019b46d8f2d544ab176ad6451cd54, type: 2}
+  - {fileID: 11400000, guid: 6cc7126afb73eba4e8fbc6dd98a3c291, type: 2}
+  - {fileID: 11400000, guid: 4650f6787bc301640a2cd8e430116088, type: 2}
+  - {fileID: 11400000, guid: 3885ab98be859ab488f6a9252c80d1cd, type: 2}
+  - {fileID: 11400000, guid: 8f1512345fa911843bfdda9faffbdbf1, type: 2}
+  roofMaterials: {fileID: 11400000, guid: 916b9136ea450ca4985edd518da7e0c0, type: 2}

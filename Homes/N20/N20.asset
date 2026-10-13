@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c41e103a5605a314c97d5c494335f867, type: 3}
+  m_Name: N20
+  m_EditorClassIdentifier: GeoWorld.Runtime::GeoWorld.GeoHomeModelAsset
+  id: N20
+  label: Single-storey block house with front gable and attached garage (2010s-type)
+  categories:
+  - house
+  tags: []
+  tagOnly: 0
+  floors: 1
+  length: 10.4
+  width: 8.6
+  eaveHeight: 2.8
+  rise: 2.6
+  body: {fileID: 4300000, guid: 1d417a81480434e4ba028b82ddc7e299, type: 2}
+  roofFixed: {fileID: 4300000, guid: ddc6c88947a8e994ca0d05f5a0a8647a, type: 2}
+  variantNames:
+  - flat
+  - gabled_across
+  - gabled_along
+  - half_hipped
+  - hipped
+  - skillion
+  variants:
+  - {fileID: 4300000, guid: 2af04fe6498d01d4e8db2078ced9f05b, type: 2}
+  - {fileID: 4300000, guid: fc033f03ac00e374c8affa69ffceaa6e, type: 2}
+  - {fileID: 4300000, guid: 3376477f5d55dc949b6031c5aee1f774, type: 2}
+  - {fileID: 4300000, guid: 44e1856ec885aca47a7f8cc862308b68, type: 2}
+  - {fileID: 4300000, guid: e1ca3bbe20074ea4a940c7133275a223, type: 2}
+  - {fileID: 4300000, guid: 39f19fda3d189a241a64566ce428826b, type: 2}
+  defaultVariant: gabled_across
+  defaultRoofMaterial: shingles
+  defaultRoofColor: '#5a4a40'
+  material: {fileID: 2100000, guid: 44cf78e4f20f1df4db3d32b92d62948c, type: 2}

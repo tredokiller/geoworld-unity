@@ -1,0 +1,49 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c41e103a5605a314c97d5c494335f867, type: 3}
+  m_Name: N37
+  m_EditorClassIdentifier: GeoWorld.Runtime::GeoWorld.GeoHomeModelAsset
+  id: N37
+  label: Two-storey brick office and workshop block (ABK) with entrance porch
+  categories:
+  - industrial
+  tags:
+  - industrial
+  - warehouse
+  - manufacture
+  - service
+  tagOnly: 0
+  floors: 2
+  length: 30
+  width: 13
+  eaveHeight: 6.4
+  rise: 2
+  body: {fileID: 4300000, guid: eec2eb68887ebce439829ab0010e7efb, type: 2}
+  roofFixed: {fileID: 4300000, guid: c122f6448da28cc45aa949669fe0001d, type: 2}
+  variantNames:
+  - flat
+  - gabled_across
+  - gabled_along
+  - half_hipped
+  - hipped
+  - skillion
+  variants:
+  - {fileID: 4300000, guid: 4c487ac67a37f304dbf646b8f4a48a4a, type: 2}
+  - {fileID: 4300000, guid: d9e525fe1d0c48842a959d707157385e, type: 2}
+  - {fileID: 4300000, guid: d1e9f7f88d70ef54f81a52ef3690dab1, type: 2}
+  - {fileID: 4300000, guid: a564d1ba8d46b3442a69b60c99692ed6, type: 2}
+  - {fileID: 4300000, guid: a3bf77f454efb654e8d17027017fcfcd, type: 2}
+  - {fileID: 4300000, guid: 8428896e8859680428cbdc206e869252, type: 2}
+  defaultVariant: gabled_along
+  defaultRoofMaterial: asbestos_cement
+  defaultRoofColor: '#8a8a85'
+  material: {fileID: 2100000, guid: e7900a266ad6c9c44ac19c68ea3730fe, type: 2}

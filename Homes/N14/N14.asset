@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c41e103a5605a314c97d5c494335f867, type: 3}
+  m_Name: N14
+  m_EditorClassIdentifier: GeoWorld.Runtime::GeoWorld.GeoHomeModelAsset
+  id: N14
+  label: Renovated Soviet house in vinyl siding with glazed front terrace and boiler
+    room
+  categories:
+  - house
+  tags: []
+  tagOnly: 0
+  floors: 1
+  length: 9.6
+  width: 7.6
+  eaveHeight: 2.8
+  rise: 1.8
+  body: {fileID: 4300000, guid: d3ad8ff35f4c93b4f9f44f61848c2c0c, type: 2}
+  roofFixed: {fileID: 4300000, guid: 0fa3ee987a7c24847aea95b580d42907, type: 2}
+  variantNames:
+  - flat
+  - gabled_across
+  - gabled_along
+  - half_hipped
+  - hipped
+  - skillion
+  variants:
+  - {fileID: 4300000, guid: e928cc04cc5377f4e89703ff56035696, type: 2}
+  - {fileID: 4300000, guid: f3f916598dcec9b45b5cd969badcde70, type: 2}
+  - {fileID: 4300000, guid: 79fc2260c161cb2479f90bfa9481ee62, type: 2}
+  - {fileID: 4300000, guid: d4f71e99491964244bae155bbcf95b43, type: 2}
+  - {fileID: 4300000, guid: 2b2e9a6ed1615bd4a9889b4837f47183, type: 2}
+  - {fileID: 4300000, guid: e87b41d4efb7ace40a4de165d44782f3, type: 2}
+  defaultVariant: gabled_along
+  defaultRoofMaterial: metal_tile
+  defaultRoofColor: '#2e5b44'
+  material: {fileID: 2100000, guid: 98a742c1063af1d45aa6dfb1a0e4668f, type: 2}

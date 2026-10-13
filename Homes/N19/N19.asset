@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c41e103a5605a314c97d5c494335f867, type: 3}
+  m_Name: N19
+  m_EditorClassIdentifier: GeoWorld.Runtime::GeoWorld.GeoHomeModelAsset
+  id: N19
+  label: Near-square two-storey cottage in grey plaster with porch balcony and rear
+    glazed terrace (post-1991-type)
+  categories:
+  - house
+  tags: []
+  tagOnly: 0
+  floors: 2
+  length: 9
+  width: 9
+  eaveHeight: 5.7
+  rise: 2.7
+  body: {fileID: 4300000, guid: 55a65f365aaf9a34ebd1d4be7aff706c, type: 2}
+  roofFixed: {fileID: 4300000, guid: f0e28cdeb7435c140ab61255a1151d6c, type: 2}
+  variantNames:
+  - flat
+  - gabled_across
+  - gabled_along
+  - half_hipped
+  - hipped
+  - skillion
+  variants:
+  - {fileID: 4300000, guid: 5fbc9d5c03954604c876b28f0dab8687, type: 2}
+  - {fileID: 4300000, guid: 72d16ee62d2460d44888a7d45f376968, type: 2}
+  - {fileID: 4300000, guid: bcdc8c433b624bd46aba60639bc1ee3b, type: 2}
+  - {fileID: 4300000, guid: 63fd08b4f0f510a47af4e1caab699307, type: 2}
+  - {fileID: 4300000, guid: 4bdcb7435162d774f86796c3cc3f7044, type: 2}
+  - {fileID: 4300000, guid: 373ce1ab3b89c2b499ba76975ca93919, type: 2}
+  defaultVariant: gabled_across
+  defaultRoofMaterial: metal_tile
+  defaultRoofColor: '#4f545b'
+  material: {fileID: 2100000, guid: 6cdba88d2388e2b4a8b317fe64444e44, type: 2}

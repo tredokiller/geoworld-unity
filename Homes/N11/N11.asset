@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c41e103a5605a314c97d5c494335f867, type: 3}
+  m_Name: N11
+  m_EditorClassIdentifier: GeoWorld.Runtime::GeoWorld.GeoHomeModelAsset
+  id: N11
+  label: Square pyramid-roof house with rough-cast plaster, corner pilasters and
+    open porch (1970s-80s-type)
+  categories:
+  - house
+  tags: []
+  tagOnly: 0
+  floors: 1
+  length: 8
+  width: 8
+  eaveHeight: 2.8
+  rise: 2.4
+  body: {fileID: 4300000, guid: 47c74f08aae9e21488ed785fdb338074, type: 2}
+  roofFixed: {fileID: 4300000, guid: 8004cc86587d50c4bb4b86a9e90f9d30, type: 2}
+  variantNames:
+  - flat
+  - gabled_across
+  - gabled_along
+  - half_hipped
+  - hipped
+  - skillion
+  variants:
+  - {fileID: 4300000, guid: cb4c74665346d494e8eac3e999108d0d, type: 2}
+  - {fileID: 4300000, guid: db3505085f385bc40ab4afe68a6128f1, type: 2}
+  - {fileID: 4300000, guid: ec56204b53120cf4caf270c9601c65e4, type: 2}
+  - {fileID: 4300000, guid: bb1ec849544e1f242af7aa262c7dd857, type: 2}
+  - {fileID: 4300000, guid: c07818db692eaf2448ebe99a29900427, type: 2}
+  - {fileID: 4300000, guid: 36f9ad333d665b642aa443fd8df0a7c7, type: 2}
+  defaultVariant: hipped
+  defaultRoofMaterial: metal_tile
+  defaultRoofColor: '#6a2a31'
+  material: {fileID: 2100000, guid: 9c9d9c39c8c23244b9b0a3481d17192f, type: 2}

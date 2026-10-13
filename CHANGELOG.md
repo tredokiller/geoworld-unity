@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.0
+
+- The 25 ruin and 38 home models come with the package: nothing to import in a project
+- Model textures six times smaller (colour JPEG, normal maps 1024 px PNG): the package is 277 MB
+- Home normal maps are imported as normal maps (apartment walls had dark blotches)
+
 ## 1.0.0
 
 First version as a package.

@@ -1,0 +1,49 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c41e103a5605a314c97d5c494335f867, type: 3}
+  m_Name: N38
+  m_EditorClassIdentifier: GeoWorld.Runtime::GeoWorld.GeoHomeModelAsset
+  id: N38
+  label: Long steel-frame warehouse clad in profiled sheet with roller doors
+  categories:
+  - industrial
+  tags:
+  - industrial
+  - warehouse
+  - manufacture
+  - service
+  tagOnly: 0
+  floors: 1
+  length: 50
+  width: 20
+  eaveHeight: 4.6
+  rise: 1.6
+  body: {fileID: 4300000, guid: aa7adc13f47aa1e498eaa807f9a05cb7, type: 2}
+  roofFixed: {fileID: 4300000, guid: 7837e5c95d1c42044b7afc5a55d9c3dd, type: 2}
+  variantNames:
+  - flat
+  - gabled_across
+  - gabled_along
+  - half_hipped
+  - hipped
+  - skillion
+  variants:
+  - {fileID: 4300000, guid: b7882f7e38d3de14790aab696a006485, type: 2}
+  - {fileID: 4300000, guid: e3cf2c1d090b5c6439b84b927aa970b6, type: 2}
+  - {fileID: 4300000, guid: 99208b28b4579ef418919108a0c4df11, type: 2}
+  - {fileID: 4300000, guid: 93f29b9b1b8b9544d9883a1f65ae9297, type: 2}
+  - {fileID: 4300000, guid: 6f92d73c2bd42514a9e9cd58dd6b19df, type: 2}
+  - {fileID: 4300000, guid: 9f8bdbb069fa9334fa097d980a60c0d4, type: 2}
+  defaultVariant: gabled_along
+  defaultRoofMaterial: metal_sheet
+  defaultRoofColor: '#9da1a0'
+  material: {fileID: 2100000, guid: 5dfc9e7d6e66c984aae0e2d91c42a14f, type: 2}

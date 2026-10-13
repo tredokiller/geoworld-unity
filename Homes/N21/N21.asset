@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c41e103a5605a314c97d5c494335f867, type: 3}
+  m_Name: N21
+  m_EditorClassIdentifier: GeoWorld.Runtime::GeoWorld.GeoHomeModelAsset
+  id: N21
+  label: 1990s-2000s red-brick cottage with bay window, arched portico and garage
+    terrace
+  categories:
+  - house
+  tags: []
+  tagOnly: 0
+  floors: 2
+  length: 10.4
+  width: 9.6
+  eaveHeight: 5.6
+  rise: 3.3
+  body: {fileID: 4300000, guid: 5645a6a41ebefdb4db20fa9d5a8df586, type: 2}
+  roofFixed: {fileID: 4300000, guid: 6c2b95d2b853d0b448837f771bfebf49, type: 2}
+  variantNames:
+  - flat
+  - gabled_across
+  - gabled_along
+  - half_hipped
+  - hipped
+  - skillion
+  variants:
+  - {fileID: 4300000, guid: 804d4960bd6adf046a59a7417f55c9af, type: 2}
+  - {fileID: 4300000, guid: 23a1cc6ba0bb7684a8393e4e7989df19, type: 2}
+  - {fileID: 4300000, guid: a6a73d0c345047b499622fe63d899279, type: 2}
+  - {fileID: 4300000, guid: 0734d82d70c598a499b1dc08de2a6304, type: 2}
+  - {fileID: 4300000, guid: bf8444345980f2a44bd44f83f94ea27e, type: 2}
+  - {fileID: 4300000, guid: 98696bd818c18a2418d32467958de4fc, type: 2}
+  defaultVariant: hipped
+  defaultRoofMaterial: metal_tile
+  defaultRoofColor: '#6b4a3a'
+  material: {fileID: 2100000, guid: 7eb9f434d79a55f48bb4e8bea3efe3f7, type: 2}

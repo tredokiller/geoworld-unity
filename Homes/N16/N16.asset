@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c41e103a5605a314c97d5c494335f867, type: 3}
+  m_Name: N16
+  m_EditorClassIdentifier: GeoWorld.Runtime::GeoWorld.GeoHomeModelAsset
+  id: N16
+  label: One-storey semi-detached two-family house with two glazed porches (small-town-type)
+  categories:
+  - house
+  tags: []
+  tagOnly: 0
+  floors: 1
+  length: 14.6
+  width: 8.2
+  eaveHeight: 2.8
+  rise: 2
+  body: {fileID: 4300000, guid: 252e389ab0eacfc468717c1b1e8db9df, type: 2}
+  roofFixed: {fileID: 4300000, guid: 2e01b9f304454a0429fb3011a19b2c9e, type: 2}
+  variantNames:
+  - flat
+  - gabled_across
+  - gabled_along
+  - half_hipped
+  - hipped
+  - skillion
+  variants:
+  - {fileID: 4300000, guid: f3329f60132238b49b915f210c2bbd80, type: 2}
+  - {fileID: 4300000, guid: 324b7f1bf618f4f44a6e0e1a26e3eb8e, type: 2}
+  - {fileID: 4300000, guid: 4098f6fd0a7046c4e864cdc7e882b4d5, type: 2}
+  - {fileID: 4300000, guid: 8c36c3059bec8544da346c5c33743a5f, type: 2}
+  - {fileID: 4300000, guid: 07dd2cf0a182c9641a8c01ed85b90e76, type: 2}
+  - {fileID: 4300000, guid: 5c0b4b45b7cd30b4aa0ca1eaf1c834b3, type: 2}
+  defaultVariant: gabled_along
+  defaultRoofMaterial: asbestos_cement
+  defaultRoofColor: '#86867f'
+  material: {fileID: 2100000, guid: 81d4472a075379840a2e01e05e9bbcd7, type: 2}

@@ -19,7 +19,7 @@ namespace GeoWorld
     [CreateAssetMenu(menuName = "Geo World/Ruin library", fileName = "Ruin library")]
     public class GeoRuinLibrary : ScriptableObject
     {
-        public const string DefaultPath = GeoPaths.Project + "/Ruins/Ruin library.asset";
+        public const string DefaultPath = GeoPaths.Package + "/Ruins/Ruin library.asset";
 
         public List<GeoRuinModel> models = new List<GeoRuinModel>();
         [Tooltip("Footprints that fill less of their smallest bounding rectangle than this (L, U and odd shapes) keep the procedural damage.")]

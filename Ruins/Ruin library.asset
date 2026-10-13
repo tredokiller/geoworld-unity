@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ab4dbe4f5de73842a7e8ece874ffab2, type: 3}
+  m_Name: Ruin library
+  m_EditorClassIdentifier: GeoWorld.Runtime::GeoWorld.GeoRuinLibrary
+  models:
+  - {fileID: 11400000, guid: 818c9dbb947065747b49d0b20d810018, type: 2}
+  - {fileID: 11400000, guid: ab2d7642b7bdc734798a9da4cf6aa3df, type: 2}
+  - {fileID: 11400000, guid: c1af5002b0f59364496c14336ff25394, type: 2}
+  - {fileID: 11400000, guid: 4fc4c498aafed86499be8acf6131e6f6, type: 2}
+  - {fileID: 11400000, guid: a17baf106cbfbfe4aa0145cb0d7c52f7, type: 2}
+  - {fileID: 11400000, guid: e09db1d6a2e2b7d419813df9d89f7d4b, type: 2}
+  - {fileID: 11400000, guid: 356e5353043e0ce46bbe6ec0c247ea58, type: 2}
+  - {fileID: 11400000, guid: ea2e8f9a736ffdb4f9f52f3178a246b7, type: 2}
+  - {fileID: 11400000, guid: 1ba5df3c7859ebc4b8a3807b2bf7aa1e, type: 2}
+  - {fileID: 11400000, guid: fbe82cab1c6c4dc47a9337094884a226, type: 2}
+  - {fileID: 11400000, guid: 3c55951f0e73d124b907994974d30868, type: 2}
+  - {fileID: 11400000, guid: 740660733cc3d7b479e73a9746f6b5a9, type: 2}
+  - {fileID: 11400000, guid: 40bf02fa4e952f5479ecc96ed65cd4e6, type: 2}
+  - {fileID: 11400000, guid: d602aed2b3c8218449cd4d66c7f4d095, type: 2}
+  - {fileID: 11400000, guid: 223c0e47ad6887e46b3aea796524c412, type: 2}
+  - {fileID: 11400000, guid: 4d187c0ae02e55a41a9ecf6b69b0151c, type: 2}
+  - {fileID: 11400000, guid: 60ef99c07c620774ba1f109823751db8, type: 2}
+  - {fileID: 11400000, guid: 545d8acd5f7098a4893ff35a57ba979a, type: 2}
+  - {fileID: 11400000, guid: 22975d6d4e3a0d74980e345b8a045630, type: 2}
+  - {fileID: 11400000, guid: f6647061615a34a478374b8209bb8a4d, type: 2}
+  - {fileID: 11400000, guid: 2dd4ff3663479da468e4ddad72a8430e, type: 2}
+  - {fileID: 11400000, guid: 53b6f4404e79a1749a00bfcdde7ee562, type: 2}
+  - {fileID: 11400000, guid: 8aa7b23f50ee1a347856122eb5a10f45, type: 2}
+  - {fileID: 11400000, guid: cb2229237791dad4481ed349447223a0, type: 2}
+  - {fileID: 11400000, guid: 38f50e2bf1736bc4c8db2867c762ac65, type: 2}
+  minimumFill: 0.6
+  variety: 0.35
