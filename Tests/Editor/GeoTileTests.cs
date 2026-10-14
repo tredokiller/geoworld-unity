@@ -148,5 +148,30 @@ namespace GeoWorld.Editor.Tests
             Assert.That(world.report, Does.Contain("6 tiles built"));
             Assert.That(world.GetComponentsInChildren<GeoWorldRoot>().Length, Is.EqualTo(6));
         }
+
+        // The crossings are one object per chunk and material (a city tile had an object for each of 1 700 pieces).
+        [Test] public void Crossings_AreOneMeshPerChunkAndMaterial()
+        {
+            var settings = Settings(); settings.chunkSize = 200;
+            var world = GeoGenerator.Generate(Sample + "/environment.json", Sample + "/buildings.json", settings, null, false);
+            owned.Add(world.gameObject); assets.Add(world.assetPath);
+            Assert.That(world.junctionCount, Is.GreaterThan(0));
+            var roads = world.transform.Find("Roads - select a road to edit");
+            Assert.That(roads.Cast<Transform>().Where(t => t.name.StartsWith("Junction ")), Is.Empty);
+            var crossings = roads.Cast<Transform>().Where(t => t.name.StartsWith("Junctions ")).ToList();
+            Assert.That(crossings, Is.Not.Empty);
+            var keys = new HashSet<string>();
+            foreach (var crossing in crossings)
+            {
+                var mesh = crossing.GetComponent<MeshFilter>().sharedMesh; var material = crossing.GetComponent<MeshRenderer>().sharedMaterial;
+                Assert.That(EditorUtility.IsPersistent(mesh)); Assert.That(mesh.subMeshCount, Is.EqualTo(1)); Assert.That(mesh.vertexCount, Is.GreaterThan(0));
+                Assert.That(crossing.GetComponent<Collider>(), Is.Null);
+                // named after its chunk, which holds the middle of every piece in it
+                var cell = crossing.name.Substring("Junctions ".Length).Split(' ')[0].Split('_').Select(int.Parse).ToArray();
+                Assert.That(mesh.bounds.min.x, Is.GreaterThan(cell[0] * 200 - 60)); Assert.That(mesh.bounds.max.x, Is.LessThan(cell[0] * 200 + 260));
+                Assert.That(mesh.bounds.min.z, Is.GreaterThan(cell[1] * 200 - 60)); Assert.That(mesh.bounds.max.z, Is.LessThan(cell[1] * 200 + 260));
+                Assert.That(keys.Add(cell[0] + "_" + cell[1] + material.name + mesh.HasVertexAttribute(UnityEngine.Rendering.VertexAttribute.TexCoord1)), "one object per chunk and material");
+            }
+        }
     }
 }

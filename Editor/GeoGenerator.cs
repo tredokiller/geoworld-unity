@@ -227,7 +227,9 @@ namespace GeoWorld.Editor
                 }
                 if(settings.roadMeshes&&roadsBuilt)
                 {
-                    int number=0;
+                    // the crossings are drawn a few meshes per chunk: a 1 km tile of a city has 1 700 pieces of crossing, and
+                    // an object for each made it slow to load. Nothing edits them (a road is edited through its own object).
+                    var crossings=new Crossings(settings.chunkSize);
                     foreach(var junction in roadNetwork.junctions)
                     {
                         Material asphalt=null;
@@ -264,10 +266,7 @@ namespace GeoWorld.Editor
                                     {
                                         var material=context.RoadPhoto(pair.Key);
                                         if(!material)continue;
-                                        var pieceMesh=context.Clip(pair.Value.Mesh("Junction asphalt",roadNetwork.Normal));
-                                        if(pieceMesh.vertexCount==0){Object.DestroyImmediate(pieceMesh);continue;}
-                                        var cross=new GameObject("Junction "+number+" | "+pair.Key);cross.transform.SetParent(roads,false);
-                                        context.MeshObject(cross,pieceMesh,context.Blend(material),false);
+                                        crossings.Add(context.Clip(pair.Value.Mesh("Junction asphalt",roadNetwork.Normal)),new[]{context.Blend(material)});
                                     }
                                     // the asphalt is drawn; the junction mesh below keeps only its other surfaces
                                     draft.vertices.Clear();draft.uv.Clear();draft.uv2.Clear();draft.triangles.Clear();
@@ -281,10 +280,9 @@ namespace GeoWorld.Editor
                         }
                         for(int k=0;k<4;k++)GeoMeshes.JunctionEdges(junction.surfaces[k],junction.owners[k]);
                         var mesh=context.Clip(roadNetwork.JunctionMesh(junction,out var surfaces));
-                        if(mesh.vertexCount==0){Object.DestroyImmediate(mesh);continue;}
-                        var piece=new GameObject("Junction "+number++);piece.transform.SetParent(roads,false);
-                        context.MeshObject(piece,mesh,surfaces.Select(s=>context.Blend(s==GroundSurface.Asphalt&&asphalt?asphalt:context.Surface(s))).ToArray(),false);
+                        crossings.Add(mesh,surfaces.Select(s=>context.Blend(s==GroundSurface.Asphalt&&asphalt?asphalt:context.Surface(s))).ToArray());
                     }
+                    crossings.Build(roads,context);
                 }
                 var waters=Group("Water bodies",root.transform);
                 for(int i=0;i<env.water.Count;i++)
@@ -560,6 +558,62 @@ namespace GeoWorld.Editor
         }
 
         static Transform Group(string name,Transform parent) {var go=new GameObject(name);go.transform.SetParent(parent);return go.transform;}
+
+        // The pieces of the crossings, gathered per chunk (by their middle) and material and drawn as one mesh each.
+        // Pieces with soft edges (TexCoord1) and without are kept apart.
+        class Crossings
+        {
+            class Piece {public Vector3[] vertices,normals;public List<Vector2> uv=new List<Vector2>(),uv2=new List<Vector2>();public Mesh mesh;}
+            readonly float size;
+            readonly Dictionary<(int x,int z,Material material,bool edges),List<(Piece piece,int submesh)>> groups=new Dictionary<(int,int,Material,bool),List<(Piece,int)>>();
+            readonly List<Mesh> sources=new List<Mesh>();
+            public Crossings(float chunkSize){size=Mathf.Max(50,chunkSize);}
+
+            public void Add(Mesh mesh,Material[] materials)
+            {
+                sources.Add(mesh);
+                if(mesh.vertexCount==0)return;
+                var piece=new Piece{mesh=mesh,vertices=mesh.vertices,normals=mesh.normals};
+                mesh.GetUVs(0,piece.uv);mesh.GetUVs(1,piece.uv2);
+                bool edges=piece.uv2.Count==piece.vertices.Length;
+                var middle=mesh.bounds.center;int x=Mathf.FloorToInt(middle.x/size),z=Mathf.FloorToInt(middle.z/size);
+                for(int s=0;s<mesh.subMeshCount&&s<materials.Length;s++)
+                {
+                    if(!materials[s]||mesh.GetIndexCount(s)==0)continue;
+                    var key=(x,z,materials[s],edges);
+                    if(!groups.TryGetValue(key,out var list))groups[key]=list=new List<(Piece,int)>();
+                    list.Add((piece,s));
+                }
+            }
+
+            public void Build(Transform parent,BuildContext context)
+            {
+                foreach(var pair in groups.OrderBy(g=>g.Key.z).ThenBy(g=>g.Key.x).ThenBy(g=>g.Key.material.name,StringComparer.Ordinal).ThenBy(g=>g.Key.edges))
+                {
+                    var draft=new MeshDraft();var normals=new List<Vector3>();
+                    foreach(var (piece,submesh) in pair.Value)
+                    {
+                        // only the vertices this sub-mesh uses
+                        var index=new Dictionary<int,int>();
+                        foreach(int v in piece.mesh.GetTriangles(submesh))
+                        {
+                            if(!index.TryGetValue(v,out int n))
+                            {
+                                n=draft.vertices.Count;index[v]=n;draft.vertices.Add(piece.vertices[v]);
+                                normals.Add(piece.normals.Length>v?piece.normals[v]:Vector3.up);
+                                draft.uv.Add(piece.uv.Count>v?piece.uv[v]:Vector2.zero);
+                                if(pair.Key.edges)draft.uv2.Add(piece.uv2[v]);
+                            }
+                            draft.triangles.Add(n);
+                        }
+                    }
+                    var mesh=draft.Mesh("Junctions",p=>Vector3.up);mesh.SetNormals(normals);
+                    var go=new GameObject("Junctions "+pair.Key.x+"_"+pair.Key.z+" | "+pair.Key.material.name);go.transform.SetParent(parent,false);
+                    context.MeshObject(go,mesh,pair.Key.material,false);
+                }
+                foreach(var mesh in sources)Object.DestroyImmediate(mesh);
+            }
+        }
 
         class BuildContext
         {

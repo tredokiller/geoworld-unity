@@ -241,6 +241,10 @@ once for the whole export; every tile is built with a 96 m margin on a height gr
 neighbours have the same ground at their common edge (Unity stitches the terrains: one grouping ID).
 Roads, junctions and markings are cut where tiles meet; a building, tree or prop belongs to the tile its
 centre is on. Memory stays flat however many tiles there are.
+A tiled world is a town or a city: Building Mode Auto merges its buildings and props in every tile (counted per
+tile, Auto kept a 1 km tile of apartment blocks editable: 15 000 objects and 7 500 mesh colliders, seconds to
+load). Editable still keeps one object per building where it is chosen. The pieces of the crossings are one
+mesh per chunk (Chunk Size) and material; the roads keep their own objects for editing.
 Rebuilding: the GeoTiledWorld Inspector rebuilds changed tiles (export files or settings changed) or all
 of them, and opens/closes tile scenes around the Scene view; a tile's own Inspector rebuilds that tile
 from the whole export. Edited buildings and kept props survive a tile rebuild; edited road nodes do not
@@ -381,7 +385,7 @@ half the model's walls: the model then keeps its lowest walls (three quarters of
 a little taller than the estimate. A mapped height must fit as before.
 
 Merged city. One object per building does not scale to a city. Building Mode Auto switches to Merged above Merge Above
-buildings (2500): buildings are built with the same code as editable ones (footprint, roof, facade, damage) and baked into
+buildings (2500), and always in a tiled world: buildings are built with the same code as editable ones (footprint, roof, facade, damage) and baked into
 chunks of mesh (Chunk Size 200 m), colours through one palette texture, small buildings without window geometry. Each chunk
 is one object with a Geo City Chunk component listing its buildings, their positions and states (TryFind gives the
 building near a point). Editable mode keeps one object per building for villages and edits; manually added buildings

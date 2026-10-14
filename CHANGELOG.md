@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.1
+
+- Tiled cities load without lag: Auto building mode merges buildings and props in every tile (a 1 km tile of Kharkiv went from 15 000 objects to 1 700 and no longer runs the editor out of video memory)
+- Road crossings are one mesh per chunk and material instead of an object per piece; roads keep their own objects for editing
+- Generate a tiled world again to rebuild its tiles with this version
+
 ## 1.4.0
 
 - New area... in the Geo World window: draw an area on a map of Ukraine and extract it with the Building Extractor app, which comes with the package (with its own Python on Windows); the new export is selected, ready to generate

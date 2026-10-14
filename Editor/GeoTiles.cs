@@ -53,7 +53,7 @@ namespace GeoWorld.Editor
         // Far more than any road grading or junction reaches, and room for the buildings next to a tile.
         public const float MarginMetres = 96;
         // bump when the generator draws tiles differently, so that "Rebuild changed tiles" rebuilds them
-        internal const string Version = "geo-tiles-10"; // 10: homes made from a list when the tile loads (GeoHomeInstances)
+        internal const string Version = "geo-tiles-12"; // 12: crossings one mesh per chunk and material; 11: Auto building mode merges in tiles; 10: homes made from a list when the tile loads
 
         public static string DefaultFolder(string environmentPath) => GeoPaths.Project + "/Tiled/" + PackageName(environmentPath);
         static string PackageName(string environmentPath) => new DirectoryInfo(Path.GetDirectoryName(Path.GetFullPath(environmentPath))).Name;
@@ -245,6 +245,10 @@ namespace GeoWorld.Editor
             // Road meshes draw the roads: the paint under them needs no more detail than the ground (three RGBA maps
             // of 1024 are 16 MB in every tile, of 512 a quarter of that).
             if (settings.roadMeshes) settings.roadPaintResolution = Mathf.Min(settings.roadPaintResolution, settings.textureResolution);
+            // A tiled world is a town or a city: Auto merges its buildings and props. Counted per tile, Auto would keep an
+            // object per building wherever a tile has fewer than Merge Above buildings (a tile of Kharkiv's apartment
+            // blocks has a few hundred): 15 000 objects and 7 500 mesh colliders a tile, 250 MB, seconds to load.
+            if (settings.buildingMode == GeoBuildingMode.Auto) settings.buildingMode = GeoBuildingMode.Merged;
             return settings;
         }
 

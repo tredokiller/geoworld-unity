@@ -24,7 +24,7 @@ namespace GeoWorld
         public bool roadMeshes = true;
         public bool buildings = true;
         [Header("Buildings")]
-        [Tooltip("Editable: one object per building (a village). Merged: buildings baked into chunks of mesh (a city). Auto merges above Merge Above buildings.")]
+        [Tooltip("Editable: one object per building (a village). Merged: buildings baked into chunks of mesh (a city). Auto merges above Merge Above buildings, and always in a tiled world.")]
         public GeoBuildingMode buildingMode = GeoBuildingMode.Auto;
         [Range(100, 20000)] public int mergeAbove = 2500;
         [Range(50, 500)] public float chunkSize = 200;
