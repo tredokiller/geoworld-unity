@@ -12,6 +12,8 @@ namespace GeoWorld
         public int textureResolution = 512;
         [Tooltip("Detail of roads and painted centre lines on the terrain. 2048 is economical; 4096 gives sharper lines on an 800 m area.")]
         public int roadPaintResolution = 2048;
+        [Tooltip("The terrain casts shadows (hills shading valleys at a low sun, as in the Carpathians). Off by default: buildings and trees still cast theirs on the ground, the imagery has its own, and a city frame takes 3-6 ms less.")]
+        public bool terrainShadows = false;
         [Range(0, 12)] public float blendMetres = 3;
         [Range(0, 12)] public float roadShoulder = 2.5f;
         [Range(0.5f, 8)] public float riverDepth = 1.5f;

@@ -146,6 +146,9 @@ namespace GeoWorld.Editor
                 terrainObject.transform.position=new Vector3(env.bounds.minX,baseY,env.bounds.minZ);
                 root.terrain=terrainObject.GetComponent<Terrain>();
                 root.terrain.heightmapPixelError=1;
+                // a terrain casting shadows is drawn again for every shadow cascade at full detail: 3-6 ms of a city frame
+                // for shadows that hardly show (Kharkiv: no pixel changed). Buildings and trees still cast theirs on it.
+                root.terrain.shadowCastingMode=settings.terrainShadows?ShadowCastingMode.TwoSided:ShadowCastingMode.Off;
                 // tiles of one world join up: Unity stitches the edges of neighbouring terrains of one group
                 if(tile!=null){root.terrain.groupingID=GeoTiles.TerrainGroup;root.terrain.allowAutoConnect=true;}
                 if(satellite) root.terrain.basemapDistance=20000;

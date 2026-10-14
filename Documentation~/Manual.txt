@@ -245,6 +245,10 @@ A tiled world is a town or a city: Building Mode Auto merges its buildings and p
 tile, Auto kept a 1 km tile of apartment blocks editable: 15 000 objects and 7 500 mesh colliders, seconds to
 load). Editable still keeps one object per building where it is chosen. The pieces of the crossings are one
 mesh per chunk (Chunk Size) and material; the roads keep their own objects for editing.
+The terrain casts no shadows unless Terrain Casts Shadows is on (Advanced settings; for mountains, where hills shade
+valleys at a low sun). A terrain that casts them is drawn again for every shadow cascade: in Kharkiv that was 3-6 ms
+of a frame and changed no pixel. Buildings and trees still cast their shadows on the ground. The terrain keeps pixel
+error 1: at 4 the coarser far terrain already covers parts of rivers and road edges.
 Rebuilding: the GeoTiledWorld Inspector rebuilds changed tiles (export files or settings changed) or all
 of them, and opens/closes tile scenes around the Scene view; a tile's own Inspector rebuilds that tile
 from the whole export. Edited buildings and kept props survive a tile rebuild; edited road nodes do not

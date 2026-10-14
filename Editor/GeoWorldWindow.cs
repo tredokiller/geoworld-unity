@@ -380,6 +380,7 @@ namespace GeoWorld.Editor
             settings.carveRivers = EditorGUILayout.Toggle("Carve river beds", settings.carveRivers);
             settings.laneMarkings = EditorGUILayout.Toggle("Road centre markings", settings.laneMarkings);
             settings.groundTextures = EditorGUILayout.Toggle("Photographic ground textures", settings.groundTextures);
+            settings.terrainShadows = EditorGUILayout.Toggle(new GUIContent("Terrain casts shadows", "Hills shading valleys at a low sun (mountains). Off: a city frame takes 3-6 ms less; buildings and trees still cast shadows on the ground."), settings.terrainShadows);
             if (settings.satelliteImagery)
             {
                 Section("Satellite imagery");

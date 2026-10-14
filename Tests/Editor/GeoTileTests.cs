@@ -149,6 +149,18 @@ namespace GeoWorld.Editor.Tests
             Assert.That(world.GetComponentsInChildren<GeoWorldRoot>().Length, Is.EqualTo(6));
         }
 
+        // The terrain casts shadows only when asked (in a city they cost 3-6 ms a frame and hardly show).
+        [Test] public void Terrain_CastsShadowsOnlyWhenAsked()
+        {
+            var off = GeoGenerator.Generate(Sample + "/environment.json", Sample + "/buildings.json", Settings(), null, false);
+            owned.Add(off.gameObject); assets.Add(off.assetPath);
+            Assert.That(off.terrain.shadowCastingMode, Is.EqualTo(UnityEngine.Rendering.ShadowCastingMode.Off));
+            var settings = Settings(); settings.terrainShadows = true;
+            var on = GeoGenerator.Generate(Sample + "/environment.json", Sample + "/buildings.json", settings, null, false);
+            owned.Add(on.gameObject); assets.Add(on.assetPath);
+            Assert.That(on.terrain.shadowCastingMode, Is.EqualTo(UnityEngine.Rendering.ShadowCastingMode.TwoSided));
+        }
+
         // The crossings are one object per chunk and material (a city tile had an object for each of 1 700 pieces).
         [Test] public void Crossings_AreOneMeshPerChunkAndMaterial()
         {

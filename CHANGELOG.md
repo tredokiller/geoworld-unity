@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.2
+
+- The terrain casts no shadows by default: 3-6 ms less a frame in a city, no visible change (buildings and trees still cast theirs on the ground)
+- Terrain casts shadows in the Advanced settings turns them back on, for mountains
+- Generate a world again to rebuild its tiles with this version
+
 ## 1.4.1
 
 - Tiled cities load without lag: Auto building mode merges buildings and props in every tile (a 1 km tile of Kharkiv went from 15 000 objects to 1 700 and no longer runs the editor out of video memory)
