@@ -1,0 +1,217 @@
+{
+  "format": "building-extractor.condition",
+  "version": 1,
+  "area": {
+    "id": "lyman",
+    "name": "Lyman, Donetsk oblast",
+    "center": {
+      "lat": 48.985,
+      "lon": 37.805
+    },
+    "bounds": [
+      [
+        48.93,
+        37.74
+      ],
+      [
+        49.04,
+        37.88
+      ]
+    ],
+    "analysisBounds": {
+      "west": 37.75,
+      "south": 48.948,
+      "east": 37.845,
+      "north": 49.021
+    },
+    "newsQuery": "Lyman Donetsk"
+  },
+  "sources": [
+    {
+      "id": "sar-145",
+      "kind": "satellite",
+      "title": "Sentinel-1 radar change, orbit 145",
+      "publisher": "ESA Copernicus / Microsoft Planetary Computer",
+      "url": "https://planetarycomputer.microsoft.com/dataset/sentinel-1-rtc",
+      "publishedAt": "2026-10-01",
+      "license": {
+        "name": "CC BY 4.0",
+        "url": "https://creativecommons.org/licenses/by/4.0/"
+      },
+      "note": "Contains modified Copernicus Sentinel data, processed by Microsoft Planetary Computer (Sentinel-1 RTC, CC BY 4.0). pixel-wise t-test, VV and VH, Ballinger et al. 2024."
+    },
+    {
+      "id": "src-svoboda-2023-06-12",
+      "kind": "news",
+      "publisher": "Радіо Свобода",
+      "publishedAt": "2023-06-12",
+      "accessedAt": "2026-10-06",
+      "title": "«Поки займатися відбудовою ніхто не буде». Як живе Лиманщина після деокупації",
+      "url": "https://www.radiosvoboda.org/a/lyman-pislya-deokupatsiyi/32434097.html",
+      "note": "O. Zhuravlov, head of the Lyman city military administration: 85% of the buildings of the Lyman community are damaged or destroyed; schools and hospitals are all damaged or destroyed."
+    },
+    {
+      "id": "src-suspilne-2024-05-30",
+      "kind": "news",
+      "publisher": "Суспільне Донбас",
+      "publishedAt": "2024-05-30",
+      "accessedAt": "2026-10-06",
+      "title": "Лиман, Донецька область: два роки з дня окупації міста",
+      "url": "https://suspilne.media/donbas/757297-pro-misto-ludej-ne-dbali-vse-so-im-bulo-vazlivo-maroderstvo-dva-roki-z-dna-okupacii-limana/",
+      "note": "Head of the military administration: of 236 apartment blocks in the city 15 are beyond repair and 221 damaged; about 21,000 of 22,000 private houses destroyed or damaged."
+    },
+    {
+      "id": "src-ukrinform-2024-08-20",
+      "kind": "news",
+      "publisher": "Укрінформ",
+      "publishedAt": "2024-08-20",
+      "accessedAt": "2026-10-06",
+      "title": "У Лиманській громаді російськими обстрілами вже пошкоджені та зруйновані до 90% будівель",
+      "url": "https://www.ukrinform.ua/rubric-regions/3897009-u-limanskij-gromadi-rosijskimi-obstrilami-vze-poskodzeni-ta-zrujnovani-do-90-budivel.html",
+      "note": "O. Zhuravlov: 85-90% of the buildings of the community and over 80% of those in the city are damaged or destroyed; of 236 multi-storey buildings 15 are destroyed beyond repair."
+    },
+    {
+      "id": "src-slavinfo-2026-09-24",
+      "kind": "news",
+      "publisher": "Слов’янські відомості",
+      "publishedAt": "2026-09-24",
+      "accessedAt": "2026-10-06",
+      "title": "Росія знищила заклади освіти: із 19 шкіл у Лиманській громаді 12 знищені, ще п’ять пошкоджені",
+      "url": "https://slavinfo.dn.ua/novosti/regions/rosiia-znyshchyla-zaklady-osvity-iz-19-shkil-u-lymanskii-hromadi-12-znyshcheni-shche-p-iat-poshkodzheni/",
+      "note": "Reply of the Lyman City Council to an information request, state of 23 September 2026: schools No. 3 and No. 4 destroyed, No. 2 70% destroyed, No. 5 70% burned; the Lyman Lyceum damaged."
+    }
+  ],
+  "assessments": [
+    {
+      "id": "seed-school-3",
+      "sourceId": "src-slavinfo-2026-09-24",
+      "state": "destroyed",
+      "asOf": "2026-09-23",
+      "basis": "reported",
+      "confidence": "medium",
+      "status": "confirmed",
+      "reviewer": "claude (assisted)",
+      "target": {
+        "mode": "building",
+        "buildingId": "osm/way/193171658"
+      },
+      "note": "School No. 3 reported destroyed by the Lyman City Council (matched by the OpenStreetMap name)."
+    },
+    {
+      "id": "seed-school-5",
+      "sourceId": "src-slavinfo-2026-09-24",
+      "state": "destroyed",
+      "asOf": "2026-09-23",
+      "basis": "reported",
+      "confidence": "medium",
+      "status": "confirmed",
+      "reviewer": "claude (assisted)",
+      "target": {
+        "mode": "building",
+        "buildingId": "osm/way/290437142"
+      },
+      "note": "School No. 5 reported destroyed, 70% burned (matched by the OpenStreetMap name)."
+    },
+    {
+      "id": "seed-lyceum",
+      "sourceId": "src-slavinfo-2026-09-24",
+      "state": "damaged",
+      "asOf": "2026-09-23",
+      "basis": "reported",
+      "confidence": "medium",
+      "status": "confirmed",
+      "reviewer": "claude (assisted)",
+      "target": {
+        "mode": "building",
+        "buildingId": "osm/way/355452251"
+      },
+      "note": "The Lyman Lyceum reported damaged (matched by the OpenStreetMap name)."
+    }
+  ],
+  "rasters": [
+    {
+      "id": "sar-145",
+      "folder": "sar",
+      "kind": "sar_change",
+      "thresholds": {
+        "damaged": 1.21
+      },
+      "categoryThresholds": {
+        "apartments": {
+          "damaged": 0.0,
+          "destroyed": 7.43
+        }
+      },
+      "calibration": [
+        {
+          "id": "city-damaged",
+          "label": "Over 80% of the buildings of the city are damaged or destroyed",
+          "state": "damaged",
+          "share": 0.8,
+          "categories": null,
+          "threshold": 1.21,
+          "population": 20971,
+          "sourceId": "src-ukrinform-2024-08-20"
+        },
+        {
+          "id": "apartments-damaged",
+          "label": "All 236 apartment blocks are damaged or destroyed",
+          "state": "damaged",
+          "share": 1.0,
+          "categories": [
+            "apartments"
+          ],
+          "threshold": 0.0,
+          "population": 246,
+          "sourceId": "src-suspilne-2024-05-30"
+        },
+        {
+          "id": "apartments-destroyed",
+          "label": "15 of 236 apartment blocks are beyond repair",
+          "state": "destroyed",
+          "share": 0.0636,
+          "categories": [
+            "apartments"
+          ],
+          "threshold": 7.43,
+          "population": 246,
+          "sourceId": "src-suspilne-2024-05-30"
+        }
+      ]
+    }
+  ],
+  "notes": [
+    "Condition is evidence-based and dated. A building without evidence is unknown, never assumed intact.",
+    "Radar estimates (rasters) are low confidence and never outweigh a reviewed observation or a report."
+  ],
+  "calibration": [
+    {
+      "id": "city-damaged",
+      "label": "Over 80% of the buildings of the city are damaged or destroyed",
+      "categories": null,
+      "state": "damaged",
+      "share": 0.8,
+      "sourceId": "src-ukrinform-2024-08-20"
+    },
+    {
+      "id": "apartments-damaged",
+      "label": "All 236 apartment blocks are damaged or destroyed",
+      "categories": [
+        "apartments"
+      ],
+      "state": "damaged",
+      "share": 1.0,
+      "sourceId": "src-suspilne-2024-05-30"
+    },
+    {
+      "id": "apartments-destroyed",
+      "label": "15 of 236 apartment blocks are beyond repair",
+      "categories": [
+        "apartments"
+      ],
+      "state": "destroyed",
+      "share": 0.0636,
+      "sourceId": "src-suspilne-2024-05-30"
+    }
+  ]
+}

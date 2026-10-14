@@ -1,0 +1,47 @@
+{
+ "id": "sar-145",
+ "kind": "sar_change",
+ "method": "pixel-wise t-test, VV and VH, Ballinger et al. 2024",
+ "relativeOrbit": 145,
+ "orbitState": "ascending",
+ "baseline": {
+  "start": "2021-02-24",
+  "end": "2022-02-23",
+  "scenes": 56
+ },
+ "monitoring": {
+  "start": "2026-08-22",
+  "end": "2026-10-06",
+  "scenes": 7,
+  "latest": "2026-10-01"
+ },
+ "polarisations": [
+  "VV",
+  "VH"
+ ],
+ "grid": {
+  "zone": 37,
+  "e0": 408410.0,
+  "n1": 5430610.0,
+  "width": 721,
+  "height": 836,
+  "pixel": 10.0
+ },
+ "scale": 12.0,
+ "attribution": "Contains modified Copernicus Sentinel data, processed by Microsoft Planetary Computer (Sentinel-1 RTC, CC BY 4.0)",
+ "createdAt": "2026-10-06",
+ "license": {
+  "name": "CC BY 4.0",
+  "url": "https://creativecommons.org/licenses/by/4.0/"
+ },
+ "previewBounds": [
+  [
+   48.946387841927184,
+   37.747232281672886
+  ],
+  [
+   49.022601855273294,
+   37.847564101720764
+  ]
+ ]
+}

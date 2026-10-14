@@ -1,0 +1,4055 @@
+{
+  "retrievedAt": "2026-10-06T00:21:10Z",
+  "sourceUrl": "https://commons.wikimedia.org/w/api.php?action=query&format=json&prop=imageinfo%7Ccoordinates&pageids=147077476%7C147112787%7C147097142%7C147112784%7C147112781%7C147112786%7C73009966%7C153164984%7C153165213%7C4663145%7C147112785%7C147112788%7C147112782%7C45363493%7C45363497&iiprop=url%7Csize%7Cextmetadata%7Cmetadata%7Ctimestamp&iiurlwidth=1280&iiurlheight=1280",
+  "response": {
+    "batchcomplete": "",
+    "query": {
+      "pages": {
+        "4663145": {
+          "pageid": 4663145,
+          "ns": 6,
+          "title": "File:Krasniy Liman - 20100725.jpg",
+          "imagerepository": "local",
+          "imageinfo": [
+            {
+              "timestamp": "2011-04-08T13:50:34Z",
+              "size": 1242788,
+              "width": 2680,
+              "height": 2011,
+              "thumburl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f6/Krasniy_Liman_-_20100725.jpg/1280px-Krasniy_Liman_-_20100725.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+              "thumbwidth": 1280,
+              "thumbheight": 960,
+              "responsiveUrls": {
+                "2": "https://upload.wikimedia.org/wikipedia/commons/f/f6/Krasniy_Liman_-_20100725.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
+              },
+              "thumbattribs": {
+                "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f6/Krasniy_Liman_-_20100725.jpg/1280px-Krasniy_Liman_-_20100725.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+                "decoding": "async",
+                "loading": "lazy",
+                "width": 1280,
+                "height": 960,
+                "srcset": "https://upload.wikimedia.org/wikipedia/commons/f/f6/Krasniy_Liman_-_20100725.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled 2x"
+              },
+              "url": "https://upload.wikimedia.org/wikipedia/commons/f/f6/Krasniy_Liman_-_20100725.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+              "descriptionurl": "https://commons.wikimedia.org/wiki/File:Krasniy_Liman_-_20100725.jpg",
+              "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=4663145",
+              "metadata": [
+                {
+                  "name": "Make",
+                  "value": "Canon"
+                },
+                {
+                  "name": "Model",
+                  "value": "Canon PowerShot A560"
+                },
+                {
+                  "name": "Orientation",
+                  "value": 0
+                },
+                {
+                  "name": "XResolution",
+                  "value": "180/1"
+                },
+                {
+                  "name": "ResolutionUnit",
+                  "value": 2
+                },
+                {
+                  "name": "YResolution",
+                  "value": "180/1"
+                },
+                {
+                  "name": "Software",
+                  "value": "Picasa 3.0"
+                },
+                {
+                  "name": "DateTime",
+                  "value": "2010:07:25 12:26:35"
+                },
+                {
+                  "name": "YCbCrPositioning",
+                  "value": 1
+                },
+                {
+                  "name": "ExposureTime",
+                  "value": "1/400"
+                },
+                {
+                  "name": "FNumber",
+                  "value": "32/10"
+                },
+                {
+                  "name": "ISOSpeedRatings",
+                  "value": 80
+                },
+                {
+                  "name": "ExifVersion",
+                  "value": "0220"
+                },
+                {
+                  "name": "DateTimeOriginal",
+                  "value": "2010:07:25 12:26:35"
+                },
+                {
+                  "name": "DateTimeDigitized",
+                  "value": "2010:07:25 12:26:35"
+                },
+                {
+                  "name": "CompressedBitsPerPixel",
+                  "value": "5/1"
+                },
+                {
+                  "name": "ShutterSpeedValue",
+                  "value": "277/32"
+                },
+                {
+                  "name": "ApertureValue",
+                  "value": "107/32"
+                },
+                {
+                  "name": "ExposureBiasValue",
+                  "value": "0/3"
+                },
+                {
+                  "name": "MaxApertureValue",
+                  "value": "107/32"
+                },
+                {
+                  "name": "MeteringMode",
+                  "value": 5
+                },
+                {
+                  "name": "Flash",
+                  "value": 24
+                },
+                {
+                  "name": "FocalLength",
+                  "value": "7889/1000"
+                },
+                {
+                  "name": "ColorSpace",
+                  "value": 65535
+                },
+                {
+                  "name": "FocalPlaneXResolution",
+                  "value": "3072000/225"
+                },
+                {
+                  "name": "FocalPlaneYResolution",
+                  "value": "2304000/169"
+                },
+                {
+                  "name": "FocalPlaneResolutionUnit",
+                  "value": 2
+                },
+                {
+                  "name": "SensingMethod",
+                  "value": 2
+                },
+                {
+                  "name": "CustomRendered",
+                  "value": 0
+                },
+                {
+                  "name": "ExposureMode",
+                  "value": 0
+                },
+                {
+                  "name": "WhiteBalance",
+                  "value": 0
+                },
+                {
+                  "name": "DigitalZoomRatio",
+                  "value": "3072/3072"
+                },
+                {
+                  "name": "SceneCaptureType",
+                  "value": 0
+                },
+                {
+                  "name": "ImageUniqueID",
+                  "value": "3011d4af1b71c0f0cd134548b35e5844"
+                },
+                {
+                  "name": "MEDIAWIKI_EXIF_VERSION",
+                  "value": 1
+                }
+              ],
+              "extmetadata": {
+                "DateTime": {
+                  "value": "2011-04-08 13:50:34",
+                  "source": "mediawiki-metadata",
+                  "hidden": ""
+                },
+                "ObjectName": {
+                  "value": "Krasniy Liman - 20100725",
+                  "source": "mediawiki-metadata"
+                },
+                "CommonsMetadataExtension": {
+                  "value": 1.2,
+                  "source": "extension",
+                  "hidden": ""
+                },
+                "Categories": {
+                  "value": "GFDL|Taken with Canon PowerShot A560|Lyman railway station|License migration redundant|2010 in Donetsk Oblast|Self-published work",
+                  "source": "commons-categories",
+                  "hidden": ""
+                },
+                "Assessments": {
+                  "value": "",
+                  "source": "commons-categories",
+                  "hidden": ""
+                },
+                "ImageDescription": {
+                  "value": "A train station in Krasnyi Lyman",
+                  "source": "commons-desc-page"
+                },
+                "DateTimeOriginal": {
+                  "value": "2010-07-25",
+                  "source": "commons-desc-page"
+                },
+                "Credit": {
+                  "value": "<span class=\"int-own-work\" lang=\"en\">Own work</span>",
+                  "source": "commons-desc-page"
+                },
+                "Artist": {
+                  "value": "Michael Pershyn",
+                  "source": "commons-desc-page"
+                },
+                "LicenseShortName": {
+                  "value": "CC BY-SA 3.0",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "UsageTerms": {
+                  "value": "Creative Commons Attribution-Share Alike 3.0",
+                  "source": "commons-desc-page"
+                },
+                "AttributionRequired": {
+                  "value": "true",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "LicenseUrl": {
+                  "value": "http://creativecommons.org/licenses/by-sa/3.0/",
+                  "source": "commons-desc-page"
+                },
+                "Copyrighted": {
+                  "value": "True",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "Restrictions": {
+                  "value": "",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "License": {
+                  "value": "cc-by-sa-3.0",
+                  "source": "commons-templates",
+                  "hidden": ""
+                }
+              }
+            }
+          ]
+        },
+        "45363493": {
+          "pageid": 45363493,
+          "ns": 6,
+          "title": "File:Spoilt.exile DSC01714 СУФ (9107803914).jpg",
+          "imagerepository": "local",
+          "imageinfo": [
+            {
+              "timestamp": "2015-12-01T13:36:42Z",
+              "size": 2883241,
+              "width": 3264,
+              "height": 2448,
+              "thumburl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/92/Spoilt.exile_DSC01714_%D0%A1%D0%A3%D0%A4_%289107803914%29.jpg/1280px-Spoilt.exile_DSC01714_%D0%A1%D0%A3%D0%A4_%289107803914%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+              "thumbwidth": 1280,
+              "thumbheight": 960,
+              "responsiveUrls": {
+                "2": "https://upload.wikimedia.org/wikipedia/commons/9/92/Spoilt.exile_DSC01714_%D0%A1%D0%A3%D0%A4_%289107803914%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
+              },
+              "thumbattribs": {
+                "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/92/Spoilt.exile_DSC01714_%D0%A1%D0%A3%D0%A4_%289107803914%29.jpg/1280px-Spoilt.exile_DSC01714_%D0%A1%D0%A3%D0%A4_%289107803914%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+                "decoding": "async",
+                "loading": "lazy",
+                "width": 1280,
+                "height": 960,
+                "srcset": "https://upload.wikimedia.org/wikipedia/commons/9/92/Spoilt.exile_DSC01714_%D0%A1%D0%A3%D0%A4_%289107803914%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled 2x"
+              },
+              "url": "https://upload.wikimedia.org/wikipedia/commons/9/92/Spoilt.exile_DSC01714_%D0%A1%D0%A3%D0%A4_%289107803914%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+              "descriptionurl": "https://commons.wikimedia.org/wiki/File:Spoilt.exile_DSC01714_%D0%A1%D0%A3%D0%A4_(9107803914).jpg",
+              "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=45363493",
+              "metadata": [
+                {
+                  "name": "ImageWidth",
+                  "value": 3264
+                },
+                {
+                  "name": "ImageLength",
+                  "value": 2448
+                },
+                {
+                  "name": "Make",
+                  "value": "SONY"
+                },
+                {
+                  "name": "Model",
+                  "value": "DSC-F828"
+                },
+                {
+                  "name": "Orientation",
+                  "value": 1
+                },
+                {
+                  "name": "XResolution",
+                  "value": "72/1"
+                },
+                {
+                  "name": "YResolution",
+                  "value": "72/1"
+                },
+                {
+                  "name": "ResolutionUnit",
+                  "value": 2
+                },
+                {
+                  "name": "Software",
+                  "value": "GIMP 2.8.0"
+                },
+                {
+                  "name": "DateTime",
+                  "value": "2012:08:01 01:42:51"
+                },
+                {
+                  "name": "YCbCrPositioning",
+                  "value": 2
+                },
+                {
+                  "name": "ExposureTime",
+                  "value": "10/6400"
+                },
+                {
+                  "name": "FNumber",
+                  "value": "28/10"
+                },
+                {
+                  "name": "ExposureProgram",
+                  "value": 3
+                },
+                {
+                  "name": "ISOSpeedRatings",
+                  "value": 64
+                },
+                {
+                  "name": "ExifVersion",
+                  "value": "0220"
+                },
+                {
+                  "name": "DateTimeOriginal",
+                  "value": "2012:07:20 08:00:54"
+                },
+                {
+                  "name": "DateTimeDigitized",
+                  "value": "2012:07:20 08:00:54"
+                },
+                {
+                  "name": "ComponentsConfiguration",
+                  "value": "\n#1\n#2\n#3\n#0"
+                },
+                {
+                  "name": "CompressedBitsPerPixel",
+                  "value": "8/1"
+                },
+                {
+                  "name": "ExposureBiasValue",
+                  "value": "0/10"
+                },
+                {
+                  "name": "MaxApertureValue",
+                  "value": "33/16"
+                },
+                {
+                  "name": "MeteringMode",
+                  "value": 5
+                },
+                {
+                  "name": "LightSource",
+                  "value": 10
+                },
+                {
+                  "name": "Flash",
+                  "value": 16
+                },
+                {
+                  "name": "FocalLength",
+                  "value": "149/10"
+                },
+                {
+                  "name": "FlashPixVersion",
+                  "value": "0100"
+                },
+                {
+                  "name": "ColorSpace",
+                  "value": 1
+                },
+                {
+                  "name": "FileSource",
+                  "value": 3
+                },
+                {
+                  "name": "SceneType",
+                  "value": 1
+                },
+                {
+                  "name": "CustomRendered",
+                  "value": 0
+                },
+                {
+                  "name": "ExposureMode",
+                  "value": 0
+                },
+                {
+                  "name": "WhiteBalance",
+                  "value": 1
+                },
+                {
+                  "name": "SceneCaptureType",
+                  "value": 0
+                },
+                {
+                  "name": "Contrast",
+                  "value": 2
+                },
+                {
+                  "name": "Saturation",
+                  "value": 2
+                },
+                {
+                  "name": "Sharpness",
+                  "value": 0
+                },
+                {
+                  "name": "PixelXDimension",
+                  "value": "3264"
+                },
+                {
+                  "name": "PixelYDimension",
+                  "value": "2448"
+                },
+                {
+                  "name": "MEDIAWIKI_EXIF_VERSION",
+                  "value": 1
+                }
+              ],
+              "extmetadata": {
+                "DateTime": {
+                  "value": "2015-12-01 13:36:42",
+                  "source": "mediawiki-metadata",
+                  "hidden": ""
+                },
+                "ObjectName": {
+                  "value": "Spoilt.exile DSC01714 СУФ (9107803914)",
+                  "source": "mediawiki-metadata"
+                },
+                "CommonsMetadataExtension": {
+                  "value": 1.2,
+                  "source": "extension",
+                  "hidden": ""
+                },
+                "Categories": {
+                  "value": "Taken with Sony DSC-F828|Flickr images reviewed by FlickreviewR|Supermarkets in Donetsk Oblast|July 2012 in Donetsk Oblast|Ukraine photographs taken on 2012-07-20|Shops in Kramatorsk Raion|Photographs by spoilt.exile|Buildings in Lyman|Queue for categorisation (spoilt.exile)|Flickr images missing SDC published in",
+                  "source": "commons-categories",
+                  "hidden": ""
+                },
+                "Assessments": {
+                  "value": "",
+                  "source": "commons-categories",
+                  "hidden": ""
+                },
+                "ImageDescription": {
+                  "value": "DSC01714_СУФ",
+                  "source": "commons-desc-page"
+                },
+                "DateTimeOriginal": {
+                  "value": "2012-07-20 08:00",
+                  "source": "commons-desc-page"
+                },
+                "Credit": {
+                  "value": "<a rel=\"nofollow\" class=\"external text\" href=\"https://www.flickr.com/photos/spoilt_exile/9107803914/\">DSC01714_СУФ</a>",
+                  "source": "commons-desc-page"
+                },
+                "Artist": {
+                  "value": "<a rel=\"nofollow\" class=\"external text\" href=\"https://www.flickr.com/people/96301483@N05\">spoilt.exile</a> from Kiev, Ukraine",
+                  "source": "commons-desc-page"
+                },
+                "LicenseShortName": {
+                  "value": "CC BY-SA 2.0",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "UsageTerms": {
+                  "value": "Creative Commons Attribution-Share Alike 2.0",
+                  "source": "commons-desc-page"
+                },
+                "AttributionRequired": {
+                  "value": "true",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "LicenseUrl": {
+                  "value": "https://creativecommons.org/licenses/by-sa/2.0",
+                  "source": "commons-desc-page"
+                },
+                "Copyrighted": {
+                  "value": "True",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "Restrictions": {
+                  "value": "",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "License": {
+                  "value": "cc-by-sa-2.0",
+                  "source": "commons-templates",
+                  "hidden": ""
+                }
+              }
+            }
+          ]
+        },
+        "45363497": {
+          "pageid": 45363497,
+          "ns": 6,
+          "title": "File:Spoilt.exile DSC01710 СУФ (9105570003).jpg",
+          "imagerepository": "local",
+          "imageinfo": [
+            {
+              "timestamp": "2015-12-01T13:36:49Z",
+              "size": 3218778,
+              "width": 3264,
+              "height": 2448,
+              "thumburl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d7/Spoilt.exile_DSC01710_%D0%A1%D0%A3%D0%A4_%289105570003%29.jpg/1280px-Spoilt.exile_DSC01710_%D0%A1%D0%A3%D0%A4_%289105570003%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+              "thumbwidth": 1280,
+              "thumbheight": 960,
+              "responsiveUrls": {
+                "2": "https://upload.wikimedia.org/wikipedia/commons/d/d7/Spoilt.exile_DSC01710_%D0%A1%D0%A3%D0%A4_%289105570003%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
+              },
+              "thumbattribs": {
+                "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d7/Spoilt.exile_DSC01710_%D0%A1%D0%A3%D0%A4_%289105570003%29.jpg/1280px-Spoilt.exile_DSC01710_%D0%A1%D0%A3%D0%A4_%289105570003%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+                "decoding": "async",
+                "loading": "lazy",
+                "width": 1280,
+                "height": 960,
+                "srcset": "https://upload.wikimedia.org/wikipedia/commons/d/d7/Spoilt.exile_DSC01710_%D0%A1%D0%A3%D0%A4_%289105570003%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled 2x"
+              },
+              "url": "https://upload.wikimedia.org/wikipedia/commons/d/d7/Spoilt.exile_DSC01710_%D0%A1%D0%A3%D0%A4_%289105570003%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+              "descriptionurl": "https://commons.wikimedia.org/wiki/File:Spoilt.exile_DSC01710_%D0%A1%D0%A3%D0%A4_(9105570003).jpg",
+              "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=45363497",
+              "metadata": [
+                {
+                  "name": "ImageWidth",
+                  "value": 3264
+                },
+                {
+                  "name": "ImageLength",
+                  "value": 2448
+                },
+                {
+                  "name": "Make",
+                  "value": "SONY"
+                },
+                {
+                  "name": "Model",
+                  "value": "DSC-F828"
+                },
+                {
+                  "name": "Orientation",
+                  "value": 1
+                },
+                {
+                  "name": "XResolution",
+                  "value": "72/1"
+                },
+                {
+                  "name": "YResolution",
+                  "value": "72/1"
+                },
+                {
+                  "name": "ResolutionUnit",
+                  "value": 2
+                },
+                {
+                  "name": "Software",
+                  "value": "GIMP 2.8.0"
+                },
+                {
+                  "name": "DateTime",
+                  "value": "2012:08:01 01:42:40"
+                },
+                {
+                  "name": "YCbCrPositioning",
+                  "value": 2
+                },
+                {
+                  "name": "ExposureTime",
+                  "value": "10/20000"
+                },
+                {
+                  "name": "FNumber",
+                  "value": "28/10"
+                },
+                {
+                  "name": "ExposureProgram",
+                  "value": 3
+                },
+                {
+                  "name": "ISOSpeedRatings",
+                  "value": 64
+                },
+                {
+                  "name": "ExifVersion",
+                  "value": "0220"
+                },
+                {
+                  "name": "DateTimeOriginal",
+                  "value": "2012:07:20 07:38:55"
+                },
+                {
+                  "name": "DateTimeDigitized",
+                  "value": "2012:07:20 07:38:55"
+                },
+                {
+                  "name": "ComponentsConfiguration",
+                  "value": "\n#1\n#2\n#3\n#0"
+                },
+                {
+                  "name": "CompressedBitsPerPixel",
+                  "value": "8/1"
+                },
+                {
+                  "name": "ExposureBiasValue",
+                  "value": "0/10"
+                },
+                {
+                  "name": "MaxApertureValue",
+                  "value": "33/16"
+                },
+                {
+                  "name": "MeteringMode",
+                  "value": 5
+                },
+                {
+                  "name": "LightSource",
+                  "value": 10
+                },
+                {
+                  "name": "Flash",
+                  "value": 16
+                },
+                {
+                  "name": "FocalLength",
+                  "value": "82/10"
+                },
+                {
+                  "name": "FlashPixVersion",
+                  "value": "0100"
+                },
+                {
+                  "name": "ColorSpace",
+                  "value": 1
+                },
+                {
+                  "name": "FileSource",
+                  "value": 3
+                },
+                {
+                  "name": "SceneType",
+                  "value": 1
+                },
+                {
+                  "name": "CustomRendered",
+                  "value": 0
+                },
+                {
+                  "name": "ExposureMode",
+                  "value": 0
+                },
+                {
+                  "name": "WhiteBalance",
+                  "value": 1
+                },
+                {
+                  "name": "SceneCaptureType",
+                  "value": 0
+                },
+                {
+                  "name": "Contrast",
+                  "value": 2
+                },
+                {
+                  "name": "Saturation",
+                  "value": 2
+                },
+                {
+                  "name": "Sharpness",
+                  "value": 0
+                },
+                {
+                  "name": "PixelXDimension",
+                  "value": "3264"
+                },
+                {
+                  "name": "PixelYDimension",
+                  "value": "2448"
+                },
+                {
+                  "name": "MEDIAWIKI_EXIF_VERSION",
+                  "value": 1
+                }
+              ],
+              "extmetadata": {
+                "DateTime": {
+                  "value": "2015-12-01 13:36:49",
+                  "source": "mediawiki-metadata",
+                  "hidden": ""
+                },
+                "ObjectName": {
+                  "value": "Spoilt.exile DSC01710 СУФ (9105570003)",
+                  "source": "mediawiki-metadata"
+                },
+                "CommonsMetadataExtension": {
+                  "value": 1.2,
+                  "source": "extension",
+                  "hidden": ""
+                },
+                "Categories": {
+                  "value": "Taken with Sony DSC-F828|Transport in Lyman|Flickr images reviewed by FlickreviewR|July 2012 in Donetsk Oblast|Ukraine photographs taken on 2012-07-20|Streets in Kramatorsk Raion|Shops in Kramatorsk Raion|Automobiles in Kramatorsk Raion|Parking in Kramatorsk Raion|Photographs by spoilt.exile|Buildings in Lyman|Queue for categorisation (spoilt.exile)|Flickr images missing SDC published in",
+                  "source": "commons-categories",
+                  "hidden": ""
+                },
+                "Assessments": {
+                  "value": "",
+                  "source": "commons-categories",
+                  "hidden": ""
+                },
+                "ImageDescription": {
+                  "value": "DSC01710_СУФ",
+                  "source": "commons-desc-page"
+                },
+                "DateTimeOriginal": {
+                  "value": "2012-07-20 07:38",
+                  "source": "commons-desc-page"
+                },
+                "Credit": {
+                  "value": "<a rel=\"nofollow\" class=\"external text\" href=\"https://www.flickr.com/photos/spoilt_exile/9105570003/\">DSC01710_СУФ</a>",
+                  "source": "commons-desc-page"
+                },
+                "Artist": {
+                  "value": "<a rel=\"nofollow\" class=\"external text\" href=\"https://www.flickr.com/people/96301483@N05\">spoilt.exile</a> from Kiev, Ukraine",
+                  "source": "commons-desc-page"
+                },
+                "LicenseShortName": {
+                  "value": "CC BY-SA 2.0",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "UsageTerms": {
+                  "value": "Creative Commons Attribution-Share Alike 2.0",
+                  "source": "commons-desc-page"
+                },
+                "AttributionRequired": {
+                  "value": "true",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "LicenseUrl": {
+                  "value": "https://creativecommons.org/licenses/by-sa/2.0",
+                  "source": "commons-desc-page"
+                },
+                "Copyrighted": {
+                  "value": "True",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "Restrictions": {
+                  "value": "",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "License": {
+                  "value": "cc-by-sa-2.0",
+                  "source": "commons-templates",
+                  "hidden": ""
+                }
+              }
+            }
+          ]
+        },
+        "73009966": {
+          "pageid": 73009966,
+          "ns": 6,
+          "title": "File:Лиман, улица Привокзальная, 21а.jpg",
+          "imagerepository": "local",
+          "imageinfo": [
+            {
+              "timestamp": "2018-09-24T12:52:13Z",
+              "size": 1718446,
+              "width": 1800,
+              "height": 1350,
+              "thumburl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/ca/%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD%2C_%D1%83%D0%BB%D0%B8%D1%86%D0%B0_%D0%9F%D1%80%D0%B8%D0%B2%D0%BE%D0%BA%D0%B7%D0%B0%D0%BB%D1%8C%D0%BD%D0%B0%D1%8F%2C_21%D0%B0.jpg/1280px-%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD%2C_%D1%83%D0%BB%D0%B8%D1%86%D0%B0_%D0%9F%D1%80%D0%B8%D0%B2%D0%BE%D0%BA%D0%B7%D0%B0%D0%BB%D1%8C%D0%BD%D0%B0%D1%8F%2C_21%D0%B0.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+              "thumbwidth": 1280,
+              "thumbheight": 960,
+              "responsiveUrls": {
+                "2": "https://upload.wikimedia.org/wikipedia/commons/c/ca/%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD%2C_%D1%83%D0%BB%D0%B8%D1%86%D0%B0_%D0%9F%D1%80%D0%B8%D0%B2%D0%BE%D0%BA%D0%B7%D0%B0%D0%BB%D1%8C%D0%BD%D0%B0%D1%8F%2C_21%D0%B0.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
+              },
+              "thumbattribs": {
+                "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/ca/%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD%2C_%D1%83%D0%BB%D0%B8%D1%86%D0%B0_%D0%9F%D1%80%D0%B8%D0%B2%D0%BE%D0%BA%D0%B7%D0%B0%D0%BB%D1%8C%D0%BD%D0%B0%D1%8F%2C_21%D0%B0.jpg/1280px-%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD%2C_%D1%83%D0%BB%D0%B8%D1%86%D0%B0_%D0%9F%D1%80%D0%B8%D0%B2%D0%BE%D0%BA%D0%B7%D0%B0%D0%BB%D1%8C%D0%BD%D0%B0%D1%8F%2C_21%D0%B0.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+                "decoding": "async",
+                "loading": "lazy",
+                "width": 1280,
+                "height": 960,
+                "srcset": "https://upload.wikimedia.org/wikipedia/commons/c/ca/%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD%2C_%D1%83%D0%BB%D0%B8%D1%86%D0%B0_%D0%9F%D1%80%D0%B8%D0%B2%D0%BE%D0%BA%D0%B7%D0%B0%D0%BB%D1%8C%D0%BD%D0%B0%D1%8F%2C_21%D0%B0.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled 2x"
+              },
+              "url": "https://upload.wikimedia.org/wikipedia/commons/c/ca/%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD%2C_%D1%83%D0%BB%D0%B8%D1%86%D0%B0_%D0%9F%D1%80%D0%B8%D0%B2%D0%BE%D0%BA%D0%B7%D0%B0%D0%BB%D1%8C%D0%BD%D0%B0%D1%8F%2C_21%D0%B0.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+              "descriptionurl": "https://commons.wikimedia.org/wiki/File:%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD,_%D1%83%D0%BB%D0%B8%D1%86%D0%B0_%D0%9F%D1%80%D0%B8%D0%B2%D0%BE%D0%BA%D0%B7%D0%B0%D0%BB%D1%8C%D0%BD%D0%B0%D1%8F,_21%D0%B0.jpg",
+              "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=73009966",
+              "metadata": [
+                {
+                  "name": "ImageDescription",
+                  "value": "OLYMPUS DIGITAL CAMERA"
+                },
+                {
+                  "name": "Make",
+                  "value": "OLYMPUS IMAGING CORP.  "
+                },
+                {
+                  "name": "Model",
+                  "value": "SP560UZ                "
+                },
+                {
+                  "name": "Orientation",
+                  "value": 1
+                },
+                {
+                  "name": "XResolution",
+                  "value": "720000/10000"
+                },
+                {
+                  "name": "YResolution",
+                  "value": "720000/10000"
+                },
+                {
+                  "name": "ResolutionUnit",
+                  "value": 2
+                },
+                {
+                  "name": "Software",
+                  "value": "Adobe Photoshop CC 2014 (Windows)"
+                },
+                {
+                  "name": "DateTime",
+                  "value": "2018:09:24 15:49:42"
+                },
+                {
+                  "name": "YCbCrPositioning",
+                  "value": 2
+                },
+                {
+                  "name": "ExposureTime",
+                  "value": "10/1000"
+                },
+                {
+                  "name": "FNumber",
+                  "value": "35/10"
+                },
+                {
+                  "name": "ExposureProgram",
+                  "value": 5
+                },
+                {
+                  "name": "ISOSpeedRatings",
+                  "value": 50
+                },
+                {
+                  "name": "ExifVersion",
+                  "value": "0221"
+                },
+                {
+                  "name": "DateTimeOriginal",
+                  "value": "2018:06:03 15:57:03"
+                },
+                {
+                  "name": "DateTimeDigitized",
+                  "value": "2018:06:03 15:57:03"
+                },
+                {
+                  "name": "ComponentsConfiguration",
+                  "value": "\n#1\n#2\n#3\n#0"
+                },
+                {
+                  "name": "CompressedBitsPerPixel",
+                  "value": "4/1"
+                },
+                {
+                  "name": "ExposureBiasValue",
+                  "value": "0/10"
+                },
+                {
+                  "name": "MaxApertureValue",
+                  "value": "297/100"
+                },
+                {
+                  "name": "MeteringMode",
+                  "value": 5
+                },
+                {
+                  "name": "LightSource",
+                  "value": 0
+                },
+                {
+                  "name": "Flash",
+                  "value": 16
+                },
+                {
+                  "name": "FocalLength",
+                  "value": "468/100"
+                },
+                {
+                  "name": "FlashPixVersion",
+                  "value": "0100"
+                },
+                {
+                  "name": "ColorSpace",
+                  "value": 1
+                },
+                {
+                  "name": "FileSource",
+                  "value": 3
+                },
+                {
+                  "name": "SceneType",
+                  "value": 1
+                },
+                {
+                  "name": "CustomRendered",
+                  "value": 0
+                },
+                {
+                  "name": "ExposureMode",
+                  "value": 0
+                },
+                {
+                  "name": "WhiteBalance",
+                  "value": 0
+                },
+                {
+                  "name": "DigitalZoomRatio",
+                  "value": "0/100"
+                },
+                {
+                  "name": "SceneCaptureType",
+                  "value": 0
+                },
+                {
+                  "name": "GainControl",
+                  "value": 0
+                },
+                {
+                  "name": "Contrast",
+                  "value": 0
+                },
+                {
+                  "name": "Saturation",
+                  "value": 0
+                },
+                {
+                  "name": "Sharpness",
+                  "value": 0
+                },
+                {
+                  "name": "DateTimeMetadata",
+                  "value": "2018:09:24 18:49:42"
+                },
+                {
+                  "name": "OriginalDocumentID",
+                  "value": "xmp.did:a55ac6e2-b4cb-7645-8cde-b58cfd493d05"
+                },
+                {
+                  "name": "MEDIAWIKI_EXIF_VERSION",
+                  "value": 1
+                }
+              ],
+              "extmetadata": {
+                "DateTime": {
+                  "value": "2018-09-24 12:52:13",
+                  "source": "mediawiki-metadata",
+                  "hidden": ""
+                },
+                "ObjectName": {
+                  "value": "Лиман, улица Привокзальная, 21а",
+                  "source": "mediawiki-metadata"
+                },
+                "CommonsMetadataExtension": {
+                  "value": 1.2,
+                  "source": "extension",
+                  "hidden": ""
+                },
+                "Categories": {
+                  "value": "2018 in Donetsk Oblast|Images from Wiki Loves Monuments 2018|21a Pryvokzalna Street, Lyman|Self-published work|Images from Wiki Loves Monuments 2018 in Ukraine|Cultural heritage monuments in Ukraine with known IDs|Uploaded via Campaign:wlm-ua|Ukraine photographs taken on 2018-06-03|Images from Wiki Loves Monuments missing SDC location of creation|Cultural heritage monuments in Ukraine missing SDC location of creation|Wiki loves monuments in Ukraine 2018 - Quantity|Photos by Artemco/Лиман",
+                  "source": "commons-categories",
+                  "hidden": ""
+                },
+                "Assessments": {
+                  "value": "",
+                  "source": "commons-categories",
+                  "hidden": ""
+                },
+                "ImageDescription": {
+                  "value": "Будинок, у якому знаходився перший ревком, <a href=\"https://uk.wikipedia.org/wiki/%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD_(%D0%BC%D1%96%D1%81%D1%82%D0%BE)\" class=\"extiw\" title=\"uk:Лиман (місто)\">Лиман</a>, вул. Привокзальна (Кірова), 21а",
+                  "source": "commons-desc-page"
+                },
+                "DateTimeOriginal": {
+                  "value": "2018-06-03 15:57:03",
+                  "source": "commons-desc-page"
+                },
+                "Credit": {
+                  "value": "<span class=\"int-own-work\" lang=\"en\">Own work</span>",
+                  "source": "commons-desc-page"
+                },
+                "Artist": {
+                  "value": "<a href=\"//commons.wikimedia.org/wiki/User:Artemka\" class=\"mw-redirect\" title=\"User:Artemka\">Artemka</a>",
+                  "source": "commons-desc-page"
+                },
+                "LicenseShortName": {
+                  "value": "CC BY-SA 4.0",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "UsageTerms": {
+                  "value": "Creative Commons Attribution-Share Alike 4.0",
+                  "source": "commons-desc-page"
+                },
+                "AttributionRequired": {
+                  "value": "true",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "LicenseUrl": {
+                  "value": "https://creativecommons.org/licenses/by-sa/4.0",
+                  "source": "commons-desc-page"
+                },
+                "Copyrighted": {
+                  "value": "True",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "Restrictions": {
+                  "value": "",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "License": {
+                  "value": "cc-by-sa-4.0",
+                  "source": "commons-templates",
+                  "hidden": ""
+                }
+              }
+            }
+          ]
+        },
+        "147077476": {
+          "pageid": 147077476,
+          "ns": 6,
+          "title": "File:Гімназія, Лиман.jpg",
+          "imagerepository": "local",
+          "imageinfo": [
+            {
+              "timestamp": "2024-04-04T12:55:46Z",
+              "size": 2054802,
+              "width": 1800,
+              "height": 1350,
+              "thumburl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fc/%D0%93%D1%96%D0%BC%D0%BD%D0%B0%D0%B7%D1%96%D1%8F%2C_%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD.jpg/1280px-%D0%93%D1%96%D0%BC%D0%BD%D0%B0%D0%B7%D1%96%D1%8F%2C_%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+              "thumbwidth": 1280,
+              "thumbheight": 960,
+              "responsiveUrls": {
+                "2": "https://upload.wikimedia.org/wikipedia/commons/f/fc/%D0%93%D1%96%D0%BC%D0%BD%D0%B0%D0%B7%D1%96%D1%8F%2C_%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
+              },
+              "thumbattribs": {
+                "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fc/%D0%93%D1%96%D0%BC%D0%BD%D0%B0%D0%B7%D1%96%D1%8F%2C_%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD.jpg/1280px-%D0%93%D1%96%D0%BC%D0%BD%D0%B0%D0%B7%D1%96%D1%8F%2C_%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+                "decoding": "async",
+                "loading": "lazy",
+                "width": 1280,
+                "height": 960,
+                "srcset": "https://upload.wikimedia.org/wikipedia/commons/f/fc/%D0%93%D1%96%D0%BC%D0%BD%D0%B0%D0%B7%D1%96%D1%8F%2C_%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled 2x"
+              },
+              "url": "https://upload.wikimedia.org/wikipedia/commons/f/fc/%D0%93%D1%96%D0%BC%D0%BD%D0%B0%D0%B7%D1%96%D1%8F%2C_%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+              "descriptionurl": "https://commons.wikimedia.org/wiki/File:%D0%93%D1%96%D0%BC%D0%BD%D0%B0%D0%B7%D1%96%D1%8F,_%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD.jpg",
+              "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=147077476",
+              "metadata": [
+                {
+                  "name": "ImageWidth",
+                  "value": 2048
+                },
+                {
+                  "name": "ImageLength",
+                  "value": 1536
+                },
+                {
+                  "name": "BitsPerSample",
+                  "value": "\n*8\n*8\n*8"
+                },
+                {
+                  "name": "PhotometricInterpretation",
+                  "value": 2
+                },
+                {
+                  "name": "ImageDescription",
+                  "value": "OLYMPUS DIGITAL CAMERA\n\n"
+                },
+                {
+                  "name": "Make",
+                  "value": "OLYMPUS IMAGING CORP.  "
+                },
+                {
+                  "name": "Model",
+                  "value": "SP560UZ                "
+                },
+                {
+                  "name": "Orientation",
+                  "value": 1
+                },
+                {
+                  "name": "SamplesPerPixel",
+                  "value": 3
+                },
+                {
+                  "name": "XResolution",
+                  "value": "720000/10000"
+                },
+                {
+                  "name": "YResolution",
+                  "value": "720000/10000"
+                },
+                {
+                  "name": "ResolutionUnit",
+                  "value": 2
+                },
+                {
+                  "name": "Software",
+                  "value": "Adobe Photoshop CS6 (Windows)"
+                },
+                {
+                  "name": "DateTime",
+                  "value": "2024:04:04 14:29:47"
+                },
+                {
+                  "name": "YCbCrPositioning",
+                  "value": 2
+                },
+                {
+                  "name": "ExposureTime",
+                  "value": "10/800"
+                },
+                {
+                  "name": "FNumber",
+                  "value": "56/10"
+                },
+                {
+                  "name": "ExposureProgram",
+                  "value": 5
+                },
+                {
+                  "name": "ISOSpeedRatings",
+                  "value": 50
+                },
+                {
+                  "name": "ExifVersion",
+                  "value": "0221"
+                },
+                {
+                  "name": "DateTimeOriginal",
+                  "value": "2018:06:03 14:29:45"
+                },
+                {
+                  "name": "DateTimeDigitized",
+                  "value": "2018:06:03 14:29:45"
+                },
+                {
+                  "name": "ComponentsConfiguration",
+                  "value": "\n#1\n#2\n#3\n#0"
+                },
+                {
+                  "name": "CompressedBitsPerPixel",
+                  "value": "4/1"
+                },
+                {
+                  "name": "ShutterSpeedValue",
+                  "value": "6321928/1000000"
+                },
+                {
+                  "name": "ApertureValue",
+                  "value": "4970854/1000000"
+                },
+                {
+                  "name": "ExposureBiasValue",
+                  "value": "0/10"
+                },
+                {
+                  "name": "MaxApertureValue",
+                  "value": "297/100"
+                },
+                {
+                  "name": "MeteringMode",
+                  "value": 5
+                },
+                {
+                  "name": "LightSource",
+                  "value": 0
+                },
+                {
+                  "name": "Flash",
+                  "value": 16
+                },
+                {
+                  "name": "FocalLength",
+                  "value": "468/100"
+                },
+                {
+                  "name": "FlashPixVersion",
+                  "value": "0100"
+                },
+                {
+                  "name": "ColorSpace",
+                  "value": 1
+                },
+                {
+                  "name": "FileSource",
+                  "value": 3
+                },
+                {
+                  "name": "SceneType",
+                  "value": 1
+                },
+                {
+                  "name": "CustomRendered",
+                  "value": 0
+                },
+                {
+                  "name": "ExposureMode",
+                  "value": 0
+                },
+                {
+                  "name": "WhiteBalance",
+                  "value": 0
+                },
+                {
+                  "name": "DigitalZoomRatio",
+                  "value": "0/100"
+                },
+                {
+                  "name": "SceneCaptureType",
+                  "value": 0
+                },
+                {
+                  "name": "GainControl",
+                  "value": 0
+                },
+                {
+                  "name": "Contrast",
+                  "value": 0
+                },
+                {
+                  "name": "Saturation",
+                  "value": 0
+                },
+                {
+                  "name": "Sharpness",
+                  "value": 0
+                },
+                {
+                  "name": "SerialNumber",
+                  "value": "000L77534960"
+                },
+                {
+                  "name": "DateTimeMetadata",
+                  "value": "2024:04:04 17:29:47"
+                },
+                {
+                  "name": "OriginalDocumentID",
+                  "value": "C797E4D27DD73ED2EF3FB73B4ED179BC"
+                },
+                {
+                  "name": "iimVersion",
+                  "value": 64269
+                },
+                {
+                  "name": "MEDIAWIKI_EXIF_VERSION",
+                  "value": 1
+                }
+              ],
+              "extmetadata": {
+                "DateTime": {
+                  "value": "2024-04-04 12:55:46",
+                  "source": "mediawiki-metadata",
+                  "hidden": ""
+                },
+                "ObjectName": {
+                  "value": "Гімназія, Лиман",
+                  "source": "mediawiki-metadata"
+                },
+                "CommonsMetadataExtension": {
+                  "value": 1.2,
+                  "source": "extension",
+                  "hidden": ""
+                },
+                "Categories": {
+                  "value": "Self-published work|Schools in Kramatorsk Raion|School type 104|Buildings in Lyman|Photos by Artemco/Лиман",
+                  "source": "commons-categories",
+                  "hidden": ""
+                },
+                "Assessments": {
+                  "value": "",
+                  "source": "commons-categories",
+                  "hidden": ""
+                },
+                "ImageDescription": {
+                  "value": "Лиман, гімназія, 1936, до 2002 школа № 6",
+                  "source": "commons-desc-page"
+                },
+                "DateTimeOriginal": {
+                  "value": "2018-06-03 14:29:45",
+                  "source": "commons-desc-page"
+                },
+                "Credit": {
+                  "value": "<span class=\"int-own-work\" lang=\"en\">Own work</span>",
+                  "source": "commons-desc-page"
+                },
+                "Artist": {
+                  "value": "<a href=\"//commons.wikimedia.org/wiki/User:Artemco\" title=\"User:Artemco\">Artemco</a>",
+                  "source": "commons-desc-page"
+                },
+                "LicenseShortName": {
+                  "value": "CC BY-SA 4.0",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "UsageTerms": {
+                  "value": "Creative Commons Attribution-Share Alike 4.0",
+                  "source": "commons-desc-page"
+                },
+                "AttributionRequired": {
+                  "value": "true",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "LicenseUrl": {
+                  "value": "https://creativecommons.org/licenses/by-sa/4.0",
+                  "source": "commons-desc-page"
+                },
+                "Copyrighted": {
+                  "value": "True",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "Restrictions": {
+                  "value": "",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "License": {
+                  "value": "cc-by-sa-4.0",
+                  "source": "commons-templates",
+                  "hidden": ""
+                }
+              }
+            }
+          ]
+        },
+        "147097142": {
+          "pageid": 147097142,
+          "ns": 6,
+          "title": "File:М. Лиман, школа № 2.jpg",
+          "imagerepository": "local",
+          "imageinfo": [
+            {
+              "timestamp": "2024-04-05T05:20:47Z",
+              "size": 1581694,
+              "width": 1800,
+              "height": 1200,
+              "thumburl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4b/%D0%9C._%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD%2C_%D1%88%D0%BA%D0%BE%D0%BB%D0%B0_%E2%84%96_2.jpg/1280px-%D0%9C._%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD%2C_%D1%88%D0%BA%D0%BE%D0%BB%D0%B0_%E2%84%96_2.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+              "thumbwidth": 1280,
+              "thumbheight": 853,
+              "responsiveUrls": {
+                "2": "https://upload.wikimedia.org/wikipedia/commons/4/4b/%D0%9C._%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD%2C_%D1%88%D0%BA%D0%BE%D0%BB%D0%B0_%E2%84%96_2.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
+              },
+              "thumbattribs": {
+                "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4b/%D0%9C._%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD%2C_%D1%88%D0%BA%D0%BE%D0%BB%D0%B0_%E2%84%96_2.jpg/1280px-%D0%9C._%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD%2C_%D1%88%D0%BA%D0%BE%D0%BB%D0%B0_%E2%84%96_2.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+                "decoding": "async",
+                "loading": "lazy",
+                "width": 1280,
+                "height": 853,
+                "srcset": "https://upload.wikimedia.org/wikipedia/commons/4/4b/%D0%9C._%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD%2C_%D1%88%D0%BA%D0%BE%D0%BB%D0%B0_%E2%84%96_2.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled 2x"
+              },
+              "url": "https://upload.wikimedia.org/wikipedia/commons/4/4b/%D0%9C._%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD%2C_%D1%88%D0%BA%D0%BE%D0%BB%D0%B0_%E2%84%96_2.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+              "descriptionurl": "https://commons.wikimedia.org/wiki/File:%D0%9C._%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD,_%D1%88%D0%BA%D0%BE%D0%BB%D0%B0_%E2%84%96_2.jpg",
+              "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=147097142",
+              "metadata": [
+                {
+                  "name": "ImageWidth",
+                  "value": 2048
+                },
+                {
+                  "name": "ImageLength",
+                  "value": 1536
+                },
+                {
+                  "name": "BitsPerSample",
+                  "value": "\n*8\n*8\n*8"
+                },
+                {
+                  "name": "PhotometricInterpretation",
+                  "value": 2
+                },
+                {
+                  "name": "ImageDescription",
+                  "value": "OLYMPUS DIGITAL CAMERA\n\n"
+                },
+                {
+                  "name": "Make",
+                  "value": "OLYMPUS IMAGING CORP.  "
+                },
+                {
+                  "name": "Model",
+                  "value": "SP560UZ                "
+                },
+                {
+                  "name": "Orientation",
+                  "value": 1
+                },
+                {
+                  "name": "SamplesPerPixel",
+                  "value": 3
+                },
+                {
+                  "name": "XResolution",
+                  "value": "720000/10000"
+                },
+                {
+                  "name": "YResolution",
+                  "value": "720000/10000"
+                },
+                {
+                  "name": "ResolutionUnit",
+                  "value": 2
+                },
+                {
+                  "name": "Software",
+                  "value": "Adobe Photoshop CS6 (Windows)"
+                },
+                {
+                  "name": "DateTime",
+                  "value": "2024:04:04 21:52:04"
+                },
+                {
+                  "name": "YCbCrPositioning",
+                  "value": 2
+                },
+                {
+                  "name": "ExposureTime",
+                  "value": "10/2500"
+                },
+                {
+                  "name": "FNumber",
+                  "value": "56/10"
+                },
+                {
+                  "name": "ExposureProgram",
+                  "value": 5
+                },
+                {
+                  "name": "ISOSpeedRatings",
+                  "value": 50
+                },
+                {
+                  "name": "ExifVersion",
+                  "value": "0221"
+                },
+                {
+                  "name": "DateTimeOriginal",
+                  "value": "2018:06:03 14:48:01"
+                },
+                {
+                  "name": "DateTimeDigitized",
+                  "value": "2018:06:03 14:48:01"
+                },
+                {
+                  "name": "ComponentsConfiguration",
+                  "value": "\n#1\n#2\n#3\n#0"
+                },
+                {
+                  "name": "CompressedBitsPerPixel",
+                  "value": "4/1"
+                },
+                {
+                  "name": "ShutterSpeedValue",
+                  "value": "7965784/1000000"
+                },
+                {
+                  "name": "ApertureValue",
+                  "value": "4970854/1000000"
+                },
+                {
+                  "name": "ExposureBiasValue",
+                  "value": "0/10"
+                },
+                {
+                  "name": "MaxApertureValue",
+                  "value": "297/100"
+                },
+                {
+                  "name": "MeteringMode",
+                  "value": 5
+                },
+                {
+                  "name": "LightSource",
+                  "value": 0
+                },
+                {
+                  "name": "Flash",
+                  "value": 16
+                },
+                {
+                  "name": "FocalLength",
+                  "value": "468/100"
+                },
+                {
+                  "name": "FlashPixVersion",
+                  "value": "0100"
+                },
+                {
+                  "name": "ColorSpace",
+                  "value": 1
+                },
+                {
+                  "name": "FileSource",
+                  "value": 3
+                },
+                {
+                  "name": "SceneType",
+                  "value": 1
+                },
+                {
+                  "name": "CustomRendered",
+                  "value": 0
+                },
+                {
+                  "name": "ExposureMode",
+                  "value": 0
+                },
+                {
+                  "name": "WhiteBalance",
+                  "value": 0
+                },
+                {
+                  "name": "DigitalZoomRatio",
+                  "value": "0/100"
+                },
+                {
+                  "name": "SceneCaptureType",
+                  "value": 0
+                },
+                {
+                  "name": "GainControl",
+                  "value": 0
+                },
+                {
+                  "name": "Contrast",
+                  "value": 0
+                },
+                {
+                  "name": "Saturation",
+                  "value": 0
+                },
+                {
+                  "name": "Sharpness",
+                  "value": 0
+                },
+                {
+                  "name": "SerialNumber",
+                  "value": "000L77534960"
+                },
+                {
+                  "name": "DateTimeMetadata",
+                  "value": "2024:04:05 00:52:04"
+                },
+                {
+                  "name": "OriginalDocumentID",
+                  "value": "9C9112F9BCFE7512390A4CB6943E8103"
+                },
+                {
+                  "name": "iimVersion",
+                  "value": 64269
+                },
+                {
+                  "name": "MEDIAWIKI_EXIF_VERSION",
+                  "value": 1
+                }
+              ],
+              "extmetadata": {
+                "DateTime": {
+                  "value": "2024-04-05 05:20:47",
+                  "source": "mediawiki-metadata",
+                  "hidden": ""
+                },
+                "ObjectName": {
+                  "value": "М. Лиман, школа № 2",
+                  "source": "mediawiki-metadata"
+                },
+                "CommonsMetadataExtension": {
+                  "value": 1.2,
+                  "source": "extension",
+                  "hidden": ""
+                },
+                "Categories": {
+                  "value": "Self-published work|Schools in Kramatorsk Raion|224-1-142|Buildings in Lyman|Photos by Artemco/Лиман",
+                  "source": "commons-categories",
+                  "hidden": ""
+                },
+                "Assessments": {
+                  "value": "",
+                  "source": "commons-categories",
+                  "hidden": ""
+                },
+                "ImageDescription": {
+                  "value": "м. Лиман, школа № 2",
+                  "source": "commons-desc-page"
+                },
+                "DateTimeOriginal": {
+                  "value": "2018-06-03 14:48:01",
+                  "source": "commons-desc-page"
+                },
+                "Credit": {
+                  "value": "<span class=\"int-own-work\" lang=\"en\">Own work</span>",
+                  "source": "commons-desc-page"
+                },
+                "Artist": {
+                  "value": "<a href=\"//commons.wikimedia.org/wiki/User:Artemco\" title=\"User:Artemco\">Artemco</a>",
+                  "source": "commons-desc-page"
+                },
+                "LicenseShortName": {
+                  "value": "CC BY-SA 4.0",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "UsageTerms": {
+                  "value": "Creative Commons Attribution-Share Alike 4.0",
+                  "source": "commons-desc-page"
+                },
+                "AttributionRequired": {
+                  "value": "true",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "LicenseUrl": {
+                  "value": "https://creativecommons.org/licenses/by-sa/4.0",
+                  "source": "commons-desc-page"
+                },
+                "Copyrighted": {
+                  "value": "True",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "Restrictions": {
+                  "value": "",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "License": {
+                  "value": "cc-by-sa-4.0",
+                  "source": "commons-templates",
+                  "hidden": ""
+                }
+              }
+            }
+          ]
+        },
+        "147112781": {
+          "pageid": 147112781,
+          "ns": 6,
+          "title": "File:Петропавлівська церква, 1848.jpg",
+          "imagerepository": "local",
+          "imageinfo": [
+            {
+              "timestamp": "2024-04-05T15:55:36Z",
+              "size": 1250061,
+              "width": 1600,
+              "height": 1200,
+              "thumburl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5d/%D0%9F%D0%B5%D1%82%D1%80%D0%BE%D0%BF%D0%B0%D0%B2%D0%BB%D1%96%D0%B2%D1%81%D1%8C%D0%BA%D0%B0_%D1%86%D0%B5%D1%80%D0%BA%D0%B2%D0%B0%2C_1848.jpg/1280px-%D0%9F%D0%B5%D1%82%D1%80%D0%BE%D0%BF%D0%B0%D0%B2%D0%BB%D1%96%D0%B2%D1%81%D1%8C%D0%BA%D0%B0_%D1%86%D0%B5%D1%80%D0%BA%D0%B2%D0%B0%2C_1848.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+              "thumbwidth": 1280,
+              "thumbheight": 960,
+              "responsiveUrls": {
+                "2": "https://upload.wikimedia.org/wikipedia/commons/5/5d/%D0%9F%D0%B5%D1%82%D1%80%D0%BE%D0%BF%D0%B0%D0%B2%D0%BB%D1%96%D0%B2%D1%81%D1%8C%D0%BA%D0%B0_%D1%86%D0%B5%D1%80%D0%BA%D0%B2%D0%B0%2C_1848.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
+              },
+              "thumbattribs": {
+                "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5d/%D0%9F%D0%B5%D1%82%D1%80%D0%BE%D0%BF%D0%B0%D0%B2%D0%BB%D1%96%D0%B2%D1%81%D1%8C%D0%BA%D0%B0_%D1%86%D0%B5%D1%80%D0%BA%D0%B2%D0%B0%2C_1848.jpg/1280px-%D0%9F%D0%B5%D1%82%D1%80%D0%BE%D0%BF%D0%B0%D0%B2%D0%BB%D1%96%D0%B2%D1%81%D1%8C%D0%BA%D0%B0_%D1%86%D0%B5%D1%80%D0%BA%D0%B2%D0%B0%2C_1848.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+                "decoding": "async",
+                "loading": "lazy",
+                "width": 1280,
+                "height": 960,
+                "srcset": "https://upload.wikimedia.org/wikipedia/commons/5/5d/%D0%9F%D0%B5%D1%82%D1%80%D0%BE%D0%BF%D0%B0%D0%B2%D0%BB%D1%96%D0%B2%D1%81%D1%8C%D0%BA%D0%B0_%D1%86%D0%B5%D1%80%D0%BA%D0%B2%D0%B0%2C_1848.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled 2x"
+              },
+              "url": "https://upload.wikimedia.org/wikipedia/commons/5/5d/%D0%9F%D0%B5%D1%82%D1%80%D0%BE%D0%BF%D0%B0%D0%B2%D0%BB%D1%96%D0%B2%D1%81%D1%8C%D0%BA%D0%B0_%D1%86%D0%B5%D1%80%D0%BA%D0%B2%D0%B0%2C_1848.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+              "descriptionurl": "https://commons.wikimedia.org/wiki/File:%D0%9F%D0%B5%D1%82%D1%80%D0%BE%D0%BF%D0%B0%D0%B2%D0%BB%D1%96%D0%B2%D1%81%D1%8C%D0%BA%D0%B0_%D1%86%D0%B5%D1%80%D0%BA%D0%B2%D0%B0,_1848.jpg",
+              "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=147112781",
+              "metadata": [
+                {
+                  "name": "ImageWidth",
+                  "value": 2048
+                },
+                {
+                  "name": "ImageLength",
+                  "value": 1536
+                },
+                {
+                  "name": "BitsPerSample",
+                  "value": "\n*8\n*8\n*8"
+                },
+                {
+                  "name": "PhotometricInterpretation",
+                  "value": 2
+                },
+                {
+                  "name": "ImageDescription",
+                  "value": "OLYMPUS DIGITAL CAMERA\n\n"
+                },
+                {
+                  "name": "Make",
+                  "value": "OLYMPUS IMAGING CORP.  "
+                },
+                {
+                  "name": "Model",
+                  "value": "SP560UZ                "
+                },
+                {
+                  "name": "Orientation",
+                  "value": 1
+                },
+                {
+                  "name": "SamplesPerPixel",
+                  "value": 3
+                },
+                {
+                  "name": "XResolution",
+                  "value": "720000/10000"
+                },
+                {
+                  "name": "YResolution",
+                  "value": "720000/10000"
+                },
+                {
+                  "name": "ResolutionUnit",
+                  "value": 2
+                },
+                {
+                  "name": "Software",
+                  "value": "Adobe Photoshop CS6 (Windows)"
+                },
+                {
+                  "name": "DateTime",
+                  "value": "2024:04:04 13:03:08"
+                },
+                {
+                  "name": "YCbCrPositioning",
+                  "value": 2
+                },
+                {
+                  "name": "ExposureTime",
+                  "value": "10/5000"
+                },
+                {
+                  "name": "FNumber",
+                  "value": "56/10"
+                },
+                {
+                  "name": "ExposureProgram",
+                  "value": 5
+                },
+                {
+                  "name": "ISOSpeedRatings",
+                  "value": 50
+                },
+                {
+                  "name": "ExifVersion",
+                  "value": "0221"
+                },
+                {
+                  "name": "DateTimeOriginal",
+                  "value": "2018:06:03 13:30:30"
+                },
+                {
+                  "name": "DateTimeDigitized",
+                  "value": "2018:06:03 13:30:30"
+                },
+                {
+                  "name": "ComponentsConfiguration",
+                  "value": "\n#1\n#2\n#3\n#0"
+                },
+                {
+                  "name": "CompressedBitsPerPixel",
+                  "value": "4/1"
+                },
+                {
+                  "name": "ShutterSpeedValue",
+                  "value": "8965784/1000000"
+                },
+                {
+                  "name": "ApertureValue",
+                  "value": "4970854/1000000"
+                },
+                {
+                  "name": "ExposureBiasValue",
+                  "value": "0/10"
+                },
+                {
+                  "name": "MaxApertureValue",
+                  "value": "297/100"
+                },
+                {
+                  "name": "MeteringMode",
+                  "value": 5
+                },
+                {
+                  "name": "LightSource",
+                  "value": 0
+                },
+                {
+                  "name": "Flash",
+                  "value": 16
+                },
+                {
+                  "name": "FocalLength",
+                  "value": "820/100"
+                },
+                {
+                  "name": "FlashPixVersion",
+                  "value": "0100"
+                },
+                {
+                  "name": "ColorSpace",
+                  "value": 1
+                },
+                {
+                  "name": "FileSource",
+                  "value": 3
+                },
+                {
+                  "name": "SceneType",
+                  "value": 1
+                },
+                {
+                  "name": "CustomRendered",
+                  "value": 0
+                },
+                {
+                  "name": "ExposureMode",
+                  "value": 0
+                },
+                {
+                  "name": "WhiteBalance",
+                  "value": 0
+                },
+                {
+                  "name": "DigitalZoomRatio",
+                  "value": "0/100"
+                },
+                {
+                  "name": "SceneCaptureType",
+                  "value": 0
+                },
+                {
+                  "name": "GainControl",
+                  "value": 0
+                },
+                {
+                  "name": "Contrast",
+                  "value": 0
+                },
+                {
+                  "name": "Saturation",
+                  "value": 0
+                },
+                {
+                  "name": "Sharpness",
+                  "value": 0
+                },
+                {
+                  "name": "SerialNumber",
+                  "value": "000L77534960"
+                },
+                {
+                  "name": "DateTimeMetadata",
+                  "value": "2024:04:04 16:03:08"
+                },
+                {
+                  "name": "OriginalDocumentID",
+                  "value": "AF0EF20895C32D9DAB8F383F286F783B"
+                },
+                {
+                  "name": "iimVersion",
+                  "value": 64269
+                },
+                {
+                  "name": "MEDIAWIKI_EXIF_VERSION",
+                  "value": 1
+                }
+              ],
+              "extmetadata": {
+                "DateTime": {
+                  "value": "2024-04-05 15:55:36",
+                  "source": "mediawiki-metadata",
+                  "hidden": ""
+                },
+                "ObjectName": {
+                  "value": "Петропавлівська церква, 1848",
+                  "source": "mediawiki-metadata"
+                },
+                "CommonsMetadataExtension": {
+                  "value": 1.2,
+                  "source": "extension",
+                  "hidden": ""
+                },
+                "Categories": {
+                  "value": "Self-published work|Wooden churches in Donetsk Oblast|Religion in Lyman|Buildings in Lyman|Photos by Artemco/Лиман",
+                  "source": "commons-categories",
+                  "hidden": ""
+                },
+                "Assessments": {
+                  "value": "",
+                  "source": "commons-categories",
+                  "hidden": ""
+                },
+                "ImageDescription": {
+                  "value": "Петропавлівська церква, 1848, що згоріла в 2020",
+                  "source": "commons-desc-page"
+                },
+                "DateTimeOriginal": {
+                  "value": "2018-06-03 13:30:30",
+                  "source": "commons-desc-page"
+                },
+                "Credit": {
+                  "value": "<span class=\"int-own-work\" lang=\"en\">Own work</span>",
+                  "source": "commons-desc-page"
+                },
+                "Artist": {
+                  "value": "<a href=\"//commons.wikimedia.org/wiki/User:Artemco\" title=\"User:Artemco\">Artemco</a>",
+                  "source": "commons-desc-page"
+                },
+                "LicenseShortName": {
+                  "value": "CC BY-SA 4.0",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "UsageTerms": {
+                  "value": "Creative Commons Attribution-Share Alike 4.0",
+                  "source": "commons-desc-page"
+                },
+                "AttributionRequired": {
+                  "value": "true",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "LicenseUrl": {
+                  "value": "https://creativecommons.org/licenses/by-sa/4.0",
+                  "source": "commons-desc-page"
+                },
+                "Copyrighted": {
+                  "value": "True",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "Restrictions": {
+                  "value": "",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "License": {
+                  "value": "cc-by-sa-4.0",
+                  "source": "commons-templates",
+                  "hidden": ""
+                }
+              }
+            }
+          ]
+        },
+        "147112782": {
+          "pageid": 147112782,
+          "ns": 6,
+          "title": "File:Церква Іверської ікони Богоматері.jpg",
+          "imagerepository": "local",
+          "imageinfo": [
+            {
+              "timestamp": "2024-04-05T15:55:37Z",
+              "size": 1392541,
+              "width": 1350,
+              "height": 1350,
+              "thumburl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7f/%D0%A6%D0%B5%D1%80%D0%BA%D0%B2%D0%B0_%D0%86%D0%B2%D0%B5%D1%80%D1%81%D1%8C%D0%BA%D0%BE%D1%97_%D1%96%D0%BA%D0%BE%D0%BD%D0%B8_%D0%91%D0%BE%D0%B3%D0%BE%D0%BC%D0%B0%D1%82%D0%B5%D1%80%D1%96.jpg/1280px-%D0%A6%D0%B5%D1%80%D0%BA%D0%B2%D0%B0_%D0%86%D0%B2%D0%B5%D1%80%D1%81%D1%8C%D0%BA%D0%BE%D1%97_%D1%96%D0%BA%D0%BE%D0%BD%D0%B8_%D0%91%D0%BE%D0%B3%D0%BE%D0%BC%D0%B0%D1%82%D0%B5%D1%80%D1%96.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+              "thumbwidth": 1280,
+              "thumbheight": 1280,
+              "responsiveUrls": {
+                "2": "https://upload.wikimedia.org/wikipedia/commons/7/7f/%D0%A6%D0%B5%D1%80%D0%BA%D0%B2%D0%B0_%D0%86%D0%B2%D0%B5%D1%80%D1%81%D1%8C%D0%BA%D0%BE%D1%97_%D1%96%D0%BA%D0%BE%D0%BD%D0%B8_%D0%91%D0%BE%D0%B3%D0%BE%D0%BC%D0%B0%D1%82%D0%B5%D1%80%D1%96.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
+              },
+              "thumbattribs": {
+                "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7f/%D0%A6%D0%B5%D1%80%D0%BA%D0%B2%D0%B0_%D0%86%D0%B2%D0%B5%D1%80%D1%81%D1%8C%D0%BA%D0%BE%D1%97_%D1%96%D0%BA%D0%BE%D0%BD%D0%B8_%D0%91%D0%BE%D0%B3%D0%BE%D0%BC%D0%B0%D1%82%D0%B5%D1%80%D1%96.jpg/1280px-%D0%A6%D0%B5%D1%80%D0%BA%D0%B2%D0%B0_%D0%86%D0%B2%D0%B5%D1%80%D1%81%D1%8C%D0%BA%D0%BE%D1%97_%D1%96%D0%BA%D0%BE%D0%BD%D0%B8_%D0%91%D0%BE%D0%B3%D0%BE%D0%BC%D0%B0%D1%82%D0%B5%D1%80%D1%96.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+                "decoding": "async",
+                "loading": "lazy",
+                "width": 1280,
+                "height": 1280,
+                "srcset": "https://upload.wikimedia.org/wikipedia/commons/7/7f/%D0%A6%D0%B5%D1%80%D0%BA%D0%B2%D0%B0_%D0%86%D0%B2%D0%B5%D1%80%D1%81%D1%8C%D0%BA%D0%BE%D1%97_%D1%96%D0%BA%D0%BE%D0%BD%D0%B8_%D0%91%D0%BE%D0%B3%D0%BE%D0%BC%D0%B0%D1%82%D0%B5%D1%80%D1%96.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled 2x"
+              },
+              "url": "https://upload.wikimedia.org/wikipedia/commons/7/7f/%D0%A6%D0%B5%D1%80%D0%BA%D0%B2%D0%B0_%D0%86%D0%B2%D0%B5%D1%80%D1%81%D1%8C%D0%BA%D0%BE%D1%97_%D1%96%D0%BA%D0%BE%D0%BD%D0%B8_%D0%91%D0%BE%D0%B3%D0%BE%D0%BC%D0%B0%D1%82%D0%B5%D1%80%D1%96.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+              "descriptionurl": "https://commons.wikimedia.org/wiki/File:%D0%A6%D0%B5%D1%80%D0%BA%D0%B2%D0%B0_%D0%86%D0%B2%D0%B5%D1%80%D1%81%D1%8C%D0%BA%D0%BE%D1%97_%D1%96%D0%BA%D0%BE%D0%BD%D0%B8_%D0%91%D0%BE%D0%B3%D0%BE%D0%BC%D0%B0%D1%82%D0%B5%D1%80%D1%96.jpg",
+              "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=147112782",
+              "metadata": [
+                {
+                  "name": "ImageWidth",
+                  "value": 2048
+                },
+                {
+                  "name": "ImageLength",
+                  "value": 1536
+                },
+                {
+                  "name": "BitsPerSample",
+                  "value": "\n*8\n*8\n*8"
+                },
+                {
+                  "name": "PhotometricInterpretation",
+                  "value": 2
+                },
+                {
+                  "name": "ImageDescription",
+                  "value": "OLYMPUS DIGITAL CAMERA\n\n"
+                },
+                {
+                  "name": "Make",
+                  "value": "OLYMPUS IMAGING CORP.  "
+                },
+                {
+                  "name": "Model",
+                  "value": "SP560UZ                "
+                },
+                {
+                  "name": "Orientation",
+                  "value": 1
+                },
+                {
+                  "name": "SamplesPerPixel",
+                  "value": 3
+                },
+                {
+                  "name": "XResolution",
+                  "value": "720000/10000"
+                },
+                {
+                  "name": "YResolution",
+                  "value": "720000/10000"
+                },
+                {
+                  "name": "ResolutionUnit",
+                  "value": 2
+                },
+                {
+                  "name": "Software",
+                  "value": "Adobe Photoshop CS6 (Windows)"
+                },
+                {
+                  "name": "DateTime",
+                  "value": "2024:04:04 11:59:03"
+                },
+                {
+                  "name": "YCbCrPositioning",
+                  "value": 2
+                },
+                {
+                  "name": "ExposureTime",
+                  "value": "10/4000"
+                },
+                {
+                  "name": "FNumber",
+                  "value": "56/10"
+                },
+                {
+                  "name": "ExposureProgram",
+                  "value": 5
+                },
+                {
+                  "name": "ISOSpeedRatings",
+                  "value": 50
+                },
+                {
+                  "name": "ExifVersion",
+                  "value": "0221"
+                },
+                {
+                  "name": "DateTimeOriginal",
+                  "value": "2018:06:03 11:38:44"
+                },
+                {
+                  "name": "DateTimeDigitized",
+                  "value": "2018:06:03 11:38:44"
+                },
+                {
+                  "name": "ComponentsConfiguration",
+                  "value": "\n#1\n#2\n#3\n#0"
+                },
+                {
+                  "name": "CompressedBitsPerPixel",
+                  "value": "4/1"
+                },
+                {
+                  "name": "ShutterSpeedValue",
+                  "value": "8643856/1000000"
+                },
+                {
+                  "name": "ApertureValue",
+                  "value": "4970854/1000000"
+                },
+                {
+                  "name": "ExposureBiasValue",
+                  "value": "0/10"
+                },
+                {
+                  "name": "MaxApertureValue",
+                  "value": "297/100"
+                },
+                {
+                  "name": "MeteringMode",
+                  "value": 5
+                },
+                {
+                  "name": "LightSource",
+                  "value": 0
+                },
+                {
+                  "name": "Flash",
+                  "value": 16
+                },
+                {
+                  "name": "FocalLength",
+                  "value": "468/100"
+                },
+                {
+                  "name": "FlashPixVersion",
+                  "value": "0100"
+                },
+                {
+                  "name": "ColorSpace",
+                  "value": 1
+                },
+                {
+                  "name": "FileSource",
+                  "value": 3
+                },
+                {
+                  "name": "SceneType",
+                  "value": 1
+                },
+                {
+                  "name": "CustomRendered",
+                  "value": 0
+                },
+                {
+                  "name": "ExposureMode",
+                  "value": 0
+                },
+                {
+                  "name": "WhiteBalance",
+                  "value": 0
+                },
+                {
+                  "name": "DigitalZoomRatio",
+                  "value": "0/100"
+                },
+                {
+                  "name": "SceneCaptureType",
+                  "value": 0
+                },
+                {
+                  "name": "GainControl",
+                  "value": 0
+                },
+                {
+                  "name": "Contrast",
+                  "value": 0
+                },
+                {
+                  "name": "Saturation",
+                  "value": 0
+                },
+                {
+                  "name": "Sharpness",
+                  "value": 0
+                },
+                {
+                  "name": "SerialNumber",
+                  "value": "000L77534960"
+                },
+                {
+                  "name": "DateTimeMetadata",
+                  "value": "2024:04:04 14:59:03"
+                },
+                {
+                  "name": "OriginalDocumentID",
+                  "value": "D3C028FE7CAAD34B4F468E9B8F4C714C"
+                },
+                {
+                  "name": "MEDIAWIKI_EXIF_VERSION",
+                  "value": 1
+                }
+              ],
+              "extmetadata": {
+                "DateTime": {
+                  "value": "2024-04-05 15:55:37",
+                  "source": "mediawiki-metadata",
+                  "hidden": ""
+                },
+                "ObjectName": {
+                  "value": "Церква Іверської ікони Богоматері",
+                  "source": "mediawiki-metadata"
+                },
+                "CommonsMetadataExtension": {
+                  "value": 1.2,
+                  "source": "extension",
+                  "hidden": ""
+                },
+                "Categories": {
+                  "value": "Self-published work|Religion in Lyman|Buildings in Lyman|Photos by Artemco/Лиман",
+                  "source": "commons-categories",
+                  "hidden": ""
+                },
+                "Assessments": {
+                  "value": "",
+                  "source": "commons-categories",
+                  "hidden": ""
+                },
+                "ImageDescription": {
+                  "value": "Церква Іверської ікони Богоматері",
+                  "source": "commons-desc-page"
+                },
+                "DateTimeOriginal": {
+                  "value": "2018-06-03 11:38:44",
+                  "source": "commons-desc-page"
+                },
+                "Credit": {
+                  "value": "<span class=\"int-own-work\" lang=\"en\">Own work</span>",
+                  "source": "commons-desc-page"
+                },
+                "Artist": {
+                  "value": "<a href=\"//commons.wikimedia.org/wiki/User:Artemco\" title=\"User:Artemco\">Artemco</a>",
+                  "source": "commons-desc-page"
+                },
+                "LicenseShortName": {
+                  "value": "CC BY-SA 4.0",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "UsageTerms": {
+                  "value": "Creative Commons Attribution-Share Alike 4.0",
+                  "source": "commons-desc-page"
+                },
+                "AttributionRequired": {
+                  "value": "true",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "LicenseUrl": {
+                  "value": "https://creativecommons.org/licenses/by-sa/4.0",
+                  "source": "commons-desc-page"
+                },
+                "Copyrighted": {
+                  "value": "True",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "Restrictions": {
+                  "value": "",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "License": {
+                  "value": "cc-by-sa-4.0",
+                  "source": "commons-templates",
+                  "hidden": ""
+                }
+              }
+            }
+          ]
+        },
+        "147112784": {
+          "pageid": 147112784,
+          "ns": 6,
+          "title": "File:Храм Царствених страстотерпців.jpg",
+          "imagerepository": "local",
+          "imageinfo": [
+            {
+              "timestamp": "2024-04-05T15:55:39Z",
+              "size": 1234227,
+              "width": 1600,
+              "height": 1200,
+              "thumburl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8d/%D0%A5%D1%80%D0%B0%D0%BC_%D0%A6%D0%B0%D1%80%D1%81%D1%82%D0%B2%D0%B5%D0%BD%D0%B8%D1%85_%D1%81%D1%82%D1%80%D0%B0%D1%81%D1%82%D0%BE%D1%82%D0%B5%D1%80%D0%BF%D1%86%D1%96%D0%B2.jpg/1280px-%D0%A5%D1%80%D0%B0%D0%BC_%D0%A6%D0%B0%D1%80%D1%81%D1%82%D0%B2%D0%B5%D0%BD%D0%B8%D1%85_%D1%81%D1%82%D1%80%D0%B0%D1%81%D1%82%D0%BE%D1%82%D0%B5%D1%80%D0%BF%D1%86%D1%96%D0%B2.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+              "thumbwidth": 1280,
+              "thumbheight": 960,
+              "responsiveUrls": {
+                "2": "https://upload.wikimedia.org/wikipedia/commons/8/8d/%D0%A5%D1%80%D0%B0%D0%BC_%D0%A6%D0%B0%D1%80%D1%81%D1%82%D0%B2%D0%B5%D0%BD%D0%B8%D1%85_%D1%81%D1%82%D1%80%D0%B0%D1%81%D1%82%D0%BE%D1%82%D0%B5%D1%80%D0%BF%D1%86%D1%96%D0%B2.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
+              },
+              "thumbattribs": {
+                "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8d/%D0%A5%D1%80%D0%B0%D0%BC_%D0%A6%D0%B0%D1%80%D1%81%D1%82%D0%B2%D0%B5%D0%BD%D0%B8%D1%85_%D1%81%D1%82%D1%80%D0%B0%D1%81%D1%82%D0%BE%D1%82%D0%B5%D1%80%D0%BF%D1%86%D1%96%D0%B2.jpg/1280px-%D0%A5%D1%80%D0%B0%D0%BC_%D0%A6%D0%B0%D1%80%D1%81%D1%82%D0%B2%D0%B5%D0%BD%D0%B8%D1%85_%D1%81%D1%82%D1%80%D0%B0%D1%81%D1%82%D0%BE%D1%82%D0%B5%D1%80%D0%BF%D1%86%D1%96%D0%B2.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+                "decoding": "async",
+                "loading": "lazy",
+                "width": 1280,
+                "height": 960,
+                "srcset": "https://upload.wikimedia.org/wikipedia/commons/8/8d/%D0%A5%D1%80%D0%B0%D0%BC_%D0%A6%D0%B0%D1%80%D1%81%D1%82%D0%B2%D0%B5%D0%BD%D0%B8%D1%85_%D1%81%D1%82%D1%80%D0%B0%D1%81%D1%82%D0%BE%D1%82%D0%B5%D1%80%D0%BF%D1%86%D1%96%D0%B2.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled 2x"
+              },
+              "url": "https://upload.wikimedia.org/wikipedia/commons/8/8d/%D0%A5%D1%80%D0%B0%D0%BC_%D0%A6%D0%B0%D1%80%D1%81%D1%82%D0%B2%D0%B5%D0%BD%D0%B8%D1%85_%D1%81%D1%82%D1%80%D0%B0%D1%81%D1%82%D0%BE%D1%82%D0%B5%D1%80%D0%BF%D1%86%D1%96%D0%B2.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+              "descriptionurl": "https://commons.wikimedia.org/wiki/File:%D0%A5%D1%80%D0%B0%D0%BC_%D0%A6%D0%B0%D1%80%D1%81%D1%82%D0%B2%D0%B5%D0%BD%D0%B8%D1%85_%D1%81%D1%82%D1%80%D0%B0%D1%81%D1%82%D0%BE%D1%82%D0%B5%D1%80%D0%BF%D1%86%D1%96%D0%B2.jpg",
+              "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=147112784",
+              "metadata": [
+                {
+                  "name": "ImageWidth",
+                  "value": 2048
+                },
+                {
+                  "name": "ImageLength",
+                  "value": 1536
+                },
+                {
+                  "name": "BitsPerSample",
+                  "value": "\n*8\n*8\n*8"
+                },
+                {
+                  "name": "PhotometricInterpretation",
+                  "value": 2
+                },
+                {
+                  "name": "ImageDescription",
+                  "value": "OLYMPUS DIGITAL CAMERA\n\n"
+                },
+                {
+                  "name": "Make",
+                  "value": "OLYMPUS IMAGING CORP.  "
+                },
+                {
+                  "name": "Model",
+                  "value": "SP560UZ                "
+                },
+                {
+                  "name": "Orientation",
+                  "value": 1
+                },
+                {
+                  "name": "SamplesPerPixel",
+                  "value": 3
+                },
+                {
+                  "name": "XResolution",
+                  "value": "720000/10000"
+                },
+                {
+                  "name": "YResolution",
+                  "value": "720000/10000"
+                },
+                {
+                  "name": "ResolutionUnit",
+                  "value": 2
+                },
+                {
+                  "name": "Software",
+                  "value": "Adobe Photoshop CS6 (Windows)"
+                },
+                {
+                  "name": "DateTime",
+                  "value": "2024:04:04 13:15:44"
+                },
+                {
+                  "name": "YCbCrPositioning",
+                  "value": 2
+                },
+                {
+                  "name": "ExposureTime",
+                  "value": "10/3200"
+                },
+                {
+                  "name": "FNumber",
+                  "value": "56/10"
+                },
+                {
+                  "name": "ExposureProgram",
+                  "value": 5
+                },
+                {
+                  "name": "ISOSpeedRatings",
+                  "value": 50
+                },
+                {
+                  "name": "ExifVersion",
+                  "value": "0221"
+                },
+                {
+                  "name": "DateTimeOriginal",
+                  "value": "2018:06:03 13:49:46"
+                },
+                {
+                  "name": "DateTimeDigitized",
+                  "value": "2018:06:03 13:49:46"
+                },
+                {
+                  "name": "ComponentsConfiguration",
+                  "value": "\n#1\n#2\n#3\n#0"
+                },
+                {
+                  "name": "CompressedBitsPerPixel",
+                  "value": "4/1"
+                },
+                {
+                  "name": "ShutterSpeedValue",
+                  "value": "8321928/1000000"
+                },
+                {
+                  "name": "ApertureValue",
+                  "value": "4970854/1000000"
+                },
+                {
+                  "name": "ExposureBiasValue",
+                  "value": "0/10"
+                },
+                {
+                  "name": "MaxApertureValue",
+                  "value": "297/100"
+                },
+                {
+                  "name": "MeteringMode",
+                  "value": 5
+                },
+                {
+                  "name": "LightSource",
+                  "value": 0
+                },
+                {
+                  "name": "Flash",
+                  "value": 16
+                },
+                {
+                  "name": "FocalLength",
+                  "value": "1414/100"
+                },
+                {
+                  "name": "FlashPixVersion",
+                  "value": "0100"
+                },
+                {
+                  "name": "ColorSpace",
+                  "value": 1
+                },
+                {
+                  "name": "FileSource",
+                  "value": 3
+                },
+                {
+                  "name": "SceneType",
+                  "value": 1
+                },
+                {
+                  "name": "CustomRendered",
+                  "value": 0
+                },
+                {
+                  "name": "ExposureMode",
+                  "value": 0
+                },
+                {
+                  "name": "WhiteBalance",
+                  "value": 0
+                },
+                {
+                  "name": "DigitalZoomRatio",
+                  "value": "0/100"
+                },
+                {
+                  "name": "SceneCaptureType",
+                  "value": 0
+                },
+                {
+                  "name": "GainControl",
+                  "value": 0
+                },
+                {
+                  "name": "Contrast",
+                  "value": 0
+                },
+                {
+                  "name": "Saturation",
+                  "value": 0
+                },
+                {
+                  "name": "Sharpness",
+                  "value": 0
+                },
+                {
+                  "name": "SerialNumber",
+                  "value": "000L77534960"
+                },
+                {
+                  "name": "DateTimeMetadata",
+                  "value": "2024:04:04 16:15:44"
+                },
+                {
+                  "name": "OriginalDocumentID",
+                  "value": "7985CA5D6DBF32253688B1A21DF44440"
+                },
+                {
+                  "name": "iimVersion",
+                  "value": 64269
+                },
+                {
+                  "name": "MEDIAWIKI_EXIF_VERSION",
+                  "value": 1
+                }
+              ],
+              "extmetadata": {
+                "DateTime": {
+                  "value": "2024-04-05 15:55:39",
+                  "source": "mediawiki-metadata",
+                  "hidden": ""
+                },
+                "ObjectName": {
+                  "value": "Храм Царствених страстотерпців",
+                  "source": "mediawiki-metadata"
+                },
+                "CommonsMetadataExtension": {
+                  "value": 1.2,
+                  "source": "extension",
+                  "hidden": ""
+                },
+                "Categories": {
+                  "value": "Self-published work|Wooden churches in Donetsk Oblast|Religion in Lyman|Buildings in Lyman|Photos by Artemco/Лиман",
+                  "source": "commons-categories",
+                  "hidden": ""
+                },
+                "Assessments": {
+                  "value": "",
+                  "source": "commons-categories",
+                  "hidden": ""
+                },
+                "ImageDescription": {
+                  "value": "Храм Царствених страстотерпців, освячений на честь канонізованого розстріляного разом із сім'єю російського царя Миколи II",
+                  "source": "commons-desc-page"
+                },
+                "DateTimeOriginal": {
+                  "value": "2018-06-03 13:49:46",
+                  "source": "commons-desc-page"
+                },
+                "Credit": {
+                  "value": "<span class=\"int-own-work\" lang=\"en\">Own work</span>",
+                  "source": "commons-desc-page"
+                },
+                "Artist": {
+                  "value": "<a href=\"//commons.wikimedia.org/wiki/User:Artemco\" title=\"User:Artemco\">Artemco</a>",
+                  "source": "commons-desc-page"
+                },
+                "LicenseShortName": {
+                  "value": "CC BY-SA 4.0",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "UsageTerms": {
+                  "value": "Creative Commons Attribution-Share Alike 4.0",
+                  "source": "commons-desc-page"
+                },
+                "AttributionRequired": {
+                  "value": "true",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "LicenseUrl": {
+                  "value": "https://creativecommons.org/licenses/by-sa/4.0",
+                  "source": "commons-desc-page"
+                },
+                "Copyrighted": {
+                  "value": "True",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "Restrictions": {
+                  "value": "",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "License": {
+                  "value": "cc-by-sa-4.0",
+                  "source": "commons-templates",
+                  "hidden": ""
+                }
+              }
+            }
+          ]
+        },
+        "147112785": {
+          "pageid": 147112785,
+          "ns": 6,
+          "title": "File:Житловий корпус Свято-Покровського жіночого монастира.jpg",
+          "imagerepository": "local",
+          "imageinfo": [
+            {
+              "timestamp": "2024-04-05T15:55:40Z",
+              "size": 1120767,
+              "width": 1500,
+              "height": 1000,
+              "thumburl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/40/%D0%96%D0%B8%D1%82%D0%BB%D0%BE%D0%B2%D0%B8%D0%B9_%D0%BA%D0%BE%D1%80%D0%BF%D1%83%D1%81_%D0%A1%D0%B2%D1%8F%D1%82%D0%BE-%D0%9F%D0%BE%D0%BA%D1%80%D0%BE%D0%B2%D1%81%D1%8C%D0%BA%D0%BE%D0%B3%D0%BE_%D0%B6%D1%96%D0%BD%D0%BE%D1%87%D0%BE%D0%B3%D0%BE_%D0%BC%D0%BE%D0%BD%D0%B0%D1%81%D1%82%D0%B8%D1%80%D0%B0.jpg/1280px-%D0%96%D0%B8%D1%82%D0%BB%D0%BE%D0%B2%D0%B8%D0%B9_%D0%BA%D0%BE%D1%80%D0%BF%D1%83%D1%81_%D0%A1%D0%B2%D1%8F%D1%82%D0%BE-%D0%9F%D0%BE%D0%BA%D1%80%D0%BE%D0%B2%D1%81%D1%8C%D0%BA%D0%BE%D0%B3%D0%BE_%D0%B6%D1%96%D0%BD%D0%BE%D1%87%D0%BE%D0%B3%D0%BE_%D0%BC%D0%BE%D0%BD%D0%B0%D1%81%D1%82%D0%B8%D1%80%D0%B0.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+              "thumbwidth": 1280,
+              "thumbheight": 853,
+              "responsiveUrls": {
+                "2": "https://upload.wikimedia.org/wikipedia/commons/4/40/%D0%96%D0%B8%D1%82%D0%BB%D0%BE%D0%B2%D0%B8%D0%B9_%D0%BA%D0%BE%D1%80%D0%BF%D1%83%D1%81_%D0%A1%D0%B2%D1%8F%D1%82%D0%BE-%D0%9F%D0%BE%D0%BA%D1%80%D0%BE%D0%B2%D1%81%D1%8C%D0%BA%D0%BE%D0%B3%D0%BE_%D0%B6%D1%96%D0%BD%D0%BE%D1%87%D0%BE%D0%B3%D0%BE_%D0%BC%D0%BE%D0%BD%D0%B0%D1%81%D1%82%D0%B8%D1%80%D0%B0.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
+              },
+              "thumbattribs": {
+                "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/40/%D0%96%D0%B8%D1%82%D0%BB%D0%BE%D0%B2%D0%B8%D0%B9_%D0%BA%D0%BE%D1%80%D0%BF%D1%83%D1%81_%D0%A1%D0%B2%D1%8F%D1%82%D0%BE-%D0%9F%D0%BE%D0%BA%D1%80%D0%BE%D0%B2%D1%81%D1%8C%D0%BA%D0%BE%D0%B3%D0%BE_%D0%B6%D1%96%D0%BD%D0%BE%D1%87%D0%BE%D0%B3%D0%BE_%D0%BC%D0%BE%D0%BD%D0%B0%D1%81%D1%82%D0%B8%D1%80%D0%B0.jpg/1280px-%D0%96%D0%B8%D1%82%D0%BB%D0%BE%D0%B2%D0%B8%D0%B9_%D0%BA%D0%BE%D1%80%D0%BF%D1%83%D1%81_%D0%A1%D0%B2%D1%8F%D1%82%D0%BE-%D0%9F%D0%BE%D0%BA%D1%80%D0%BE%D0%B2%D1%81%D1%8C%D0%BA%D0%BE%D0%B3%D0%BE_%D0%B6%D1%96%D0%BD%D0%BE%D1%87%D0%BE%D0%B3%D0%BE_%D0%BC%D0%BE%D0%BD%D0%B0%D1%81%D1%82%D0%B8%D1%80%D0%B0.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+                "decoding": "async",
+                "loading": "lazy",
+                "width": 1280,
+                "height": 853,
+                "srcset": "https://upload.wikimedia.org/wikipedia/commons/4/40/%D0%96%D0%B8%D1%82%D0%BB%D0%BE%D0%B2%D0%B8%D0%B9_%D0%BA%D0%BE%D1%80%D0%BF%D1%83%D1%81_%D0%A1%D0%B2%D1%8F%D1%82%D0%BE-%D0%9F%D0%BE%D0%BA%D1%80%D0%BE%D0%B2%D1%81%D1%8C%D0%BA%D0%BE%D0%B3%D0%BE_%D0%B6%D1%96%D0%BD%D0%BE%D1%87%D0%BE%D0%B3%D0%BE_%D0%BC%D0%BE%D0%BD%D0%B0%D1%81%D1%82%D0%B8%D1%80%D0%B0.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled 2x"
+              },
+              "url": "https://upload.wikimedia.org/wikipedia/commons/4/40/%D0%96%D0%B8%D1%82%D0%BB%D0%BE%D0%B2%D0%B8%D0%B9_%D0%BA%D0%BE%D1%80%D0%BF%D1%83%D1%81_%D0%A1%D0%B2%D1%8F%D1%82%D0%BE-%D0%9F%D0%BE%D0%BA%D1%80%D0%BE%D0%B2%D1%81%D1%8C%D0%BA%D0%BE%D0%B3%D0%BE_%D0%B6%D1%96%D0%BD%D0%BE%D1%87%D0%BE%D0%B3%D0%BE_%D0%BC%D0%BE%D0%BD%D0%B0%D1%81%D1%82%D0%B8%D1%80%D0%B0.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+              "descriptionurl": "https://commons.wikimedia.org/wiki/File:%D0%96%D0%B8%D1%82%D0%BB%D0%BE%D0%B2%D0%B8%D0%B9_%D0%BA%D0%BE%D1%80%D0%BF%D1%83%D1%81_%D0%A1%D0%B2%D1%8F%D1%82%D0%BE-%D0%9F%D0%BE%D0%BA%D1%80%D0%BE%D0%B2%D1%81%D1%8C%D0%BA%D0%BE%D0%B3%D0%BE_%D0%B6%D1%96%D0%BD%D0%BE%D1%87%D0%BE%D0%B3%D0%BE_%D0%BC%D0%BE%D0%BD%D0%B0%D1%81%D1%82%D0%B8%D1%80%D0%B0.jpg",
+              "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=147112785",
+              "metadata": [
+                {
+                  "name": "ImageWidth",
+                  "value": 2048
+                },
+                {
+                  "name": "ImageLength",
+                  "value": 1536
+                },
+                {
+                  "name": "BitsPerSample",
+                  "value": "\n*8\n*8\n*8"
+                },
+                {
+                  "name": "PhotometricInterpretation",
+                  "value": 2
+                },
+                {
+                  "name": "ImageDescription",
+                  "value": "OLYMPUS DIGITAL CAMERA\n\n"
+                },
+                {
+                  "name": "Make",
+                  "value": "OLYMPUS IMAGING CORP.  "
+                },
+                {
+                  "name": "Model",
+                  "value": "SP560UZ                "
+                },
+                {
+                  "name": "Orientation",
+                  "value": 1
+                },
+                {
+                  "name": "SamplesPerPixel",
+                  "value": 3
+                },
+                {
+                  "name": "XResolution",
+                  "value": "720000/10000"
+                },
+                {
+                  "name": "YResolution",
+                  "value": "720000/10000"
+                },
+                {
+                  "name": "ResolutionUnit",
+                  "value": 2
+                },
+                {
+                  "name": "Software",
+                  "value": "Adobe Photoshop CS6 (Windows)"
+                },
+                {
+                  "name": "DateTime",
+                  "value": "2024:04:04 13:30:20"
+                },
+                {
+                  "name": "YCbCrPositioning",
+                  "value": 2
+                },
+                {
+                  "name": "ExposureTime",
+                  "value": "10/3200"
+                },
+                {
+                  "name": "FNumber",
+                  "value": "56/10"
+                },
+                {
+                  "name": "ExposureProgram",
+                  "value": 5
+                },
+                {
+                  "name": "ISOSpeedRatings",
+                  "value": 50
+                },
+                {
+                  "name": "ExifVersion",
+                  "value": "0221"
+                },
+                {
+                  "name": "DateTimeOriginal",
+                  "value": "2018:06:03 13:52:02"
+                },
+                {
+                  "name": "DateTimeDigitized",
+                  "value": "2018:06:03 13:52:02"
+                },
+                {
+                  "name": "ComponentsConfiguration",
+                  "value": "\n#1\n#2\n#3\n#0"
+                },
+                {
+                  "name": "CompressedBitsPerPixel",
+                  "value": "4/1"
+                },
+                {
+                  "name": "ShutterSpeedValue",
+                  "value": "8321928/1000000"
+                },
+                {
+                  "name": "ApertureValue",
+                  "value": "4970854/1000000"
+                },
+                {
+                  "name": "ExposureBiasValue",
+                  "value": "0/10"
+                },
+                {
+                  "name": "MaxApertureValue",
+                  "value": "297/100"
+                },
+                {
+                  "name": "MeteringMode",
+                  "value": 5
+                },
+                {
+                  "name": "LightSource",
+                  "value": 0
+                },
+                {
+                  "name": "Flash",
+                  "value": 16
+                },
+                {
+                  "name": "FocalLength",
+                  "value": "1067/100"
+                },
+                {
+                  "name": "FlashPixVersion",
+                  "value": "0100"
+                },
+                {
+                  "name": "ColorSpace",
+                  "value": 1
+                },
+                {
+                  "name": "FileSource",
+                  "value": 3
+                },
+                {
+                  "name": "SceneType",
+                  "value": 1
+                },
+                {
+                  "name": "CustomRendered",
+                  "value": 0
+                },
+                {
+                  "name": "ExposureMode",
+                  "value": 0
+                },
+                {
+                  "name": "WhiteBalance",
+                  "value": 0
+                },
+                {
+                  "name": "DigitalZoomRatio",
+                  "value": "0/100"
+                },
+                {
+                  "name": "SceneCaptureType",
+                  "value": 0
+                },
+                {
+                  "name": "GainControl",
+                  "value": 0
+                },
+                {
+                  "name": "Contrast",
+                  "value": 0
+                },
+                {
+                  "name": "Saturation",
+                  "value": 0
+                },
+                {
+                  "name": "Sharpness",
+                  "value": 0
+                },
+                {
+                  "name": "SerialNumber",
+                  "value": "000L77534960"
+                },
+                {
+                  "name": "DateTimeMetadata",
+                  "value": "2024:04:04 16:30:20"
+                },
+                {
+                  "name": "OriginalDocumentID",
+                  "value": "AA28FD0219F548A52BCEC2D5B84FEE0B"
+                },
+                {
+                  "name": "iimVersion",
+                  "value": 64269
+                },
+                {
+                  "name": "MEDIAWIKI_EXIF_VERSION",
+                  "value": 1
+                }
+              ],
+              "extmetadata": {
+                "DateTime": {
+                  "value": "2024-04-05 15:55:40",
+                  "source": "mediawiki-metadata",
+                  "hidden": ""
+                },
+                "ObjectName": {
+                  "value": "Житловий корпус Свято-Покровського жіночого монастира",
+                  "source": "mediawiki-metadata"
+                },
+                "CommonsMetadataExtension": {
+                  "value": 1.2,
+                  "source": "extension",
+                  "hidden": ""
+                },
+                "Categories": {
+                  "value": "Monasteries in Donetsk Oblast|Self-published work|Religion in Lyman|Buildings in Lyman|Photos by Artemco/Лиман",
+                  "source": "commons-categories",
+                  "hidden": ""
+                },
+                "Assessments": {
+                  "value": "",
+                  "source": "commons-categories",
+                  "hidden": ""
+                },
+                "ImageDescription": {
+                  "value": "житловий корпус монастира",
+                  "source": "commons-desc-page"
+                },
+                "DateTimeOriginal": {
+                  "value": "2018-06-03 13:52:02",
+                  "source": "commons-desc-page"
+                },
+                "Credit": {
+                  "value": "<span class=\"int-own-work\" lang=\"en\">Own work</span>",
+                  "source": "commons-desc-page"
+                },
+                "Artist": {
+                  "value": "<a href=\"//commons.wikimedia.org/wiki/User:Artemco\" title=\"User:Artemco\">Artemco</a>",
+                  "source": "commons-desc-page"
+                },
+                "LicenseShortName": {
+                  "value": "CC BY-SA 4.0",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "UsageTerms": {
+                  "value": "Creative Commons Attribution-Share Alike 4.0",
+                  "source": "commons-desc-page"
+                },
+                "AttributionRequired": {
+                  "value": "true",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "LicenseUrl": {
+                  "value": "https://creativecommons.org/licenses/by-sa/4.0",
+                  "source": "commons-desc-page"
+                },
+                "Copyrighted": {
+                  "value": "True",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "Restrictions": {
+                  "value": "",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "License": {
+                  "value": "cc-by-sa-4.0",
+                  "source": "commons-templates",
+                  "hidden": ""
+                }
+              }
+            }
+          ]
+        },
+        "147112786": {
+          "pageid": 147112786,
+          "ns": 6,
+          "title": "File:Свято-Покровський жіночий монастир, Лиман.jpg",
+          "imagerepository": "local",
+          "imageinfo": [
+            {
+              "timestamp": "2024-04-05T15:55:40Z",
+              "size": 1612627,
+              "width": 1800,
+              "height": 1350,
+              "thumburl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7a/%D0%A1%D0%B2%D1%8F%D1%82%D0%BE-%D0%9F%D0%BE%D0%BA%D1%80%D0%BE%D0%B2%D1%81%D1%8C%D0%BA%D0%B8%D0%B9_%D0%B6%D1%96%D0%BD%D0%BE%D1%87%D0%B8%D0%B9_%D0%BC%D0%BE%D0%BD%D0%B0%D1%81%D1%82%D0%B8%D1%80%2C_%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD.jpg/1280px-%D0%A1%D0%B2%D1%8F%D1%82%D0%BE-%D0%9F%D0%BE%D0%BA%D1%80%D0%BE%D0%B2%D1%81%D1%8C%D0%BA%D0%B8%D0%B9_%D0%B6%D1%96%D0%BD%D0%BE%D1%87%D0%B8%D0%B9_%D0%BC%D0%BE%D0%BD%D0%B0%D1%81%D1%82%D0%B8%D1%80%2C_%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+              "thumbwidth": 1280,
+              "thumbheight": 960,
+              "responsiveUrls": {
+                "2": "https://upload.wikimedia.org/wikipedia/commons/7/7a/%D0%A1%D0%B2%D1%8F%D1%82%D0%BE-%D0%9F%D0%BE%D0%BA%D1%80%D0%BE%D0%B2%D1%81%D1%8C%D0%BA%D0%B8%D0%B9_%D0%B6%D1%96%D0%BD%D0%BE%D1%87%D0%B8%D0%B9_%D0%BC%D0%BE%D0%BD%D0%B0%D1%81%D1%82%D0%B8%D1%80%2C_%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
+              },
+              "thumbattribs": {
+                "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7a/%D0%A1%D0%B2%D1%8F%D1%82%D0%BE-%D0%9F%D0%BE%D0%BA%D1%80%D0%BE%D0%B2%D1%81%D1%8C%D0%BA%D0%B8%D0%B9_%D0%B6%D1%96%D0%BD%D0%BE%D1%87%D0%B8%D0%B9_%D0%BC%D0%BE%D0%BD%D0%B0%D1%81%D1%82%D0%B8%D1%80%2C_%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD.jpg/1280px-%D0%A1%D0%B2%D1%8F%D1%82%D0%BE-%D0%9F%D0%BE%D0%BA%D1%80%D0%BE%D0%B2%D1%81%D1%8C%D0%BA%D0%B8%D0%B9_%D0%B6%D1%96%D0%BD%D0%BE%D1%87%D0%B8%D0%B9_%D0%BC%D0%BE%D0%BD%D0%B0%D1%81%D1%82%D0%B8%D1%80%2C_%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+                "decoding": "async",
+                "loading": "lazy",
+                "width": 1280,
+                "height": 960,
+                "srcset": "https://upload.wikimedia.org/wikipedia/commons/7/7a/%D0%A1%D0%B2%D1%8F%D1%82%D0%BE-%D0%9F%D0%BE%D0%BA%D1%80%D0%BE%D0%B2%D1%81%D1%8C%D0%BA%D0%B8%D0%B9_%D0%B6%D1%96%D0%BD%D0%BE%D1%87%D0%B8%D0%B9_%D0%BC%D0%BE%D0%BD%D0%B0%D1%81%D1%82%D0%B8%D1%80%2C_%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled 2x"
+              },
+              "url": "https://upload.wikimedia.org/wikipedia/commons/7/7a/%D0%A1%D0%B2%D1%8F%D1%82%D0%BE-%D0%9F%D0%BE%D0%BA%D1%80%D0%BE%D0%B2%D1%81%D1%8C%D0%BA%D0%B8%D0%B9_%D0%B6%D1%96%D0%BD%D0%BE%D1%87%D0%B8%D0%B9_%D0%BC%D0%BE%D0%BD%D0%B0%D1%81%D1%82%D0%B8%D1%80%2C_%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+              "descriptionurl": "https://commons.wikimedia.org/wiki/File:%D0%A1%D0%B2%D1%8F%D1%82%D0%BE-%D0%9F%D0%BE%D0%BA%D1%80%D0%BE%D0%B2%D1%81%D1%8C%D0%BA%D0%B8%D0%B9_%D0%B6%D1%96%D0%BD%D0%BE%D1%87%D0%B8%D0%B9_%D0%BC%D0%BE%D0%BD%D0%B0%D1%81%D1%82%D0%B8%D1%80,_%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD.jpg",
+              "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=147112786",
+              "metadata": [
+                {
+                  "name": "ImageWidth",
+                  "value": 2048
+                },
+                {
+                  "name": "ImageLength",
+                  "value": 1536
+                },
+                {
+                  "name": "BitsPerSample",
+                  "value": "\n*8\n*8\n*8"
+                },
+                {
+                  "name": "PhotometricInterpretation",
+                  "value": 2
+                },
+                {
+                  "name": "ImageDescription",
+                  "value": "OLYMPUS DIGITAL CAMERA\n\n"
+                },
+                {
+                  "name": "Make",
+                  "value": "OLYMPUS IMAGING CORP.  "
+                },
+                {
+                  "name": "Model",
+                  "value": "SP560UZ                "
+                },
+                {
+                  "name": "Orientation",
+                  "value": 1
+                },
+                {
+                  "name": "SamplesPerPixel",
+                  "value": 3
+                },
+                {
+                  "name": "XResolution",
+                  "value": "720000/10000"
+                },
+                {
+                  "name": "YResolution",
+                  "value": "720000/10000"
+                },
+                {
+                  "name": "ResolutionUnit",
+                  "value": 2
+                },
+                {
+                  "name": "Software",
+                  "value": "Adobe Photoshop CS6 (Windows)"
+                },
+                {
+                  "name": "DateTime",
+                  "value": "2024:04:04 13:41:07"
+                },
+                {
+                  "name": "YCbCrPositioning",
+                  "value": 2
+                },
+                {
+                  "name": "ExposureTime",
+                  "value": "10/5000"
+                },
+                {
+                  "name": "FNumber",
+                  "value": "56/10"
+                },
+                {
+                  "name": "ExposureProgram",
+                  "value": 5
+                },
+                {
+                  "name": "ISOSpeedRatings",
+                  "value": 50
+                },
+                {
+                  "name": "ExifVersion",
+                  "value": "0221"
+                },
+                {
+                  "name": "DateTimeOriginal",
+                  "value": "2018:06:03 13:58:37"
+                },
+                {
+                  "name": "DateTimeDigitized",
+                  "value": "2018:06:03 13:58:37"
+                },
+                {
+                  "name": "ComponentsConfiguration",
+                  "value": "\n#1\n#2\n#3\n#0"
+                },
+                {
+                  "name": "CompressedBitsPerPixel",
+                  "value": "4/1"
+                },
+                {
+                  "name": "ShutterSpeedValue",
+                  "value": "8965784/1000000"
+                },
+                {
+                  "name": "ApertureValue",
+                  "value": "4970854/1000000"
+                },
+                {
+                  "name": "ExposureBiasValue",
+                  "value": "0/10"
+                },
+                {
+                  "name": "MaxApertureValue",
+                  "value": "297/100"
+                },
+                {
+                  "name": "MeteringMode",
+                  "value": 5
+                },
+                {
+                  "name": "LightSource",
+                  "value": 0
+                },
+                {
+                  "name": "Flash",
+                  "value": 16
+                },
+                {
+                  "name": "FocalLength",
+                  "value": "744/100"
+                },
+                {
+                  "name": "FlashPixVersion",
+                  "value": "0100"
+                },
+                {
+                  "name": "ColorSpace",
+                  "value": 1
+                },
+                {
+                  "name": "FileSource",
+                  "value": 3
+                },
+                {
+                  "name": "SceneType",
+                  "value": 1
+                },
+                {
+                  "name": "CustomRendered",
+                  "value": 0
+                },
+                {
+                  "name": "ExposureMode",
+                  "value": 0
+                },
+                {
+                  "name": "WhiteBalance",
+                  "value": 0
+                },
+                {
+                  "name": "DigitalZoomRatio",
+                  "value": "0/100"
+                },
+                {
+                  "name": "SceneCaptureType",
+                  "value": 0
+                },
+                {
+                  "name": "GainControl",
+                  "value": 0
+                },
+                {
+                  "name": "Contrast",
+                  "value": 0
+                },
+                {
+                  "name": "Saturation",
+                  "value": 0
+                },
+                {
+                  "name": "Sharpness",
+                  "value": 0
+                },
+                {
+                  "name": "SerialNumber",
+                  "value": "000L77534960"
+                },
+                {
+                  "name": "DateTimeMetadata",
+                  "value": "2024:04:04 16:41:07"
+                },
+                {
+                  "name": "OriginalDocumentID",
+                  "value": "46E4EF5C916A1C146D40D5157384F37A"
+                },
+                {
+                  "name": "iimVersion",
+                  "value": 64269
+                },
+                {
+                  "name": "MEDIAWIKI_EXIF_VERSION",
+                  "value": 1
+                }
+              ],
+              "extmetadata": {
+                "DateTime": {
+                  "value": "2024-04-05 15:55:40",
+                  "source": "mediawiki-metadata",
+                  "hidden": ""
+                },
+                "ObjectName": {
+                  "value": "Свято-Покровський жіночий монастир, Лиман",
+                  "source": "mediawiki-metadata"
+                },
+                "CommonsMetadataExtension": {
+                  "value": 1.2,
+                  "source": "extension",
+                  "hidden": ""
+                },
+                "Categories": {
+                  "value": "Monasteries in Donetsk Oblast|Self-published work|Religion in Lyman|Buildings in Lyman|Photos by Artemco/Лиман",
+                  "source": "commons-categories",
+                  "hidden": ""
+                },
+                "Assessments": {
+                  "value": "",
+                  "source": "commons-categories",
+                  "hidden": ""
+                },
+                "ImageDescription": {
+                  "value": "Свято-Покровський жіночий монастир",
+                  "source": "commons-desc-page"
+                },
+                "DateTimeOriginal": {
+                  "value": "2018-06-03 13:58:37",
+                  "source": "commons-desc-page"
+                },
+                "Credit": {
+                  "value": "<span class=\"int-own-work\" lang=\"en\">Own work</span>",
+                  "source": "commons-desc-page"
+                },
+                "Artist": {
+                  "value": "<a href=\"//commons.wikimedia.org/wiki/User:Artemco\" title=\"User:Artemco\">Artemco</a>",
+                  "source": "commons-desc-page"
+                },
+                "LicenseShortName": {
+                  "value": "CC BY-SA 4.0",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "UsageTerms": {
+                  "value": "Creative Commons Attribution-Share Alike 4.0",
+                  "source": "commons-desc-page"
+                },
+                "AttributionRequired": {
+                  "value": "true",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "LicenseUrl": {
+                  "value": "https://creativecommons.org/licenses/by-sa/4.0",
+                  "source": "commons-desc-page"
+                },
+                "Copyrighted": {
+                  "value": "True",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "Restrictions": {
+                  "value": "",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "License": {
+                  "value": "cc-by-sa-4.0",
+                  "source": "commons-templates",
+                  "hidden": ""
+                }
+              }
+            }
+          ]
+        },
+        "147112787": {
+          "pageid": 147112787,
+          "ns": 6,
+          "title": "File:Лиманська міська рада.jpg",
+          "imagerepository": "local",
+          "imageinfo": [
+            {
+              "timestamp": "2024-04-05T15:55:42Z",
+              "size": 1154436,
+              "width": 1600,
+              "height": 1200,
+              "thumburl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/aa/%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD%D1%81%D1%8C%D0%BA%D0%B0_%D0%BC%D1%96%D1%81%D1%8C%D0%BA%D0%B0_%D1%80%D0%B0%D0%B4%D0%B0.jpg/1280px-%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD%D1%81%D1%8C%D0%BA%D0%B0_%D0%BC%D1%96%D1%81%D1%8C%D0%BA%D0%B0_%D1%80%D0%B0%D0%B4%D0%B0.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+              "thumbwidth": 1280,
+              "thumbheight": 960,
+              "responsiveUrls": {
+                "2": "https://upload.wikimedia.org/wikipedia/commons/a/aa/%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD%D1%81%D1%8C%D0%BA%D0%B0_%D0%BC%D1%96%D1%81%D1%8C%D0%BA%D0%B0_%D1%80%D0%B0%D0%B4%D0%B0.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
+              },
+              "thumbattribs": {
+                "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/aa/%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD%D1%81%D1%8C%D0%BA%D0%B0_%D0%BC%D1%96%D1%81%D1%8C%D0%BA%D0%B0_%D1%80%D0%B0%D0%B4%D0%B0.jpg/1280px-%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD%D1%81%D1%8C%D0%BA%D0%B0_%D0%BC%D1%96%D1%81%D1%8C%D0%BA%D0%B0_%D1%80%D0%B0%D0%B4%D0%B0.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+                "decoding": "async",
+                "loading": "lazy",
+                "width": 1280,
+                "height": 960,
+                "srcset": "https://upload.wikimedia.org/wikipedia/commons/a/aa/%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD%D1%81%D1%8C%D0%BA%D0%B0_%D0%BC%D1%96%D1%81%D1%8C%D0%BA%D0%B0_%D1%80%D0%B0%D0%B4%D0%B0.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled 2x"
+              },
+              "url": "https://upload.wikimedia.org/wikipedia/commons/a/aa/%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD%D1%81%D1%8C%D0%BA%D0%B0_%D0%BC%D1%96%D1%81%D1%8C%D0%BA%D0%B0_%D1%80%D0%B0%D0%B4%D0%B0.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+              "descriptionurl": "https://commons.wikimedia.org/wiki/File:%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD%D1%81%D1%8C%D0%BA%D0%B0_%D0%BC%D1%96%D1%81%D1%8C%D0%BA%D0%B0_%D1%80%D0%B0%D0%B4%D0%B0.jpg",
+              "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=147112787",
+              "metadata": [
+                {
+                  "name": "ImageWidth",
+                  "value": 2048
+                },
+                {
+                  "name": "ImageLength",
+                  "value": 1536
+                },
+                {
+                  "name": "BitsPerSample",
+                  "value": "\n*8\n*8\n*8"
+                },
+                {
+                  "name": "PhotometricInterpretation",
+                  "value": 2
+                },
+                {
+                  "name": "ImageDescription",
+                  "value": "OLYMPUS DIGITAL CAMERA\n\n"
+                },
+                {
+                  "name": "Make",
+                  "value": "OLYMPUS IMAGING CORP.  "
+                },
+                {
+                  "name": "Model",
+                  "value": "SP560UZ                "
+                },
+                {
+                  "name": "Orientation",
+                  "value": 1
+                },
+                {
+                  "name": "SamplesPerPixel",
+                  "value": 3
+                },
+                {
+                  "name": "XResolution",
+                  "value": "720000/10000"
+                },
+                {
+                  "name": "YResolution",
+                  "value": "720000/10000"
+                },
+                {
+                  "name": "ResolutionUnit",
+                  "value": 2
+                },
+                {
+                  "name": "Software",
+                  "value": "Adobe Photoshop CS6 (Windows)"
+                },
+                {
+                  "name": "DateTime",
+                  "value": "2024:04:04 21:46:24"
+                },
+                {
+                  "name": "YCbCrPositioning",
+                  "value": 2
+                },
+                {
+                  "name": "ExposureTime",
+                  "value": "10/1600"
+                },
+                {
+                  "name": "FNumber",
+                  "value": "56/10"
+                },
+                {
+                  "name": "ExposureProgram",
+                  "value": 5
+                },
+                {
+                  "name": "ISOSpeedRatings",
+                  "value": 50
+                },
+                {
+                  "name": "ExifVersion",
+                  "value": "0221"
+                },
+                {
+                  "name": "DateTimeOriginal",
+                  "value": "2018:06:03 14:32:18"
+                },
+                {
+                  "name": "DateTimeDigitized",
+                  "value": "2018:06:03 14:32:18"
+                },
+                {
+                  "name": "ComponentsConfiguration",
+                  "value": "\n#1\n#2\n#3\n#0"
+                },
+                {
+                  "name": "CompressedBitsPerPixel",
+                  "value": "4/1"
+                },
+                {
+                  "name": "ShutterSpeedValue",
+                  "value": "7321928/1000000"
+                },
+                {
+                  "name": "ApertureValue",
+                  "value": "4970854/1000000"
+                },
+                {
+                  "name": "ExposureBiasValue",
+                  "value": "0/10"
+                },
+                {
+                  "name": "MaxApertureValue",
+                  "value": "297/100"
+                },
+                {
+                  "name": "MeteringMode",
+                  "value": 5
+                },
+                {
+                  "name": "LightSource",
+                  "value": 0
+                },
+                {
+                  "name": "Flash",
+                  "value": 16
+                },
+                {
+                  "name": "FocalLength",
+                  "value": "468/100"
+                },
+                {
+                  "name": "FlashPixVersion",
+                  "value": "0100"
+                },
+                {
+                  "name": "ColorSpace",
+                  "value": 1
+                },
+                {
+                  "name": "FileSource",
+                  "value": 3
+                },
+                {
+                  "name": "SceneType",
+                  "value": 1
+                },
+                {
+                  "name": "CustomRendered",
+                  "value": 0
+                },
+                {
+                  "name": "ExposureMode",
+                  "value": 0
+                },
+                {
+                  "name": "WhiteBalance",
+                  "value": 0
+                },
+                {
+                  "name": "DigitalZoomRatio",
+                  "value": "0/100"
+                },
+                {
+                  "name": "SceneCaptureType",
+                  "value": 0
+                },
+                {
+                  "name": "GainControl",
+                  "value": 0
+                },
+                {
+                  "name": "Contrast",
+                  "value": 0
+                },
+                {
+                  "name": "Saturation",
+                  "value": 0
+                },
+                {
+                  "name": "Sharpness",
+                  "value": 0
+                },
+                {
+                  "name": "SerialNumber",
+                  "value": "000L77534960"
+                },
+                {
+                  "name": "DateTimeMetadata",
+                  "value": "2024:04:05 00:46:24"
+                },
+                {
+                  "name": "OriginalDocumentID",
+                  "value": "8465CAE07C76A6A29960631A55153B46"
+                },
+                {
+                  "name": "iimVersion",
+                  "value": 64269
+                },
+                {
+                  "name": "MEDIAWIKI_EXIF_VERSION",
+                  "value": 1
+                }
+              ],
+              "extmetadata": {
+                "DateTime": {
+                  "value": "2024-04-05 15:55:42",
+                  "source": "mediawiki-metadata",
+                  "hidden": ""
+                },
+                "ObjectName": {
+                  "value": "Лиманська міська рада",
+                  "source": "mediawiki-metadata"
+                },
+                "CommonsMetadataExtension": {
+                  "value": 1.2,
+                  "source": "extension",
+                  "hidden": ""
+                },
+                "Categories": {
+                  "value": "Self-published work|Town halls in Donetsk Oblast|Administrative buildings in Kramatorsk Raion|Buildings in Lyman|Photos by Artemco/Лиман",
+                  "source": "commons-categories",
+                  "hidden": ""
+                },
+                "Assessments": {
+                  "value": "",
+                  "source": "commons-categories",
+                  "hidden": ""
+                },
+                "ImageDescription": {
+                  "value": "Лиманська міська рада",
+                  "source": "commons-desc-page"
+                },
+                "DateTimeOriginal": {
+                  "value": "2018-06-03 14:32:18",
+                  "source": "commons-desc-page"
+                },
+                "Credit": {
+                  "value": "<span class=\"int-own-work\" lang=\"en\">Own work</span>",
+                  "source": "commons-desc-page"
+                },
+                "Artist": {
+                  "value": "<a href=\"//commons.wikimedia.org/wiki/User:Artemco\" title=\"User:Artemco\">Artemco</a>",
+                  "source": "commons-desc-page"
+                },
+                "LicenseShortName": {
+                  "value": "CC BY-SA 4.0",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "UsageTerms": {
+                  "value": "Creative Commons Attribution-Share Alike 4.0",
+                  "source": "commons-desc-page"
+                },
+                "AttributionRequired": {
+                  "value": "true",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "LicenseUrl": {
+                  "value": "https://creativecommons.org/licenses/by-sa/4.0",
+                  "source": "commons-desc-page"
+                },
+                "Copyrighted": {
+                  "value": "True",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "Restrictions": {
+                  "value": "",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "License": {
+                  "value": "cc-by-sa-4.0",
+                  "source": "commons-templates",
+                  "hidden": ""
+                }
+              }
+            }
+          ]
+        },
+        "147112788": {
+          "pageid": 147112788,
+          "ns": 6,
+          "title": "File:Свято-Лаврентіївський храм.jpg",
+          "imagerepository": "local",
+          "imageinfo": [
+            {
+              "timestamp": "2024-04-05T15:55:43Z",
+              "size": 1053464,
+              "width": 1200,
+              "height": 1200,
+              "thumburl": "https://upload.wikimedia.org/wikipedia/commons/9/9b/%D0%A1%D0%B2%D1%8F%D1%82%D0%BE-%D0%9B%D0%B0%D0%B2%D1%80%D0%B5%D0%BD%D1%82%D1%96%D1%97%D0%B2%D1%81%D1%8C%D0%BA%D0%B8%D0%B9_%D1%85%D1%80%D0%B0%D0%BC.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+              "thumbwidth": 1280,
+              "thumbheight": 1280,
+              "thumbattribs": {
+                "src": "https://upload.wikimedia.org/wikipedia/commons/9/9b/%D0%A1%D0%B2%D1%8F%D1%82%D0%BE-%D0%9B%D0%B0%D0%B2%D1%80%D0%B5%D0%BD%D1%82%D1%96%D1%97%D0%B2%D1%81%D1%8C%D0%BA%D0%B8%D0%B9_%D1%85%D1%80%D0%B0%D0%BC.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+                "decoding": "async",
+                "loading": "lazy",
+                "width": 1280,
+                "height": 1280
+              },
+              "url": "https://upload.wikimedia.org/wikipedia/commons/9/9b/%D0%A1%D0%B2%D1%8F%D1%82%D0%BE-%D0%9B%D0%B0%D0%B2%D1%80%D0%B5%D0%BD%D1%82%D1%96%D1%97%D0%B2%D1%81%D1%8C%D0%BA%D0%B8%D0%B9_%D1%85%D1%80%D0%B0%D0%BC.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+              "descriptionurl": "https://commons.wikimedia.org/wiki/File:%D0%A1%D0%B2%D1%8F%D1%82%D0%BE-%D0%9B%D0%B0%D0%B2%D1%80%D0%B5%D0%BD%D1%82%D1%96%D1%97%D0%B2%D1%81%D1%8C%D0%BA%D0%B8%D0%B9_%D1%85%D1%80%D0%B0%D0%BC.jpg",
+              "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=147112788",
+              "metadata": [
+                {
+                  "name": "ImageWidth",
+                  "value": 2048
+                },
+                {
+                  "name": "ImageLength",
+                  "value": 1536
+                },
+                {
+                  "name": "BitsPerSample",
+                  "value": "\n*8\n*8\n*8"
+                },
+                {
+                  "name": "PhotometricInterpretation",
+                  "value": 2
+                },
+                {
+                  "name": "ImageDescription",
+                  "value": "OLYMPUS DIGITAL CAMERA\n\n"
+                },
+                {
+                  "name": "Make",
+                  "value": "OLYMPUS IMAGING CORP.  "
+                },
+                {
+                  "name": "Model",
+                  "value": "SP560UZ                "
+                },
+                {
+                  "name": "Orientation",
+                  "value": 1
+                },
+                {
+                  "name": "SamplesPerPixel",
+                  "value": 3
+                },
+                {
+                  "name": "XResolution",
+                  "value": "720000/10000"
+                },
+                {
+                  "name": "YResolution",
+                  "value": "720000/10000"
+                },
+                {
+                  "name": "ResolutionUnit",
+                  "value": 2
+                },
+                {
+                  "name": "Software",
+                  "value": "Adobe Photoshop CS6 (Windows)"
+                },
+                {
+                  "name": "DateTime",
+                  "value": "2024:04:05 13:32:00"
+                },
+                {
+                  "name": "YCbCrPositioning",
+                  "value": 2
+                },
+                {
+                  "name": "ExposureTime",
+                  "value": "10/4000"
+                },
+                {
+                  "name": "FNumber",
+                  "value": "56/10"
+                },
+                {
+                  "name": "ExposureProgram",
+                  "value": 5
+                },
+                {
+                  "name": "ISOSpeedRatings",
+                  "value": 50
+                },
+                {
+                  "name": "ExifVersion",
+                  "value": "0221"
+                },
+                {
+                  "name": "DateTimeOriginal",
+                  "value": "2018:06:03 14:48:14"
+                },
+                {
+                  "name": "DateTimeDigitized",
+                  "value": "2018:06:03 14:48:14"
+                },
+                {
+                  "name": "ComponentsConfiguration",
+                  "value": "\n#1\n#2\n#3\n#0"
+                },
+                {
+                  "name": "CompressedBitsPerPixel",
+                  "value": "4/1"
+                },
+                {
+                  "name": "ShutterSpeedValue",
+                  "value": "8643856/1000000"
+                },
+                {
+                  "name": "ApertureValue",
+                  "value": "4970854/1000000"
+                },
+                {
+                  "name": "ExposureBiasValue",
+                  "value": "0/10"
+                },
+                {
+                  "name": "MaxApertureValue",
+                  "value": "297/100"
+                },
+                {
+                  "name": "MeteringMode",
+                  "value": 5
+                },
+                {
+                  "name": "LightSource",
+                  "value": 0
+                },
+                {
+                  "name": "Flash",
+                  "value": 16
+                },
+                {
+                  "name": "FocalLength",
+                  "value": "1067/100"
+                },
+                {
+                  "name": "FlashPixVersion",
+                  "value": "0100"
+                },
+                {
+                  "name": "ColorSpace",
+                  "value": 1
+                },
+                {
+                  "name": "FileSource",
+                  "value": 3
+                },
+                {
+                  "name": "SceneType",
+                  "value": 1
+                },
+                {
+                  "name": "CustomRendered",
+                  "value": 0
+                },
+                {
+                  "name": "ExposureMode",
+                  "value": 0
+                },
+                {
+                  "name": "WhiteBalance",
+                  "value": 0
+                },
+                {
+                  "name": "DigitalZoomRatio",
+                  "value": "0/100"
+                },
+                {
+                  "name": "SceneCaptureType",
+                  "value": 0
+                },
+                {
+                  "name": "GainControl",
+                  "value": 0
+                },
+                {
+                  "name": "Contrast",
+                  "value": 0
+                },
+                {
+                  "name": "Saturation",
+                  "value": 0
+                },
+                {
+                  "name": "Sharpness",
+                  "value": 0
+                },
+                {
+                  "name": "SerialNumber",
+                  "value": "000L77534960"
+                },
+                {
+                  "name": "DateTimeMetadata",
+                  "value": "2024:04:05 16:32"
+                },
+                {
+                  "name": "OriginalDocumentID",
+                  "value": "45BEB0DB3011EF908D66F02DF8162B9B"
+                },
+                {
+                  "name": "iimVersion",
+                  "value": 43008
+                },
+                {
+                  "name": "MEDIAWIKI_EXIF_VERSION",
+                  "value": 1
+                }
+              ],
+              "extmetadata": {
+                "DateTime": {
+                  "value": "2024-04-05 15:55:43",
+                  "source": "mediawiki-metadata",
+                  "hidden": ""
+                },
+                "ObjectName": {
+                  "value": "Свято-Лаврентіївський храм",
+                  "source": "mediawiki-metadata"
+                },
+                "CommonsMetadataExtension": {
+                  "value": 1.2,
+                  "source": "extension",
+                  "hidden": ""
+                },
+                "Categories": {
+                  "value": "Self-published work|Religion in Lyman|Buildings in Lyman|Photos by Artemco/Лиман",
+                  "source": "commons-categories",
+                  "hidden": ""
+                },
+                "Assessments": {
+                  "value": "",
+                  "source": "commons-categories",
+                  "hidden": ""
+                },
+                "ImageDescription": {
+                  "value": "Свято-Лаврентіївський храм",
+                  "source": "commons-desc-page"
+                },
+                "DateTimeOriginal": {
+                  "value": "2018-06-03 14:48:14",
+                  "source": "commons-desc-page"
+                },
+                "Credit": {
+                  "value": "<span class=\"int-own-work\" lang=\"en\">Own work</span>",
+                  "source": "commons-desc-page"
+                },
+                "Artist": {
+                  "value": "<a href=\"//commons.wikimedia.org/wiki/User:Artemco\" title=\"User:Artemco\">Artemco</a>",
+                  "source": "commons-desc-page"
+                },
+                "LicenseShortName": {
+                  "value": "CC BY-SA 4.0",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "UsageTerms": {
+                  "value": "Creative Commons Attribution-Share Alike 4.0",
+                  "source": "commons-desc-page"
+                },
+                "AttributionRequired": {
+                  "value": "true",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "LicenseUrl": {
+                  "value": "https://creativecommons.org/licenses/by-sa/4.0",
+                  "source": "commons-desc-page"
+                },
+                "Copyrighted": {
+                  "value": "True",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "Restrictions": {
+                  "value": "",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "License": {
+                  "value": "cc-by-sa-4.0",
+                  "source": "commons-templates",
+                  "hidden": ""
+                }
+              }
+            }
+          ]
+        },
+        "153164984": {
+          "pageid": 153164984,
+          "ns": 6,
+          "title": "File:Sports complex for cycling in Lyman, 2021-09-28 (01).jpg",
+          "imagerepository": "local",
+          "imageinfo": [
+            {
+              "timestamp": "2024-09-26T04:09:32Z",
+              "size": 239029,
+              "width": 820,
+              "height": 546,
+              "thumburl": "https://upload.wikimedia.org/wikipedia/commons/9/96/Sports_complex_for_cycling_in_Lyman%2C_2021-09-28_%2801%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+              "thumbwidth": 1280,
+              "thumbheight": 852,
+              "thumbattribs": {
+                "src": "https://upload.wikimedia.org/wikipedia/commons/9/96/Sports_complex_for_cycling_in_Lyman%2C_2021-09-28_%2801%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+                "decoding": "async",
+                "loading": "lazy",
+                "width": 1280,
+                "height": 852
+              },
+              "url": "https://upload.wikimedia.org/wikipedia/commons/9/96/Sports_complex_for_cycling_in_Lyman%2C_2021-09-28_%2801%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+              "descriptionurl": "https://commons.wikimedia.org/wiki/File:Sports_complex_for_cycling_in_Lyman,_2021-09-28_(01).jpg",
+              "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=153164984",
+              "metadata": [
+                {
+                  "name": "JPEGFileComment",
+                  "value": "CREATOR: gd-jpeg v1.0 (using IJG JPEG v80), quality = 95"
+                },
+                {
+                  "name": "MEDIAWIKI_EXIF_VERSION",
+                  "value": 1
+                }
+              ],
+              "extmetadata": {
+                "DateTime": {
+                  "value": "2024-09-26 04:09:32",
+                  "source": "mediawiki-metadata",
+                  "hidden": ""
+                },
+                "ObjectName": {
+                  "value": "Sports complex for cycling in Lyman, 2021-09-28 (01)",
+                  "source": "mediawiki-metadata"
+                },
+                "CommonsMetadataExtension": {
+                  "value": 1.2,
+                  "source": "extension",
+                  "hidden": ""
+                },
+                "Categories": {
+                  "value": "September 2021 in Donetsk Oblast|Images from dn.gov.ua|Sports complex for cycling in Lyman",
+                  "source": "commons-categories",
+                  "hidden": ""
+                },
+                "Assessments": {
+                  "value": "",
+                  "source": "commons-categories",
+                  "hidden": ""
+                },
+                "ImageDescription": {
+                  "value": "Opening of Regional Specialized Children's and Youth Sports School of the Olympic Reserve for Cycling in <a href=\"https://en.wikipedia.org/wiki/Lyman,_Ukraine\" class=\"extiw\" title=\"en:Lyman, Ukraine\">Lyman</a> (Donetsk region of Ukraine) on 28 September 2021 (<a rel=\"nofollow\" class=\"external text\" href=\"https://web.archive.org/web/20220421042718/https://sportdonoda.gov.ua/news/13174_velike-budivnitstvo-u-limani-vidkrili-ediniy-podibniy-v-ukrani-velokompleks.html\">an article</a>).",
+                  "source": "commons-desc-page"
+                },
+                "DateTimeOriginal": {
+                  "value": "2021-09-28",
+                  "source": "commons-desc-page"
+                },
+                "Credit": {
+                  "value": "<a rel=\"nofollow\" class=\"external text\" href=\"https://dn.gov.ua/news/na-donechchini-urochisto-vidkrili-yedinij-v-ukrayini-velokompleks-iz-suchasnoyu-trasoyu-bmx\">На Донеччині урочисто відкрили єдиний в Україні велокомплекс із сучасною трасою BMX</a>",
+                  "source": "commons-desc-page"
+                },
+                "Artist": {
+                  "value": "Donetsk Regional State Administration",
+                  "source": "commons-desc-page"
+                },
+                "LicenseShortName": {
+                  "value": "CC BY 4.0",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "UsageTerms": {
+                  "value": "Creative Commons Attribution 4.0",
+                  "source": "commons-desc-page"
+                },
+                "AttributionRequired": {
+                  "value": "true",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "LicenseUrl": {
+                  "value": "https://creativecommons.org/licenses/by/4.0",
+                  "source": "commons-desc-page"
+                },
+                "Copyrighted": {
+                  "value": "True",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "Restrictions": {
+                  "value": "",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "License": {
+                  "value": "cc-by-4.0",
+                  "source": "commons-templates",
+                  "hidden": ""
+                }
+              }
+            }
+          ]
+        },
+        "153165213": {
+          "pageid": 153165213,
+          "ns": 6,
+          "title": "File:Sports complex for cycling in Lyman, 2021-09-28 (03).jpg",
+          "imagerepository": "local",
+          "imageinfo": [
+            {
+              "timestamp": "2024-09-26T04:19:52Z",
+              "size": 179512,
+              "width": 820,
+              "height": 546,
+              "thumburl": "https://upload.wikimedia.org/wikipedia/commons/6/6f/Sports_complex_for_cycling_in_Lyman%2C_2021-09-28_%2803%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+              "thumbwidth": 1280,
+              "thumbheight": 852,
+              "thumbattribs": {
+                "src": "https://upload.wikimedia.org/wikipedia/commons/6/6f/Sports_complex_for_cycling_in_Lyman%2C_2021-09-28_%2803%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+                "decoding": "async",
+                "loading": "lazy",
+                "width": 1280,
+                "height": 852
+              },
+              "url": "https://upload.wikimedia.org/wikipedia/commons/6/6f/Sports_complex_for_cycling_in_Lyman%2C_2021-09-28_%2803%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+              "descriptionurl": "https://commons.wikimedia.org/wiki/File:Sports_complex_for_cycling_in_Lyman,_2021-09-28_(03).jpg",
+              "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=153165213",
+              "metadata": [
+                {
+                  "name": "JPEGFileComment",
+                  "value": "CREATOR: gd-jpeg v1.0 (using IJG JPEG v80), quality = 95"
+                },
+                {
+                  "name": "MEDIAWIKI_EXIF_VERSION",
+                  "value": 1
+                }
+              ],
+              "extmetadata": {
+                "DateTime": {
+                  "value": "2024-09-26 04:19:52",
+                  "source": "mediawiki-metadata",
+                  "hidden": ""
+                },
+                "ObjectName": {
+                  "value": "Sports complex for cycling in Lyman, 2021-09-28 (03)",
+                  "source": "mediawiki-metadata"
+                },
+                "CommonsMetadataExtension": {
+                  "value": 1.2,
+                  "source": "extension",
+                  "hidden": ""
+                },
+                "Categories": {
+                  "value": "September 2021 in Donetsk Oblast|Images from dn.gov.ua|Sports complex for cycling in Lyman",
+                  "source": "commons-categories",
+                  "hidden": ""
+                },
+                "Assessments": {
+                  "value": "",
+                  "source": "commons-categories",
+                  "hidden": ""
+                },
+                "ImageDescription": {
+                  "value": "Opening of Regional Specialized Children's and Youth Sports School of the Olympic Reserve for Cycling in <a href=\"https://en.wikipedia.org/wiki/Lyman,_Ukraine\" class=\"extiw\" title=\"en:Lyman, Ukraine\">Lyman</a> (Donetsk region of Ukraine) on 28 September 2021.",
+                  "source": "commons-desc-page"
+                },
+                "DateTimeOriginal": {
+                  "value": "2021-09-28",
+                  "source": "commons-desc-page"
+                },
+                "Credit": {
+                  "value": "<a rel=\"nofollow\" class=\"external text\" href=\"https://dn.gov.ua/news/na-donechchini-urochisto-vidkrili-yedinij-v-ukrayini-velokompleks-iz-suchasnoyu-trasoyu-bmx\">На Донеччині урочисто відкрили єдиний в Україні велокомплекс із сучасною трасою BMX</a>",
+                  "source": "commons-desc-page"
+                },
+                "Artist": {
+                  "value": "Donetsk Regional State Administration",
+                  "source": "commons-desc-page"
+                },
+                "LicenseShortName": {
+                  "value": "CC BY 4.0",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "UsageTerms": {
+                  "value": "Creative Commons Attribution 4.0",
+                  "source": "commons-desc-page"
+                },
+                "AttributionRequired": {
+                  "value": "true",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "LicenseUrl": {
+                  "value": "https://creativecommons.org/licenses/by/4.0",
+                  "source": "commons-desc-page"
+                },
+                "Copyrighted": {
+                  "value": "True",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "Restrictions": {
+                  "value": "",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "License": {
+                  "value": "cc-by-4.0",
+                  "source": "commons-templates",
+                  "hidden": ""
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}

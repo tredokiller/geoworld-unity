@@ -278,3 +278,15 @@
 .gw-subtle:hover {
     background-color: var(--gw-chip);
 }
+
+.gw-extract {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: 8px;
+}
+
+.gw-extract > .gw-hint {
+    margin: 0 0 0 8px;
+    flex-shrink: 1;
+}

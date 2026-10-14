@@ -27,7 +27,8 @@ namespace GeoWorld.Editor
         const string ExportsKey = "GeoWorld.ExportsFolder";
         readonly List<string> exports = new List<string>();
         DropdownField exportField;
-        Label hint, versionChip, bannerText, status;
+        Label hint, versionChip, bannerText, status, extracting;
+        string announced;
         VisualElement stats, banner;
         Image preview;
         Texture2D previewTexture;
@@ -41,16 +42,27 @@ namespace GeoWorld.Editor
             window.minSize = new Vector2(380, 520);
         }
 
+        // Opens the window with an export (an <area>_env folder) selected.
+        public static void OpenExport(string folder)
+        {
+            Open();
+            var window = GetWindow<GeoWorldWindow>();
+            window.exportFolder = folder ?? "";
+            if (window.exportField != null) window.ListExports();
+        }
+
         void OnEnable()
         {
             if (settings != null) GeoDefaults.FillLibraries(settings, false);
             GeoUpdate.Changed += ShowUpdate;
+            GeoExtractor.Changed += ShowExtraction;
             Selection.selectionChanged += ShowSelection;
         }
 
         void OnDisable()
         {
             GeoUpdate.Changed -= ShowUpdate;
+            GeoExtractor.Changed -= ShowExtraction;
             Selection.selectionChanged -= ShowSelection;
             if (previewTexture) DestroyImmediate(previewTexture);
         }
@@ -90,6 +102,18 @@ namespace GeoWorld.Editor
             pick.Add(exportField);
             pick.Add(new Button(Browse) { text = "Browse…" });
             exportCard.Add(pick);
+            var extract = Row("gw-extract");
+            var newArea = new Button(GeoAreaWindow.Open) { text = "New area…", tooltip = "Draw an area on the map and extract it with the Building Extractor app" };
+            newArea.AddToClassList("gw-accent");
+            extract.Add(newArea);
+            var fullApp = new Button(() => Run(GeoExtractor.OpenFullApp)) { text = "Open full app", tooltip = "The Building Extractor web app: condition review, reports, news" };
+            fullApp.AddToClassList("gw-subtle");
+            extract.Add(fullApp);
+            extracting = Text("", "gw-hint");
+            extract.Add(extracting);
+            newArea.SetEnabled(GeoExtractor.Available);
+            fullApp.SetEnabled(GeoExtractor.Available);
+            exportCard.Add(extract);
             preview = new Image { scaleMode = ScaleMode.ScaleAndCrop };
             preview.AddToClassList("gw-preview");
             exportCard.Add(preview);
@@ -135,6 +159,7 @@ namespace GeoWorld.Editor
             page.Add(status);
 
             ListExports();
+            ShowExtraction();
             SetTiled(tiled);
             ShowUpdate();
             ShowSelection();
@@ -149,7 +174,10 @@ namespace GeoWorld.Editor
             get
             {
                 string chosen = EditorPrefs.GetString(ExportsKey, "");
-                return Directory.Exists(chosen) ? chosen : Directory.Exists(GeoDefaults.ExportsFolder) ? GeoDefaults.ExportsFolder : "";
+                if (Directory.Exists(chosen)) return chosen;
+                // the exports of the app that comes with the package (New area… puts them there)
+                if (GeoExtractor.Available) { Directory.CreateDirectory(GeoExtractor.ExportsFolder); return GeoExtractor.ExportsFolder; }
+                return "";
             }
         }
 
@@ -401,6 +429,21 @@ namespace GeoWorld.Editor
         {
             EditorGUILayout.Space(6);
             EditorGUILayout.LabelField(title, EditorStyles.boldLabel);
+        }
+
+        // An extraction (New area…) in progress, and the new export selected once it is there.
+        void ShowExtraction()
+        {
+            if (extracting == null) return;
+            var job = GeoExtractor.Current;
+            extracting.text = job == null ? "" : job.Running ? $"Extracting {job.name}: {job.stage} ({job.progress:P0})" :
+                job.error != null ? "Extracting " + job.name + " failed: " + job.error : job.Finished ? $"{job.name}: {job.buildings:N0} buildings extracted" : "";
+            if (job != null && job.Finished && job.package != null && job.package != announced)
+            {
+                announced = job.package;
+                exportFolder = job.package;
+                ListExports();
+            }
         }
 
         // ---------------------------------------------------------------- update and status

@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.4.0
+
+- New area... in the Geo World window: draw an area on a map of Ukraine and extract it with the Building Extractor app, which comes with the package (with its own Python on Windows); the new export is selected, ready to generate
+- Open full app starts the app's web page (condition review, reports, news)
+
 ## 1.3.0
 
 - A simpler, nicer Geo World window: pick an export with a picture of the area, tiled or one world, four switches, Advanced settings for the rest

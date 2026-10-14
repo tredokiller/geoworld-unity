@@ -32,17 +32,21 @@ keeps the commit it first downloaded, recorded in `Packages/packages-lock.json`,
 ## First steps in a project
 
 1. **Tools > Geo World > Set up rendering for large worlds** (GPU Resident Drawer, occlusion culling).
-2. **Tools > Geo World > Generate world from export...** and choose an unzipped Terrain & ground package of the
-   app (`exports/<area>_env`). Or open **Tools > Geo World > Generator window**: pick an export from the list (with a
-   picture of the area, its size, roads, buildings and damage), choose a tiled world or one world and a few switches,
-   and press Generate; every other setting is under Advanced settings.
+2. **Tools > Geo World > Generator window** › **New area…**: find a place on the map of Ukraine (search, or pan and
+   zoom), press Draw area and drag the area, name it, and press Extract. The Building Extractor app, which comes with
+   the package (with its own Python on Windows: nothing to install), fetches the buildings, roads, terrain and the
+   radar damage estimate in the background; a small town takes a few minutes. The export is then selected in the
+   window: choose a tiled world or one world and a few switches, and press Generate. Every other setting is under
+   Advanced settings. **Open full app** starts the app's web page (condition review, reports, news).
+
+Exports go to `%LOCALAPPDATA%\GeoWorld\exports`; exports made elsewhere with the app can be picked with Browse….
 
 **Updates.** Once per editor session the newest version is looked up; when there is a newer one the console and the
 Scene view say so and the Geo World window shows an **Update** button. **Tools > Geo World > Update Geo World...**
 does the same on demand.
 
 The 25 ruin models and 38 home models come with the package (`Ruins`, `Homes`): nothing to import. Their textures are
-kept small (colour as JPEG, normal maps as 1024 px PNG; about 280 MB for the whole package). Everything the tools
+kept small (colour as JPEG, normal maps as 1024 px PNG; about 310 MB for the whole package with the app). Everything the tools
 make goes into the project's `Assets/GeoWorld` (generated worlds, tiles, reduced copies of the models, roofs tinted
 to the export's colours); the package itself is read-only.
 

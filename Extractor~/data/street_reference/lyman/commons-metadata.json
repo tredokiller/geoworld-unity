@@ -1,0 +1,1124 @@
+{
+  "retrievedAt": "2026-10-05T23:52:35Z",
+  "sourceUrl": "https://commons.wikimedia.org/w/api.php?action=query&prop=imageinfo%7Ccoordinates&pageids=53394255%7C53394358%7C53394237%7C53394611%7C19961908&iiprop=url%7Csize%7Cextmetadata%7Cmetadata%7Ctimestamp&iiurlwidth=1280&format=json",
+  "response": {
+    "batchcomplete": "",
+    "query": {
+      "pages": {
+        "19961908": {
+          "pageid": 19961908,
+          "ns": 6,
+          "title": "File:Panoramio - V&A Dudush - Красный Лиман.jpg",
+          "imagerepository": "local",
+          "imageinfo": [
+            {
+              "timestamp": "2012-06-19T23:07:45Z",
+              "size": 539735,
+              "width": 1080,
+              "height": 698,
+              "thumburl": "https://upload.wikimedia.org/wikipedia/commons/b/b3/Panoramio_-_V%26A_Dudush_-_%D0%9A%D1%80%D0%B0%D1%81%D0%BD%D1%8B%D0%B9_%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+              "thumbwidth": 1280,
+              "thumbheight": 827,
+              "thumbattribs": {
+                "src": "https://upload.wikimedia.org/wikipedia/commons/b/b3/Panoramio_-_V%26A_Dudush_-_%D0%9A%D1%80%D0%B0%D1%81%D0%BD%D1%8B%D0%B9_%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+                "decoding": "async",
+                "loading": "lazy",
+                "width": 1280,
+                "height": 827
+              },
+              "url": "https://upload.wikimedia.org/wikipedia/commons/b/b3/Panoramio_-_V%26A_Dudush_-_%D0%9A%D1%80%D0%B0%D1%81%D0%BD%D1%8B%D0%B9_%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+              "descriptionurl": "https://commons.wikimedia.org/wiki/File:Panoramio_-_V%26A_Dudush_-_%D0%9A%D1%80%D0%B0%D1%81%D0%BD%D1%8B%D0%B9_%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD.jpg",
+              "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=19961908",
+              "metadata": [
+                {
+                  "name": "MEDIAWIKI_EXIF_VERSION",
+                  "value": 1
+                }
+              ],
+              "extmetadata": {
+                "DateTime": {
+                  "value": "2012-06-19 23:07:45",
+                  "source": "mediawiki-metadata",
+                  "hidden": ""
+                },
+                "ObjectName": {
+                  "value": "Panoramio - V&A Dudush - Красный Лиман",
+                  "source": "mediawiki-metadata"
+                },
+                "CommonsMetadataExtension": {
+                  "value": 1.2,
+                  "source": "extension",
+                  "hidden": ""
+                },
+                "Categories": {
+                  "value": "Lyman (city)|Panoramio images reviewed by trusted users|Photos from Panoramio|Files with coordinates missing SDC location of creation|Roads in Kramatorsk Raion|Structures in Kramatorsk Raion|Photos from Panoramio ID 2333416|Photographs of Donetsk Oblast by V&A Dudush",
+                  "source": "commons-categories",
+                  "hidden": ""
+                },
+                "Assessments": {
+                  "value": "",
+                  "source": "commons-categories",
+                  "hidden": ""
+                },
+                "GPSLatitude": {
+                  "value": "48.968160",
+                  "source": "commons-desc-page"
+                },
+                "GPSLongitude": {
+                  "value": "37.842246",
+                  "source": "commons-desc-page"
+                },
+                "GPSMapDatum": {
+                  "value": "WGS-84",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "ImageDescription": {
+                  "value": "Красный Лиман",
+                  "source": "commons-desc-page"
+                },
+                "DateTimeOriginal": {
+                  "value": "12 May 2009 (upload date)",
+                  "source": "commons-desc-page"
+                },
+                "Credit": {
+                  "value": "<a rel=\"nofollow\" class=\"external text\" href=\"https://web.archive.org/web/20161013230614/http://www.panoramio.com/photo/22285785\">Panoramio</a>",
+                  "source": "commons-desc-page"
+                },
+                "Artist": {
+                  "value": "<a rel=\"nofollow\" class=\"external text\" href=\"https://web.archive.org/web/20161013230616/http://www.panoramio.com/user/2333416?with_photo_id=22285785\">V&amp;A Dudush</a>",
+                  "source": "commons-desc-page"
+                },
+                "LicenseShortName": {
+                  "value": "CC BY 3.0",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "UsageTerms": {
+                  "value": "Creative Commons Attribution 3.0",
+                  "source": "commons-desc-page"
+                },
+                "AttributionRequired": {
+                  "value": "true",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "LicenseUrl": {
+                  "value": "https://creativecommons.org/licenses/by/3.0",
+                  "source": "commons-desc-page"
+                },
+                "Copyrighted": {
+                  "value": "True",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "Restrictions": {
+                  "value": "",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "License": {
+                  "value": "cc-by-3.0",
+                  "source": "commons-templates",
+                  "hidden": ""
+                }
+              }
+            }
+          ],
+          "coordinates": [
+            {
+              "lat": 48.96816,
+              "lon": 37.842246,
+              "primary": "",
+              "globe": "earth"
+            }
+          ]
+        },
+        "53394237": {
+          "pageid": 53394237,
+          "ns": 6,
+          "title": "File:Медучилище - panoramio (1).jpg",
+          "imagerepository": "local",
+          "imageinfo": [
+            {
+              "timestamp": "2016-11-21T22:57:17Z",
+              "size": 4043546,
+              "width": 3264,
+              "height": 1836,
+              "thumburl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e7/%D0%9C%D0%B5%D0%B4%D1%83%D1%87%D0%B8%D0%BB%D0%B8%D1%89%D0%B5_-_panoramio_%281%29.jpg/1280px-%D0%9C%D0%B5%D0%B4%D1%83%D1%87%D0%B8%D0%BB%D0%B8%D1%89%D0%B5_-_panoramio_%281%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+              "thumbwidth": 1280,
+              "thumbheight": 720,
+              "responsiveUrls": {
+                "2": "https://upload.wikimedia.org/wikipedia/commons/e/e7/%D0%9C%D0%B5%D0%B4%D1%83%D1%87%D0%B8%D0%BB%D0%B8%D1%89%D0%B5_-_panoramio_%281%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
+              },
+              "thumbattribs": {
+                "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e7/%D0%9C%D0%B5%D0%B4%D1%83%D1%87%D0%B8%D0%BB%D0%B8%D1%89%D0%B5_-_panoramio_%281%29.jpg/1280px-%D0%9C%D0%B5%D0%B4%D1%83%D1%87%D0%B8%D0%BB%D0%B8%D1%89%D0%B5_-_panoramio_%281%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+                "decoding": "async",
+                "loading": "lazy",
+                "width": 1280,
+                "height": 720,
+                "srcset": "https://upload.wikimedia.org/wikipedia/commons/e/e7/%D0%9C%D0%B5%D0%B4%D1%83%D1%87%D0%B8%D0%BB%D0%B8%D1%89%D0%B5_-_panoramio_%281%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled 2x"
+              },
+              "url": "https://upload.wikimedia.org/wikipedia/commons/e/e7/%D0%9C%D0%B5%D0%B4%D1%83%D1%87%D0%B8%D0%BB%D0%B8%D1%89%D0%B5_-_panoramio_%281%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+              "descriptionurl": "https://commons.wikimedia.org/wiki/File:%D0%9C%D0%B5%D0%B4%D1%83%D1%87%D0%B8%D0%BB%D0%B8%D1%89%D0%B5_-_panoramio_(1).jpg",
+              "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=53394237",
+              "metadata": [
+                {
+                  "name": "ImageDescription",
+                  "value": "SAMSUNG"
+                },
+                {
+                  "name": "Make",
+                  "value": "SAMSUNG"
+                },
+                {
+                  "name": "Model",
+                  "value": "GT-i8910"
+                },
+                {
+                  "name": "Orientation",
+                  "value": 1
+                },
+                {
+                  "name": "XResolution",
+                  "value": "72/1"
+                },
+                {
+                  "name": "YResolution",
+                  "value": "72/1"
+                },
+                {
+                  "name": "ResolutionUnit",
+                  "value": 2
+                },
+                {
+                  "name": "DateTime",
+                  "value": "2011.05.01 07.38.14"
+                },
+                {
+                  "name": "YCbCrPositioning",
+                  "value": 1
+                },
+                {
+                  "name": "ExposureTime",
+                  "value": "80/20000"
+                },
+                {
+                  "name": "FNumber",
+                  "value": "260/100"
+                },
+                {
+                  "name": "ExposureProgram",
+                  "value": 0
+                },
+                {
+                  "name": "ISOSpeedRatings",
+                  "value": 50
+                },
+                {
+                  "name": "ExifVersion",
+                  "value": "0220"
+                },
+                {
+                  "name": "DateTimeOriginal",
+                  "value": "2011.05.01 07.38.14"
+                },
+                {
+                  "name": "DateTimeDigitized",
+                  "value": "2011.05.01 07.38.14"
+                },
+                {
+                  "name": "ComponentsConfiguration",
+                  "value": "\n#1\n#2\n#3\n#0"
+                },
+                {
+                  "name": "ShutterSpeedValue",
+                  "value": "521666/65536"
+                },
+                {
+                  "name": "ApertureValue",
+                  "value": "180684/65536"
+                },
+                {
+                  "name": "BrightnessValue",
+                  "value": "440206/65536"
+                },
+                {
+                  "name": "ExposureBiasValue",
+                  "value": "0/65536"
+                },
+                {
+                  "name": "MeteringMode",
+                  "value": 2
+                },
+                {
+                  "name": "LightSource",
+                  "value": 0
+                },
+                {
+                  "name": "Flash",
+                  "value": 0
+                },
+                {
+                  "name": "FocalLength",
+                  "value": "48/10"
+                },
+                {
+                  "name": "FlashPixVersion",
+                  "value": "0100"
+                },
+                {
+                  "name": "ColorSpace",
+                  "value": 0
+                },
+                {
+                  "name": "FileSource",
+                  "value": 3
+                },
+                {
+                  "name": "SceneType",
+                  "value": 1
+                },
+                {
+                  "name": "ExposureMode",
+                  "value": 0
+                },
+                {
+                  "name": "WhiteBalance",
+                  "value": 0
+                },
+                {
+                  "name": "SceneCaptureType",
+                  "value": 0
+                },
+                {
+                  "name": "SubjectDistanceRange",
+                  "value": 0
+                },
+                {
+                  "name": "MEDIAWIKI_EXIF_VERSION",
+                  "value": 1
+                }
+              ],
+              "extmetadata": {
+                "DateTime": {
+                  "value": "2016-11-21 22:57:17",
+                  "source": "mediawiki-metadata",
+                  "hidden": ""
+                },
+                "ObjectName": {
+                  "value": "Медучилище - panoramio (1)",
+                  "source": "mediawiki-metadata"
+                },
+                "CommonsMetadataExtension": {
+                  "value": 1.2,
+                  "source": "extension",
+                  "hidden": ""
+                },
+                "Categories": {
+                  "value": "Taken with Samsung GT-i8910|Panoramio files uploaded by Panoramio upload bot|Panoramio images reviewed by trusted users|Photos from Panoramio|Files with coordinates missing SDC location of creation|Education in Lyman|Buildings in Lyman|Photos from Panoramio ID 1405063|Photographs of Donetsk Oblast by dc ScAn|Higher education institutions in Donetsk Oblast",
+                  "source": "commons-categories",
+                  "hidden": ""
+                },
+                "Assessments": {
+                  "value": "",
+                  "source": "commons-categories",
+                  "hidden": ""
+                },
+                "GPSLatitude": {
+                  "value": "48.966724",
+                  "source": "commons-desc-page"
+                },
+                "GPSLongitude": {
+                  "value": "37.818718",
+                  "source": "commons-desc-page"
+                },
+                "GPSMapDatum": {
+                  "value": "WGS-84",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "ImageDescription": {
+                  "value": "Медучилище",
+                  "source": "commons-desc-page"
+                },
+                "DateTimeOriginal": {
+                  "value": "3 May 2011 (original upload date)",
+                  "source": "commons-desc-page"
+                },
+                "Credit": {
+                  "value": "<a rel=\"nofollow\" class=\"external free\" href=\"https://web.archive.org/web/20161022110032/http://www.panoramio.com/photo/52075224\">https://web.archive.org/web/20161022110032/http://www.panoramio.com/photo/52075224</a>",
+                  "source": "commons-desc-page"
+                },
+                "Artist": {
+                  "value": "<a rel=\"nofollow\" class=\"external text\" href=\"https://web.archive.org/web/20161022110033/http://www.panoramio.com/user/1405063?with_photo_id=52075224\">dc_ScAn</a>",
+                  "source": "commons-desc-page"
+                },
+                "Permission": {
+                  "value": "<div class=\"responsive-license-cc layouttemplate licensetpl\" dir=\"ltr\" lang=\"en\"><div class=\"rlicense-icons\"><span class=\"skin-invert\" typeof=\"mw:File\"><span title=\"w:en:Creative Commons\"><img alt=\"w:en:Creative Commons\" src=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/7/79/CC_some_rights_reserved.svg/120px-CC_some_rights_reserved.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail\" decoding=\"async\" loading=\"lazy\" width=\"90\" height=\"36\" class=\"mw-file-element\" srcset=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/7/79/CC_some_rights_reserved.svg/250px-CC_some_rights_reserved.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail 2x\" data-file-width=\"744\" data-file-height=\"300\"></span></span><br>\n<span class=\"skin-invert\" typeof=\"mw:File\"><span title=\"attribution\"><img alt=\"attribution\" src=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/1/11/Cc-by_new_white.svg/40px-Cc-by_new_white.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail\" decoding=\"async\" loading=\"lazy\" width=\"24\" height=\"24\" class=\"mw-file-element\" srcset=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/1/11/Cc-by_new_white.svg/60px-Cc-by_new_white.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail 2x\" data-file-width=\"64\" data-file-height=\"64\"></span></span></div><div class=\"rlicense-text\"><div class=\"rlicense-declaration\">This file is licensed under the <a href=\"https://en.wikipedia.org/wiki/en:Creative_Commons\" class=\"extiw\" title=\"w:en:Creative Commons\">Creative Commons</a> <a href=\"//creativecommons.org/licenses/by/3.0/deed.en\" class=\"extiw\" title=\"creativecommons:by/3.0/deed.en\">Attribution 3.0 Unported</a> license.</div><div class=\"rlicense-attr\" style=\"font-weight: bold;\">Attribution: <div style=\"display:inline;font-size:larger;\" class=\"licensetpl_attr\">dc_ScAn</div></div><div class=\"rlicense-desc\" style=\"text-align:start;\" dir=\"ltr\" lang=\"en\">\n<dl><dd>You are free:\n<ul><li><b>to share</b> – to copy, distribute and transmit the work</li>\n<li><b>to remix</b> – to adapt the work</li></ul></dd>\n<dd>Under the following conditions:\n<ul><li><b>attribution</b> – You must give appropriate credit, provide a link to the license, and indicate if changes were made. You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.</li></ul></dd></dl>\n</div><span class=\"licensetpl_link\" style=\"display:none;\">https://creativecommons.org/licenses/by/3.0</span><span class=\"licensetpl_short\" style=\"display:none;\">CC BY 3.0 </span><span class=\"licensetpl_long\" style=\"display:none;\">Creative Commons Attribution 3.0 </span><span class=\"licensetpl_link_req\" style=\"display:none;\">true</span><span class=\"licensetpl_attr_req\" style=\"display:none;\">true</span></div></div>\n<style data-mw-deduplicate=\"TemplateStyles:r901585720\">.mw-parser-output .panoramioreview{width:100%;margin:0.5em 0;background-color:var(--background-color-warning-subtle,#fffff0);padding:5px;border:1px solid var(--border-color-warning,#aa8);color:inherit}.mw-parser-output .panoramioreview-failed{background-color:var(--background-color-error-subtle,#fcc);color:inherit}.mw-parser-output .panoramioreview-passed{background-color:var(--background-color-success-subtle,#efe);color:inherit}</style>\n<table class=\"panoramioreview panoramioreview-passed\" lang=\"en\" dir=\"ltr\">\n\n<tbody><tr>\n<td><span typeof=\"mw:File\"><span><img alt=\"\" src=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/9/95/Checked_copyright_icon.svg/60px-Checked_copyright_icon.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail\" decoding=\"async\" loading=\"lazy\" width=\"50\" height=\"48\" class=\"mw-file-element\" srcset=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/9/95/Checked_copyright_icon.svg/120px-Checked_copyright_icon.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail 2x\" data-file-width=\"160\" data-file-height=\"153\"></span></span>\n</td>\n<td>This image, which was originally posted to <b><span lang=\"en\" dir=\"ltr\"><a href=\"https://en.wikipedia.org/wiki/Panoramio\" class=\"extiw\" title=\"en:Panoramio\">Panoramio</a></span></b>, was automatically reviewed on 21 November 2016 by <b><a href=\"//commons.wikimedia.org/wiki/User:Panoramio_upload_bot\" title=\"User:Panoramio upload bot\">Panoramio upload bot</a></b>, who confirmed that it was available on Panoramio under the above license on that date.\n</td>\n<td><span typeof=\"mw:File\"><a href=\"//commons.wikimedia.org/wiki/File:Star_and_ring.svg\" class=\"mw-file-description\"><img src=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/9/98/Star_and_ring.svg/60px-Star_and_ring.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail\" decoding=\"async\" loading=\"lazy\" width=\"50\" height=\"50\" class=\"mw-file-element\" srcset=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/9/98/Star_and_ring.svg/120px-Star_and_ring.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail 2x\" data-file-width=\"75\" data-file-height=\"75\"></a></span>\n</td></tr></tbody></table>",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "LicenseShortName": {
+                  "value": "CC BY 3.0",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "UsageTerms": {
+                  "value": "Creative Commons Attribution 3.0",
+                  "source": "commons-desc-page"
+                },
+                "AttributionRequired": {
+                  "value": "true",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "Attribution": {
+                  "value": "dc_ScAn",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "LicenseUrl": {
+                  "value": "https://creativecommons.org/licenses/by/3.0",
+                  "source": "commons-desc-page"
+                },
+                "Copyrighted": {
+                  "value": "True",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "Restrictions": {
+                  "value": "",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "License": {
+                  "value": "cc-by-3.0",
+                  "source": "commons-templates",
+                  "hidden": ""
+                }
+              }
+            }
+          ],
+          "coordinates": [
+            {
+              "lat": 48.966724,
+              "lon": 37.818718,
+              "primary": "",
+              "globe": "earth"
+            }
+          ]
+        },
+        "53394255": {
+          "pageid": 53394255,
+          "ns": 6,
+          "title": "File:ДК - panoramio (1).jpg",
+          "imagerepository": "local",
+          "imageinfo": [
+            {
+              "timestamp": "2016-11-21T22:57:37Z",
+              "size": 2640836,
+              "width": 3264,
+              "height": 1836,
+              "thumburl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3b/%D0%94%D0%9A_-_panoramio_%281%29.jpg/1280px-%D0%94%D0%9A_-_panoramio_%281%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+              "thumbwidth": 1280,
+              "thumbheight": 720,
+              "responsiveUrls": {
+                "2": "https://upload.wikimedia.org/wikipedia/commons/3/3b/%D0%94%D0%9A_-_panoramio_%281%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
+              },
+              "thumbattribs": {
+                "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3b/%D0%94%D0%9A_-_panoramio_%281%29.jpg/1280px-%D0%94%D0%9A_-_panoramio_%281%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+                "decoding": "async",
+                "loading": "lazy",
+                "width": 1280,
+                "height": 720,
+                "srcset": "https://upload.wikimedia.org/wikipedia/commons/3/3b/%D0%94%D0%9A_-_panoramio_%281%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled 2x"
+              },
+              "url": "https://upload.wikimedia.org/wikipedia/commons/3/3b/%D0%94%D0%9A_-_panoramio_%281%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+              "descriptionurl": "https://commons.wikimedia.org/wiki/File:%D0%94%D0%9A_-_panoramio_(1).jpg",
+              "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=53394255",
+              "metadata": [
+                {
+                  "name": "ImageDescription",
+                  "value": "SAMSUNG"
+                },
+                {
+                  "name": "Make",
+                  "value": "SAMSUNG"
+                },
+                {
+                  "name": "Model",
+                  "value": "GT-i8910"
+                },
+                {
+                  "name": "Orientation",
+                  "value": 1
+                },
+                {
+                  "name": "XResolution",
+                  "value": "72/1"
+                },
+                {
+                  "name": "YResolution",
+                  "value": "72/1"
+                },
+                {
+                  "name": "ResolutionUnit",
+                  "value": 2
+                },
+                {
+                  "name": "DateTime",
+                  "value": "2011.05.01 07.40.52"
+                },
+                {
+                  "name": "YCbCrPositioning",
+                  "value": 1
+                },
+                {
+                  "name": "ExposureTime",
+                  "value": "53/20000"
+                },
+                {
+                  "name": "FNumber",
+                  "value": "260/100"
+                },
+                {
+                  "name": "ExposureProgram",
+                  "value": 0
+                },
+                {
+                  "name": "ISOSpeedRatings",
+                  "value": 50
+                },
+                {
+                  "name": "ExifVersion",
+                  "value": "0220"
+                },
+                {
+                  "name": "DateTimeOriginal",
+                  "value": "2011.05.01 07.40.52"
+                },
+                {
+                  "name": "DateTimeDigitized",
+                  "value": "2011.05.01 07.40.52"
+                },
+                {
+                  "name": "ComponentsConfiguration",
+                  "value": "\n#1\n#2\n#3\n#0"
+                },
+                {
+                  "name": "ShutterSpeedValue",
+                  "value": "561329/65536"
+                },
+                {
+                  "name": "ApertureValue",
+                  "value": "180684/65536"
+                },
+                {
+                  "name": "BrightnessValue",
+                  "value": "479869/65536"
+                },
+                {
+                  "name": "ExposureBiasValue",
+                  "value": "0/65536"
+                },
+                {
+                  "name": "MeteringMode",
+                  "value": 2
+                },
+                {
+                  "name": "LightSource",
+                  "value": 0
+                },
+                {
+                  "name": "Flash",
+                  "value": 0
+                },
+                {
+                  "name": "FocalLength",
+                  "value": "48/10"
+                },
+                {
+                  "name": "FlashPixVersion",
+                  "value": "0100"
+                },
+                {
+                  "name": "ColorSpace",
+                  "value": 0
+                },
+                {
+                  "name": "FileSource",
+                  "value": 3
+                },
+                {
+                  "name": "SceneType",
+                  "value": 1
+                },
+                {
+                  "name": "ExposureMode",
+                  "value": 0
+                },
+                {
+                  "name": "WhiteBalance",
+                  "value": 0
+                },
+                {
+                  "name": "SceneCaptureType",
+                  "value": 0
+                },
+                {
+                  "name": "SubjectDistanceRange",
+                  "value": 0
+                },
+                {
+                  "name": "GPSLatitude",
+                  "value": 48.967169444444444
+                },
+                {
+                  "name": "GPSLongitude",
+                  "value": 37.81749444444445
+                },
+                {
+                  "name": "GPSAltitude",
+                  "value": 126
+                },
+                {
+                  "name": "GPSVersionID",
+                  "value": "0.0.2.2"
+                },
+                {
+                  "name": "MEDIAWIKI_EXIF_VERSION",
+                  "value": 1
+                }
+              ],
+              "extmetadata": {
+                "DateTime": {
+                  "value": "2016-11-21 22:57:37",
+                  "source": "mediawiki-metadata",
+                  "hidden": ""
+                },
+                "ObjectName": {
+                  "value": "ДК - panoramio (1)",
+                  "source": "mediawiki-metadata"
+                },
+                "CommonsMetadataExtension": {
+                  "value": 1.2,
+                  "source": "extension",
+                  "hidden": ""
+                },
+                "Categories": {
+                  "value": "Taken with Samsung GT-i8910|Panoramio files uploaded by Panoramio upload bot|Panoramio images reviewed by trusted users|Photos from Panoramio|Files with coordinates missing SDC location of creation|Houses of culture in Kramatorsk Raion|Culture of Lyman|Buildings in Lyman|Photos from Panoramio ID 1405063|Photographs of Donetsk Oblast by dc ScAn",
+                  "source": "commons-categories",
+                  "hidden": ""
+                },
+                "Assessments": {
+                  "value": "",
+                  "source": "commons-categories",
+                  "hidden": ""
+                },
+                "GPSLatitude": {
+                  "value": "48.967169",
+                  "source": "commons-desc-page"
+                },
+                "GPSLongitude": {
+                  "value": "37.817494",
+                  "source": "commons-desc-page"
+                },
+                "GPSMapDatum": {
+                  "value": "WGS-84",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "ImageDescription": {
+                  "value": "ДК",
+                  "source": "commons-desc-page"
+                },
+                "DateTimeOriginal": {
+                  "value": "3 May 2011 (original upload date)",
+                  "source": "commons-desc-page"
+                },
+                "Credit": {
+                  "value": "<a rel=\"nofollow\" class=\"external free\" href=\"https://web.archive.org/web/20161022110108/http://www.panoramio.com/photo/52075229\">https://web.archive.org/web/20161022110108/http://www.panoramio.com/photo/52075229</a>",
+                  "source": "commons-desc-page"
+                },
+                "Artist": {
+                  "value": "<a rel=\"nofollow\" class=\"external text\" href=\"https://web.archive.org/web/20161022110038/http://www.panoramio.com/user/1405063?with_photo_id=52075229\">dc_ScAn</a>",
+                  "source": "commons-desc-page"
+                },
+                "Permission": {
+                  "value": "<div class=\"responsive-license-cc layouttemplate licensetpl\" dir=\"ltr\" lang=\"en\"><div class=\"rlicense-icons\"><span class=\"skin-invert\" typeof=\"mw:File\"><span title=\"w:en:Creative Commons\"><img alt=\"w:en:Creative Commons\" src=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/7/79/CC_some_rights_reserved.svg/120px-CC_some_rights_reserved.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail\" decoding=\"async\" loading=\"lazy\" width=\"90\" height=\"36\" class=\"mw-file-element\" srcset=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/7/79/CC_some_rights_reserved.svg/250px-CC_some_rights_reserved.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail 2x\" data-file-width=\"744\" data-file-height=\"300\"></span></span><br>\n<span class=\"skin-invert\" typeof=\"mw:File\"><span title=\"attribution\"><img alt=\"attribution\" src=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/1/11/Cc-by_new_white.svg/40px-Cc-by_new_white.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail\" decoding=\"async\" loading=\"lazy\" width=\"24\" height=\"24\" class=\"mw-file-element\" srcset=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/1/11/Cc-by_new_white.svg/60px-Cc-by_new_white.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail 2x\" data-file-width=\"64\" data-file-height=\"64\"></span></span></div><div class=\"rlicense-text\"><div class=\"rlicense-declaration\">This file is licensed under the <a href=\"https://en.wikipedia.org/wiki/en:Creative_Commons\" class=\"extiw\" title=\"w:en:Creative Commons\">Creative Commons</a> <a href=\"//creativecommons.org/licenses/by/3.0/deed.en\" class=\"extiw\" title=\"creativecommons:by/3.0/deed.en\">Attribution 3.0 Unported</a> license.</div><div class=\"rlicense-attr\" style=\"font-weight: bold;\">Attribution: <div style=\"display:inline;font-size:larger;\" class=\"licensetpl_attr\">dc_ScAn</div></div><div class=\"rlicense-desc\" style=\"text-align:start;\" dir=\"ltr\" lang=\"en\">\n<dl><dd>You are free:\n<ul><li><b>to share</b> – to copy, distribute and transmit the work</li>\n<li><b>to remix</b> – to adapt the work</li></ul></dd>\n<dd>Under the following conditions:\n<ul><li><b>attribution</b> – You must give appropriate credit, provide a link to the license, and indicate if changes were made. You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.</li></ul></dd></dl>\n</div><span class=\"licensetpl_link\" style=\"display:none;\">https://creativecommons.org/licenses/by/3.0</span><span class=\"licensetpl_short\" style=\"display:none;\">CC BY 3.0 </span><span class=\"licensetpl_long\" style=\"display:none;\">Creative Commons Attribution 3.0 </span><span class=\"licensetpl_link_req\" style=\"display:none;\">true</span><span class=\"licensetpl_attr_req\" style=\"display:none;\">true</span></div></div>\n<style data-mw-deduplicate=\"TemplateStyles:r901585720\">.mw-parser-output .panoramioreview{width:100%;margin:0.5em 0;background-color:var(--background-color-warning-subtle,#fffff0);padding:5px;border:1px solid var(--border-color-warning,#aa8);color:inherit}.mw-parser-output .panoramioreview-failed{background-color:var(--background-color-error-subtle,#fcc);color:inherit}.mw-parser-output .panoramioreview-passed{background-color:var(--background-color-success-subtle,#efe);color:inherit}</style>\n<table class=\"panoramioreview panoramioreview-passed\" lang=\"en\" dir=\"ltr\">\n\n<tbody><tr>\n<td><span typeof=\"mw:File\"><span><img alt=\"\" src=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/9/95/Checked_copyright_icon.svg/60px-Checked_copyright_icon.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail\" decoding=\"async\" loading=\"lazy\" width=\"50\" height=\"48\" class=\"mw-file-element\" srcset=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/9/95/Checked_copyright_icon.svg/120px-Checked_copyright_icon.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail 2x\" data-file-width=\"160\" data-file-height=\"153\"></span></span>\n</td>\n<td>This image, which was originally posted to <b><span lang=\"en\" dir=\"ltr\"><a href=\"https://en.wikipedia.org/wiki/Panoramio\" class=\"extiw\" title=\"en:Panoramio\">Panoramio</a></span></b>, was automatically reviewed on 21 November 2016 by <b><a href=\"//commons.wikimedia.org/wiki/User:Panoramio_upload_bot\" title=\"User:Panoramio upload bot\">Panoramio upload bot</a></b>, who confirmed that it was available on Panoramio under the above license on that date.\n</td>\n<td><span typeof=\"mw:File\"><a href=\"//commons.wikimedia.org/wiki/File:Star_and_ring.svg\" class=\"mw-file-description\"><img src=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/9/98/Star_and_ring.svg/60px-Star_and_ring.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail\" decoding=\"async\" loading=\"lazy\" width=\"50\" height=\"50\" class=\"mw-file-element\" srcset=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/9/98/Star_and_ring.svg/120px-Star_and_ring.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail 2x\" data-file-width=\"75\" data-file-height=\"75\"></a></span>\n</td></tr></tbody></table>",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "LicenseShortName": {
+                  "value": "CC BY 3.0",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "UsageTerms": {
+                  "value": "Creative Commons Attribution 3.0",
+                  "source": "commons-desc-page"
+                },
+                "AttributionRequired": {
+                  "value": "true",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "Attribution": {
+                  "value": "dc_ScAn",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "LicenseUrl": {
+                  "value": "https://creativecommons.org/licenses/by/3.0",
+                  "source": "commons-desc-page"
+                },
+                "Copyrighted": {
+                  "value": "True",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "Restrictions": {
+                  "value": "",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "License": {
+                  "value": "cc-by-3.0",
+                  "source": "commons-templates",
+                  "hidden": ""
+                }
+              }
+            }
+          ],
+          "coordinates": [
+            {
+              "lat": 48.96716944,
+              "lon": 37.81749444,
+              "primary": "",
+              "globe": "earth"
+            }
+          ]
+        },
+        "53394358": {
+          "pageid": 53394358,
+          "ns": 6,
+          "title": "File:Церковь Николая Чудотворца. Красный Лиман. - panoramio (12).jpg",
+          "imagerepository": "local",
+          "imageinfo": [
+            {
+              "timestamp": "2016-11-21T22:59:17Z",
+              "size": 3103370,
+              "width": 3264,
+              "height": 1836,
+              "thumburl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/38/%D0%A6%D0%B5%D1%80%D0%BA%D0%BE%D0%B2%D1%8C_%D0%9D%D0%B8%D0%BA%D0%BE%D0%BB%D0%B0%D1%8F_%D0%A7%D1%83%D0%B4%D0%BE%D1%82%D0%B2%D0%BE%D1%80%D1%86%D0%B0._%D0%9A%D1%80%D0%B0%D1%81%D0%BD%D1%8B%D0%B9_%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD._-_panoramio_%2812%29.jpg/1280px-%D0%A6%D0%B5%D1%80%D0%BA%D0%BE%D0%B2%D1%8C_%D0%9D%D0%B8%D0%BA%D0%BE%D0%BB%D0%B0%D1%8F_%D0%A7%D1%83%D0%B4%D0%BE%D1%82%D0%B2%D0%BE%D1%80%D1%86%D0%B0._%D0%9A%D1%80%D0%B0%D1%81%D0%BD%D1%8B%D0%B9_%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD._-_panoramio_%2812%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+              "thumbwidth": 1280,
+              "thumbheight": 720,
+              "responsiveUrls": {
+                "2": "https://upload.wikimedia.org/wikipedia/commons/3/38/%D0%A6%D0%B5%D1%80%D0%BA%D0%BE%D0%B2%D1%8C_%D0%9D%D0%B8%D0%BA%D0%BE%D0%BB%D0%B0%D1%8F_%D0%A7%D1%83%D0%B4%D0%BE%D1%82%D0%B2%D0%BE%D1%80%D1%86%D0%B0._%D0%9A%D1%80%D0%B0%D1%81%D0%BD%D1%8B%D0%B9_%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD._-_panoramio_%2812%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
+              },
+              "thumbattribs": {
+                "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/38/%D0%A6%D0%B5%D1%80%D0%BA%D0%BE%D0%B2%D1%8C_%D0%9D%D0%B8%D0%BA%D0%BE%D0%BB%D0%B0%D1%8F_%D0%A7%D1%83%D0%B4%D0%BE%D1%82%D0%B2%D0%BE%D1%80%D1%86%D0%B0._%D0%9A%D1%80%D0%B0%D1%81%D0%BD%D1%8B%D0%B9_%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD._-_panoramio_%2812%29.jpg/1280px-%D0%A6%D0%B5%D1%80%D0%BA%D0%BE%D0%B2%D1%8C_%D0%9D%D0%B8%D0%BA%D0%BE%D0%BB%D0%B0%D1%8F_%D0%A7%D1%83%D0%B4%D0%BE%D1%82%D0%B2%D0%BE%D1%80%D1%86%D0%B0._%D0%9A%D1%80%D0%B0%D1%81%D0%BD%D1%8B%D0%B9_%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD._-_panoramio_%2812%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+                "decoding": "async",
+                "loading": "lazy",
+                "width": 1280,
+                "height": 720,
+                "srcset": "https://upload.wikimedia.org/wikipedia/commons/3/38/%D0%A6%D0%B5%D1%80%D0%BA%D0%BE%D0%B2%D1%8C_%D0%9D%D0%B8%D0%BA%D0%BE%D0%BB%D0%B0%D1%8F_%D0%A7%D1%83%D0%B4%D0%BE%D1%82%D0%B2%D0%BE%D1%80%D1%86%D0%B0._%D0%9A%D1%80%D0%B0%D1%81%D0%BD%D1%8B%D0%B9_%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD._-_panoramio_%2812%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled 2x"
+              },
+              "url": "https://upload.wikimedia.org/wikipedia/commons/3/38/%D0%A6%D0%B5%D1%80%D0%BA%D0%BE%D0%B2%D1%8C_%D0%9D%D0%B8%D0%BA%D0%BE%D0%BB%D0%B0%D1%8F_%D0%A7%D1%83%D0%B4%D0%BE%D1%82%D0%B2%D0%BE%D1%80%D1%86%D0%B0._%D0%9A%D1%80%D0%B0%D1%81%D0%BD%D1%8B%D0%B9_%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD._-_panoramio_%2812%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+              "descriptionurl": "https://commons.wikimedia.org/wiki/File:%D0%A6%D0%B5%D1%80%D0%BA%D0%BE%D0%B2%D1%8C_%D0%9D%D0%B8%D0%BA%D0%BE%D0%BB%D0%B0%D1%8F_%D0%A7%D1%83%D0%B4%D0%BE%D1%82%D0%B2%D0%BE%D1%80%D1%86%D0%B0._%D0%9A%D1%80%D0%B0%D1%81%D0%BD%D1%8B%D0%B9_%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD._-_panoramio_(12).jpg",
+              "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=53394358",
+              "metadata": [
+                {
+                  "name": "ImageDescription",
+                  "value": "SAMSUNG"
+                },
+                {
+                  "name": "Make",
+                  "value": "SAMSUNG"
+                },
+                {
+                  "name": "Model",
+                  "value": "GT-i8910"
+                },
+                {
+                  "name": "Orientation",
+                  "value": 1
+                },
+                {
+                  "name": "XResolution",
+                  "value": "72/1"
+                },
+                {
+                  "name": "YResolution",
+                  "value": "72/1"
+                },
+                {
+                  "name": "ResolutionUnit",
+                  "value": 2
+                },
+                {
+                  "name": "DateTime",
+                  "value": "2011.05.01 07.43.30"
+                },
+                {
+                  "name": "YCbCrPositioning",
+                  "value": 1
+                },
+                {
+                  "name": "ExposureTime",
+                  "value": "32/20000"
+                },
+                {
+                  "name": "FNumber",
+                  "value": "260/100"
+                },
+                {
+                  "name": "ExposureProgram",
+                  "value": 0
+                },
+                {
+                  "name": "ISOSpeedRatings",
+                  "value": 50
+                },
+                {
+                  "name": "ExifVersion",
+                  "value": "0220"
+                },
+                {
+                  "name": "DateTimeOriginal",
+                  "value": "2011.05.01 07.43.30"
+                },
+                {
+                  "name": "DateTimeDigitized",
+                  "value": "2011.05.01 07.43.30"
+                },
+                {
+                  "name": "ComponentsConfiguration",
+                  "value": "\n#1\n#2\n#3\n#0"
+                },
+                {
+                  "name": "ShutterSpeedValue",
+                  "value": "609772/65536"
+                },
+                {
+                  "name": "ApertureValue",
+                  "value": "180684/65536"
+                },
+                {
+                  "name": "BrightnessValue",
+                  "value": "528312/65536"
+                },
+                {
+                  "name": "ExposureBiasValue",
+                  "value": "0/65536"
+                },
+                {
+                  "name": "MeteringMode",
+                  "value": 2
+                },
+                {
+                  "name": "LightSource",
+                  "value": 0
+                },
+                {
+                  "name": "Flash",
+                  "value": 0
+                },
+                {
+                  "name": "FocalLength",
+                  "value": "48/10"
+                },
+                {
+                  "name": "FlashPixVersion",
+                  "value": "0100"
+                },
+                {
+                  "name": "ColorSpace",
+                  "value": 0
+                },
+                {
+                  "name": "FileSource",
+                  "value": 3
+                },
+                {
+                  "name": "SceneType",
+                  "value": 1
+                },
+                {
+                  "name": "ExposureMode",
+                  "value": 0
+                },
+                {
+                  "name": "WhiteBalance",
+                  "value": 0
+                },
+                {
+                  "name": "SceneCaptureType",
+                  "value": 0
+                },
+                {
+                  "name": "SubjectDistanceRange",
+                  "value": 0
+                },
+                {
+                  "name": "MEDIAWIKI_EXIF_VERSION",
+                  "value": 1
+                }
+              ],
+              "extmetadata": {
+                "DateTime": {
+                  "value": "2016-11-21 22:59:17",
+                  "source": "mediawiki-metadata",
+                  "hidden": ""
+                },
+                "ObjectName": {
+                  "value": "Церковь Николая Чудотворца. Красный Лиман. - panoramio (12)",
+                  "source": "mediawiki-metadata"
+                },
+                "CommonsMetadataExtension": {
+                  "value": 1.2,
+                  "source": "extension",
+                  "hidden": ""
+                },
+                "Categories": {
+                  "value": "Taken with Samsung GT-i8910|Panoramio files uploaded by Panoramio upload bot|Panoramio images reviewed by trusted users|Photos from Panoramio|Files with coordinates missing SDC location of creation|Churches in Kramatorsk Raion|Religion in Lyman|Buildings in Lyman|Photos from Panoramio ID 1405063|Photographs of Donetsk Oblast by dc ScAn",
+                  "source": "commons-categories",
+                  "hidden": ""
+                },
+                "Assessments": {
+                  "value": "",
+                  "source": "commons-categories",
+                  "hidden": ""
+                },
+                "GPSLatitude": {
+                  "value": "48.967055",
+                  "source": "commons-desc-page"
+                },
+                "GPSLongitude": {
+                  "value": "37.818493",
+                  "source": "commons-desc-page"
+                },
+                "GPSMapDatum": {
+                  "value": "WGS-84",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "ImageDescription": {
+                  "value": "Церковь Николая Чудотворца, город Красный Лиман.",
+                  "source": "commons-desc-page"
+                },
+                "DateTimeOriginal": {
+                  "value": "3 May 2011 (original upload date)",
+                  "source": "commons-desc-page"
+                },
+                "Credit": {
+                  "value": "<a rel=\"nofollow\" class=\"external free\" href=\"https://web.archive.org/web/20161022145448/http://www.panoramio.com/photo/52075253\">https://web.archive.org/web/20161022145448/http://www.panoramio.com/photo/52075253</a>",
+                  "source": "commons-desc-page"
+                },
+                "Artist": {
+                  "value": "<a rel=\"nofollow\" class=\"external text\" href=\"https://web.archive.org/web/20161022145449/http://www.panoramio.com/user/1405063?with_photo_id=52075253\">dc_ScAn</a>",
+                  "source": "commons-desc-page"
+                },
+                "Permission": {
+                  "value": "<div class=\"responsive-license-cc layouttemplate licensetpl\" dir=\"ltr\" lang=\"en\"><div class=\"rlicense-icons\"><span class=\"skin-invert\" typeof=\"mw:File\"><span title=\"w:en:Creative Commons\"><img alt=\"w:en:Creative Commons\" src=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/7/79/CC_some_rights_reserved.svg/120px-CC_some_rights_reserved.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail\" decoding=\"async\" loading=\"lazy\" width=\"90\" height=\"36\" class=\"mw-file-element\" srcset=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/7/79/CC_some_rights_reserved.svg/250px-CC_some_rights_reserved.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail 2x\" data-file-width=\"744\" data-file-height=\"300\"></span></span><br>\n<span class=\"skin-invert\" typeof=\"mw:File\"><span title=\"attribution\"><img alt=\"attribution\" src=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/1/11/Cc-by_new_white.svg/40px-Cc-by_new_white.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail\" decoding=\"async\" loading=\"lazy\" width=\"24\" height=\"24\" class=\"mw-file-element\" srcset=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/1/11/Cc-by_new_white.svg/60px-Cc-by_new_white.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail 2x\" data-file-width=\"64\" data-file-height=\"64\"></span></span></div><div class=\"rlicense-text\"><div class=\"rlicense-declaration\">This file is licensed under the <a href=\"https://en.wikipedia.org/wiki/en:Creative_Commons\" class=\"extiw\" title=\"w:en:Creative Commons\">Creative Commons</a> <a href=\"//creativecommons.org/licenses/by/3.0/deed.en\" class=\"extiw\" title=\"creativecommons:by/3.0/deed.en\">Attribution 3.0 Unported</a> license.</div><div class=\"rlicense-attr\" style=\"font-weight: bold;\">Attribution: <div style=\"display:inline;font-size:larger;\" class=\"licensetpl_attr\">dc_ScAn</div></div><div class=\"rlicense-desc\" style=\"text-align:start;\" dir=\"ltr\" lang=\"en\">\n<dl><dd>You are free:\n<ul><li><b>to share</b> – to copy, distribute and transmit the work</li>\n<li><b>to remix</b> – to adapt the work</li></ul></dd>\n<dd>Under the following conditions:\n<ul><li><b>attribution</b> – You must give appropriate credit, provide a link to the license, and indicate if changes were made. You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.</li></ul></dd></dl>\n</div><span class=\"licensetpl_link\" style=\"display:none;\">https://creativecommons.org/licenses/by/3.0</span><span class=\"licensetpl_short\" style=\"display:none;\">CC BY 3.0 </span><span class=\"licensetpl_long\" style=\"display:none;\">Creative Commons Attribution 3.0 </span><span class=\"licensetpl_link_req\" style=\"display:none;\">true</span><span class=\"licensetpl_attr_req\" style=\"display:none;\">true</span></div></div>\n<style data-mw-deduplicate=\"TemplateStyles:r901585720\">.mw-parser-output .panoramioreview{width:100%;margin:0.5em 0;background-color:var(--background-color-warning-subtle,#fffff0);padding:5px;border:1px solid var(--border-color-warning,#aa8);color:inherit}.mw-parser-output .panoramioreview-failed{background-color:var(--background-color-error-subtle,#fcc);color:inherit}.mw-parser-output .panoramioreview-passed{background-color:var(--background-color-success-subtle,#efe);color:inherit}</style>\n<table class=\"panoramioreview panoramioreview-passed\" lang=\"en\" dir=\"ltr\">\n\n<tbody><tr>\n<td><span typeof=\"mw:File\"><span><img alt=\"\" src=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/9/95/Checked_copyright_icon.svg/60px-Checked_copyright_icon.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail\" decoding=\"async\" loading=\"lazy\" width=\"50\" height=\"48\" class=\"mw-file-element\" srcset=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/9/95/Checked_copyright_icon.svg/120px-Checked_copyright_icon.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail 2x\" data-file-width=\"160\" data-file-height=\"153\"></span></span>\n</td>\n<td>This image, which was originally posted to <b><span lang=\"en\" dir=\"ltr\"><a href=\"https://en.wikipedia.org/wiki/Panoramio\" class=\"extiw\" title=\"en:Panoramio\">Panoramio</a></span></b>, was automatically reviewed on 21 November 2016 by <b><a href=\"//commons.wikimedia.org/wiki/User:Panoramio_upload_bot\" title=\"User:Panoramio upload bot\">Panoramio upload bot</a></b>, who confirmed that it was available on Panoramio under the above license on that date.\n</td>\n<td><span typeof=\"mw:File\"><a href=\"//commons.wikimedia.org/wiki/File:Star_and_ring.svg\" class=\"mw-file-description\"><img src=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/9/98/Star_and_ring.svg/60px-Star_and_ring.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail\" decoding=\"async\" loading=\"lazy\" width=\"50\" height=\"50\" class=\"mw-file-element\" srcset=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/9/98/Star_and_ring.svg/120px-Star_and_ring.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail 2x\" data-file-width=\"75\" data-file-height=\"75\"></a></span>\n</td></tr></tbody></table>",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "LicenseShortName": {
+                  "value": "CC BY 3.0",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "UsageTerms": {
+                  "value": "Creative Commons Attribution 3.0",
+                  "source": "commons-desc-page"
+                },
+                "AttributionRequired": {
+                  "value": "true",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "Attribution": {
+                  "value": "dc_ScAn",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "LicenseUrl": {
+                  "value": "https://creativecommons.org/licenses/by/3.0",
+                  "source": "commons-desc-page"
+                },
+                "Copyrighted": {
+                  "value": "True",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "Restrictions": {
+                  "value": "",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "License": {
+                  "value": "cc-by-3.0",
+                  "source": "commons-templates",
+                  "hidden": ""
+                }
+              }
+            }
+          ],
+          "coordinates": [
+            {
+              "lat": 48.967055,
+              "lon": 37.818493,
+              "primary": "",
+              "globe": "earth"
+            }
+          ]
+        },
+        "53394611": {
+          "pageid": 53394611,
+          "ns": 6,
+          "title": "File:Панорама пруда - panoramio.jpg",
+          "imagerepository": "local",
+          "imageinfo": [
+            {
+              "timestamp": "2016-11-21T23:10:18Z",
+              "size": 2578451,
+              "width": 7845,
+              "height": 1662,
+              "thumburl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4c/%D0%9F%D0%B0%D0%BD%D0%BE%D1%80%D0%B0%D0%BC%D0%B0_%D0%BF%D1%80%D1%83%D0%B4%D0%B0_-_panoramio.jpg/1280px-%D0%9F%D0%B0%D0%BD%D0%BE%D1%80%D0%B0%D0%BC%D0%B0_%D0%BF%D1%80%D1%83%D0%B4%D0%B0_-_panoramio.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+              "thumbwidth": 1280,
+              "thumbheight": 271,
+              "responsiveUrls": {
+                "2": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4c/%D0%9F%D0%B0%D0%BD%D0%BE%D1%80%D0%B0%D0%BC%D0%B0_%D0%BF%D1%80%D1%83%D0%B4%D0%B0_-_panoramio.jpg/3840px-%D0%9F%D0%B0%D0%BD%D0%BE%D1%80%D0%B0%D0%BC%D0%B0_%D0%BF%D1%80%D1%83%D0%B4%D0%B0_-_panoramio.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+              },
+              "thumbattribs": {
+                "src": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4c/%D0%9F%D0%B0%D0%BD%D0%BE%D1%80%D0%B0%D0%BC%D0%B0_%D0%BF%D1%80%D1%83%D0%B4%D0%B0_-_panoramio.jpg/1280px-%D0%9F%D0%B0%D0%BD%D0%BE%D1%80%D0%B0%D0%BC%D0%B0_%D0%BF%D1%80%D1%83%D0%B4%D0%B0_-_panoramio.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+                "decoding": "async",
+                "loading": "lazy",
+                "width": 1280,
+                "height": 271,
+                "srcset": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4c/%D0%9F%D0%B0%D0%BD%D0%BE%D1%80%D0%B0%D0%BC%D0%B0_%D0%BF%D1%80%D1%83%D0%B4%D0%B0_-_panoramio.jpg/3840px-%D0%9F%D0%B0%D0%BD%D0%BE%D1%80%D0%B0%D0%BC%D0%B0_%D0%BF%D1%80%D1%83%D0%B4%D0%B0_-_panoramio.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail 2x"
+              },
+              "url": "https://upload.wikimedia.org/wikipedia/commons/4/4c/%D0%9F%D0%B0%D0%BD%D0%BE%D1%80%D0%B0%D0%BC%D0%B0_%D0%BF%D1%80%D1%83%D0%B4%D0%B0_-_panoramio.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+              "descriptionurl": "https://commons.wikimedia.org/wiki/File:%D0%9F%D0%B0%D0%BD%D0%BE%D1%80%D0%B0%D0%BC%D0%B0_%D0%BF%D1%80%D1%83%D0%B4%D0%B0_-_panoramio.jpg",
+              "descriptionshorturl": "https://commons.wikimedia.org/w/index.php?curid=53394611",
+              "metadata": [
+                {
+                  "name": "MEDIAWIKI_EXIF_VERSION",
+                  "value": 1
+                }
+              ],
+              "extmetadata": {
+                "DateTime": {
+                  "value": "2016-11-21 23:10:18",
+                  "source": "mediawiki-metadata",
+                  "hidden": ""
+                },
+                "ObjectName": {
+                  "value": "Панорама пруда - panoramio",
+                  "source": "mediawiki-metadata"
+                },
+                "CommonsMetadataExtension": {
+                  "value": 1.2,
+                  "source": "extension",
+                  "hidden": ""
+                },
+                "Categories": {
+                  "value": "Lyman (city)|Panoramio files uploaded by Panoramio upload bot|Panoramio images reviewed by trusted users|Photos from Panoramio|Files with coordinates missing SDC location of creation|Ponds in Kramatorsk Raion|Panoramics in Kramatorsk Raion|Photos from Panoramio ID 1405063|Photographs of Donetsk Oblast by dc ScAn",
+                  "source": "commons-categories",
+                  "hidden": ""
+                },
+                "Assessments": {
+                  "value": "",
+                  "source": "commons-categories",
+                  "hidden": ""
+                },
+                "GPSLatitude": {
+                  "value": "48.960412",
+                  "source": "commons-desc-page"
+                },
+                "GPSLongitude": {
+                  "value": "37.813611",
+                  "source": "commons-desc-page"
+                },
+                "GPSMapDatum": {
+                  "value": "WGS-84",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "ImageDescription": {
+                  "value": "Панорама озера",
+                  "source": "commons-desc-page"
+                },
+                "DateTimeOriginal": {
+                  "value": "3 May 2011 (original upload date)",
+                  "source": "commons-desc-page"
+                },
+                "Credit": {
+                  "value": "<a rel=\"nofollow\" class=\"external free\" href=\"https://web.archive.org/web/20161021022940/http://www.panoramio.com/photo/52076750\">https://web.archive.org/web/20161021022940/http://www.panoramio.com/photo/52076750</a>",
+                  "source": "commons-desc-page"
+                },
+                "Artist": {
+                  "value": "<a rel=\"nofollow\" class=\"external text\" href=\"https://web.archive.org/web/20161021022943/http://www.panoramio.com/user/1405063?with_photo_id=52076750\">dc_ScAn</a>",
+                  "source": "commons-desc-page"
+                },
+                "Permission": {
+                  "value": "<div class=\"responsive-license-cc layouttemplate licensetpl\" dir=\"ltr\" lang=\"en\"><div class=\"rlicense-icons\"><span class=\"skin-invert\" typeof=\"mw:File\"><span title=\"w:en:Creative Commons\"><img alt=\"w:en:Creative Commons\" src=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/7/79/CC_some_rights_reserved.svg/120px-CC_some_rights_reserved.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail\" decoding=\"async\" loading=\"lazy\" width=\"90\" height=\"36\" class=\"mw-file-element\" srcset=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/7/79/CC_some_rights_reserved.svg/250px-CC_some_rights_reserved.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail 2x\" data-file-width=\"744\" data-file-height=\"300\"></span></span><br>\n<span class=\"skin-invert\" typeof=\"mw:File\"><span title=\"attribution\"><img alt=\"attribution\" src=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/1/11/Cc-by_new_white.svg/40px-Cc-by_new_white.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail\" decoding=\"async\" loading=\"lazy\" width=\"24\" height=\"24\" class=\"mw-file-element\" srcset=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/1/11/Cc-by_new_white.svg/60px-Cc-by_new_white.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail 2x\" data-file-width=\"64\" data-file-height=\"64\"></span></span></div><div class=\"rlicense-text\"><div class=\"rlicense-declaration\">This file is licensed under the <a href=\"https://en.wikipedia.org/wiki/en:Creative_Commons\" class=\"extiw\" title=\"w:en:Creative Commons\">Creative Commons</a> <a href=\"//creativecommons.org/licenses/by/3.0/deed.en\" class=\"extiw\" title=\"creativecommons:by/3.0/deed.en\">Attribution 3.0 Unported</a> license.</div><div class=\"rlicense-attr\" style=\"font-weight: bold;\">Attribution: <div style=\"display:inline;font-size:larger;\" class=\"licensetpl_attr\">dc_ScAn</div></div><div class=\"rlicense-desc\" style=\"text-align:start;\" dir=\"ltr\" lang=\"en\">\n<dl><dd>You are free:\n<ul><li><b>to share</b> – to copy, distribute and transmit the work</li>\n<li><b>to remix</b> – to adapt the work</li></ul></dd>\n<dd>Under the following conditions:\n<ul><li><b>attribution</b> – You must give appropriate credit, provide a link to the license, and indicate if changes were made. You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.</li></ul></dd></dl>\n</div><span class=\"licensetpl_link\" style=\"display:none;\">https://creativecommons.org/licenses/by/3.0</span><span class=\"licensetpl_short\" style=\"display:none;\">CC BY 3.0 </span><span class=\"licensetpl_long\" style=\"display:none;\">Creative Commons Attribution 3.0 </span><span class=\"licensetpl_link_req\" style=\"display:none;\">true</span><span class=\"licensetpl_attr_req\" style=\"display:none;\">true</span></div></div>\n<style data-mw-deduplicate=\"TemplateStyles:r901585720\">.mw-parser-output .panoramioreview{width:100%;margin:0.5em 0;background-color:var(--background-color-warning-subtle,#fffff0);padding:5px;border:1px solid var(--border-color-warning,#aa8);color:inherit}.mw-parser-output .panoramioreview-failed{background-color:var(--background-color-error-subtle,#fcc);color:inherit}.mw-parser-output .panoramioreview-passed{background-color:var(--background-color-success-subtle,#efe);color:inherit}</style>\n<table class=\"panoramioreview panoramioreview-passed\" lang=\"en\" dir=\"ltr\">\n\n<tbody><tr>\n<td><span typeof=\"mw:File\"><span><img alt=\"\" src=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/9/95/Checked_copyright_icon.svg/60px-Checked_copyright_icon.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail\" decoding=\"async\" loading=\"lazy\" width=\"50\" height=\"48\" class=\"mw-file-element\" srcset=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/9/95/Checked_copyright_icon.svg/120px-Checked_copyright_icon.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail 2x\" data-file-width=\"160\" data-file-height=\"153\"></span></span>\n</td>\n<td>This image, which was originally posted to <b><span lang=\"en\" dir=\"ltr\"><a href=\"https://en.wikipedia.org/wiki/Panoramio\" class=\"extiw\" title=\"en:Panoramio\">Panoramio</a></span></b>, was automatically reviewed on 21 November 2016 by <b><a href=\"//commons.wikimedia.org/wiki/User:Panoramio_upload_bot\" title=\"User:Panoramio upload bot\">Panoramio upload bot</a></b>, who confirmed that it was available on Panoramio under the above license on that date.\n</td>\n<td><span typeof=\"mw:File\"><a href=\"//commons.wikimedia.org/wiki/File:Star_and_ring.svg\" class=\"mw-file-description\"><img src=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/9/98/Star_and_ring.svg/60px-Star_and_ring.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail\" decoding=\"async\" loading=\"lazy\" width=\"50\" height=\"50\" class=\"mw-file-element\" srcset=\"https://thumb.wikimedia.org/wikipedia/commons/thumb/9/98/Star_and_ring.svg/120px-Star_and_ring.svg.png?utm_source=commons.wikimedia.org&amp;utm_campaign=parser&amp;utm_content=thumbnail 2x\" data-file-width=\"75\" data-file-height=\"75\"></a></span>\n</td></tr></tbody></table>",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "LicenseShortName": {
+                  "value": "CC BY 3.0",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "UsageTerms": {
+                  "value": "Creative Commons Attribution 3.0",
+                  "source": "commons-desc-page"
+                },
+                "AttributionRequired": {
+                  "value": "true",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "Attribution": {
+                  "value": "dc_ScAn",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "LicenseUrl": {
+                  "value": "https://creativecommons.org/licenses/by/3.0",
+                  "source": "commons-desc-page"
+                },
+                "Copyrighted": {
+                  "value": "True",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "Restrictions": {
+                  "value": "",
+                  "source": "commons-desc-page",
+                  "hidden": ""
+                },
+                "License": {
+                  "value": "cc-by-3.0",
+                  "source": "commons-templates",
+                  "hidden": ""
+                }
+              }
+            }
+          ],
+          "coordinates": [
+            {
+              "lat": 48.960412,
+              "lon": 37.813611,
+              "primary": "",
+              "globe": "earth"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

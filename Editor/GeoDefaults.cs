@@ -34,8 +34,8 @@ namespace GeoWorld.Editor
             return true;
         }
 
-        // the app's exports next to this project (buildings-extractor/exports), where a "Terrain & ground" package is <area>_env
-        public static string ExportsFolder => Path.GetFullPath(Path.Combine(Application.dataPath, "..", "..", "exports"));
+        // the exports of the Building Extractor app that comes with the package, where a "Terrain & ground" package is <area>_env
+        public static string ExportsFolder => GeoExtractor.ExportsFolder;
 
         public static GenerationSettings Settings()
         {

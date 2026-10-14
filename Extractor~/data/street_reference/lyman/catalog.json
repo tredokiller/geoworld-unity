@@ -1,0 +1,1659 @@
+{
+  "format": "building-extractor.street-references",
+  "version": 1,
+  "area": {
+    "id": "lyman",
+    "name": "Lyman, Donetsk oblast",
+    "center": {
+      "lat": 48.985,
+      "lon": 37.812
+    },
+    "bounds": [
+      [
+        48.91,
+        37.76
+      ],
+      [
+        49.04,
+        37.88
+      ]
+    ]
+  },
+  "coverage": [
+    {
+      "provider": "Panoramax",
+      "status": "no_coverage",
+      "message": "The public federated catalog returned an empty features list for the selected Lyman bounding box.",
+      "checkedAt": "2026-10-05",
+      "sourceUrl": "https://api.panoramax.xyz/api/search?bbox=37.76%2C48.91%2C37.88%2C49.04&limit=5"
+    },
+    {
+      "provider": "KartaView",
+      "status": "no_coverage",
+      "message": "Five anonymous photo searches with 2000 m radius around central, northern, southern, eastern, and western Lyman each returned API code 601 (empty response).",
+      "checkedAt": "2026-10-05T23:52:35Z",
+      "sourceUrl": "https://api.openstreetcam.org/2.0/photo/?lat=48.985&lng=37.812&radius=2000&itemsPerPage=10",
+      "queries": [
+        {
+          "lat": 48.985,
+          "lon": 37.812,
+          "radiusM": 2000,
+          "apiCode": 601
+        },
+        {
+          "lat": 49.008,
+          "lon": 37.812,
+          "radiusM": 2000,
+          "apiCode": 601
+        },
+        {
+          "lat": 48.962,
+          "lon": 37.812,
+          "radiusM": 2000,
+          "apiCode": 601
+        },
+        {
+          "lat": 48.985,
+          "lon": 37.78,
+          "radiusM": 2000,
+          "apiCode": 601
+        },
+        {
+          "lat": 48.985,
+          "lon": 37.84,
+          "radiusM": 2000,
+          "apiCode": 601
+        }
+      ]
+    },
+    {
+      "provider": "Mapillary",
+      "status": "restricted",
+      "message": "Mapillary announced disabled viewing and downloading of Ukraine imagery in March 2022 for civilian safety. Its official forum still reported the restriction in August/September 2026. No restricted imagery was accessed.",
+      "checkedAt": "2026-10-05T23:52:35Z",
+      "sourceUrl": "https://twitter.com/mapillary/status/1501014050733314049",
+      "supportingUrl": "https://forum.mapillary.com/t/motorola-edge-60-neo-camera-quality-sony-lyt700c-50-mp/10336"
+    },
+    {
+      "provider": "Wikimedia Commons",
+      "status": "reference_photos_available",
+      "message": "15 historical civilian reference photographs with individual CC licenses are stored locally. Five have unverified source reference geotags; ten have unknown positions. These are individual photographs, not navigable street-view coverage.",
+      "checkedAt": "2026-10-06T00:33:14Z",
+      "sourceUrl": "https://commons.wikimedia.org/w/api.php?action=query&format=json&prop=imageinfo%7Ccoordinates&pageids=147077476%7C147112787%7C147097142%7C147112784%7C147112781%7C147112786%7C73009966%7C153164984%7C153165213%7C4663145%7C147112785%7C147112788%7C147112782%7C45363493%7C45363497&iiprop=url%7Csize%7Cextmetadata%7Cmetadata%7Ctimestamp&iiurlwidth=1280&iiurlheight=1280"
+    },
+    {
+      "provider": "OpenStreetMap building details",
+      "status": "partial_coverage",
+      "message": "The existing Lyman sample contains 285 buildings: 163 have mapped level counts; none have roof shape, colour or material tags in the audited source. Missing roof values remain unknown.",
+      "sourceUrl": "https://wiki.openstreetmap.org/wiki/Key:roof:shape",
+      "checkedAt": "2026-10-06T00:33:14Z"
+    },
+    {
+      "provider": "Esri overhead imagery",
+      "status": "analysis_restricted",
+      "message": "At the Lyman centre only, Esri metadata reports WorldView-2/Vantor imagery captured 2023-09-29: 0.5 m source pixels, 0.6 m sampled pixels. Automated extraction terms require noncommercial use within ArcGIS; this app does not extract its roof pixels.",
+      "sourceUrl": "https://www.esri.com/arcgis-blog/products/arcgis-living-atlas/imagery/learn-to-use-ai-to-extract-information-from-world-imagery",
+      "checkedAt": "2026-10-06T00:33:14Z",
+      "metadataSourceUrl": "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/10/query?f=json&geometry=37.8168%2C48.98013&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=SRC_DATE%2CSRC_RES%2CSAMP_RES%2CSRC_DESC%2CNICE_NAME%2CNICE_DESC&returnGeometry=false"
+    },
+    {
+      "provider": "Sentinel-2 roof detail",
+      "status": "resolution_insufficient",
+      "message": "Open Sentinel-2 RGB pixels are 10 m across: useful for broad landscape context, too coarse for reliable small-building roof colours or shapes.",
+      "sourceUrl": "https://www.esa.int/Applications/Observing_the_Earth/Copernicus/Sentinel-2/",
+      "checkedAt": "2026-10-06T00:33:14Z"
+    },
+    {
+      "provider": "Overture building details",
+      "status": "coverage_unverified",
+      "message": "Overture documents optional roof attributes. Actual Lyman roof values have not been verified or imported; schema support does not establish local coverage.",
+      "sourceUrl": "https://docs.overturemaps.org/schema/reference/buildings/building/",
+      "checkedAt": "2026-10-06T00:33:14Z"
+    }
+  ],
+  "photos": [
+    {
+      "id": "commons-53394255",
+      "title": "Culture house facade",
+      "originalTitle": "File:ДК - panoramio (1).jpg",
+      "provider": "Wikimedia Commons",
+      "kind": "reference_photo",
+      "position": {
+        "lat": 48.96716944,
+        "lon": 37.81749444
+      },
+      "positionMeaning": "reference_location",
+      "positionSource": "Commons geotag (camera position unverified)",
+      "capturedAt": null,
+      "uploadedAt": "2016-11-21T22:57:37Z",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:%D0%94%D0%9A_-_panoramio_(1).jpg",
+      "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/3/3b/%D0%94%D0%9A_-_panoramio_%281%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3b/%D0%94%D0%9A_-_panoramio_%281%29.jpg/1280px-%D0%94%D0%9A_-_panoramio_%281%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "localFile": "culture-house.jpg",
+      "license": {
+        "name": "CC BY 3.0",
+        "url": "https://creativecommons.org/licenses/by/3.0"
+      },
+      "attribution": "dc_ScAn",
+      "width": 1280,
+      "height": 720,
+      "notes": [
+        "Historical photo reference, not a 360-degree panorama or current-condition survey.",
+        "Commons geotag is retained as a reference point; the actual camera position and view direction are unverified.",
+        "Commons description DateTimeOriginal: 3 May 2011 (original upload date). This explicitly describes an upload date and is not treated as capture time.",
+        "uploadedAt is the timestamp of the currently archived Wikimedia Commons file version, not capture time.",
+        "Camera EXIF DateTimeOriginal reports 2011.05.01 07.40.52; camera clock and timezone are unverified. capturedAt remains null."
+      ],
+      "dateMetadata": {
+        "descriptionDateText": "3 May 2011 (original upload date)",
+        "descriptionDateMeaning": "original_upload_date",
+        "captureDateConfidence": "unverified_exif",
+        "exif": {
+          "DateTime": "2011.05.01 07.40.52",
+          "DateTimeOriginal": "2011.05.01 07.40.52",
+          "DateTimeDigitized": "2011.05.01 07.40.52"
+        }
+      },
+      "bytes": 231718,
+      "sha256": "55a07d7a46178951108552c118e8c335b007de3230b06b2c4410dd6c19ebf14c"
+    },
+    {
+      "id": "commons-53394358",
+      "title": "St Nicholas church facade",
+      "originalTitle": "File:Церковь Николая Чудотворца. Красный Лиман. - panoramio (12).jpg",
+      "provider": "Wikimedia Commons",
+      "kind": "reference_photo",
+      "position": {
+        "lat": 48.967055,
+        "lon": 37.818493
+      },
+      "positionMeaning": "reference_location",
+      "positionSource": "Commons geotag (camera position unverified)",
+      "capturedAt": null,
+      "uploadedAt": "2016-11-21T22:59:17Z",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:%D0%A6%D0%B5%D1%80%D0%BA%D0%BE%D0%B2%D1%8C_%D0%9D%D0%B8%D0%BA%D0%BE%D0%BB%D0%B0%D1%8F_%D0%A7%D1%83%D0%B4%D0%BE%D1%82%D0%B2%D0%BE%D1%80%D1%86%D0%B0._%D0%9A%D1%80%D0%B0%D1%81%D0%BD%D1%8B%D0%B9_%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD._-_panoramio_(12).jpg",
+      "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/3/38/%D0%A6%D0%B5%D1%80%D0%BA%D0%BE%D0%B2%D1%8C_%D0%9D%D0%B8%D0%BA%D0%BE%D0%BB%D0%B0%D1%8F_%D0%A7%D1%83%D0%B4%D0%BE%D1%82%D0%B2%D0%BE%D1%80%D1%86%D0%B0._%D0%9A%D1%80%D0%B0%D1%81%D0%BD%D1%8B%D0%B9_%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD._-_panoramio_%2812%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/38/%D0%A6%D0%B5%D1%80%D0%BA%D0%BE%D0%B2%D1%8C_%D0%9D%D0%B8%D0%BA%D0%BE%D0%BB%D0%B0%D1%8F_%D0%A7%D1%83%D0%B4%D0%BE%D1%82%D0%B2%D0%BE%D1%80%D1%86%D0%B0._%D0%9A%D1%80%D0%B0%D1%81%D0%BD%D1%8B%D0%B9_%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD._-_panoramio_%2812%29.jpg/1280px-%D0%A6%D0%B5%D1%80%D0%BA%D0%BE%D0%B2%D1%8C_%D0%9D%D0%B8%D0%BA%D0%BE%D0%BB%D0%B0%D1%8F_%D0%A7%D1%83%D0%B4%D0%BE%D1%82%D0%B2%D0%BE%D1%80%D1%86%D0%B0._%D0%9A%D1%80%D0%B0%D1%81%D0%BD%D1%8B%D0%B9_%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD._-_panoramio_%2812%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "localFile": "st-nicholas-church.jpg",
+      "license": {
+        "name": "CC BY 3.0",
+        "url": "https://creativecommons.org/licenses/by/3.0"
+      },
+      "attribution": "dc_ScAn",
+      "width": 1280,
+      "height": 720,
+      "notes": [
+        "Historical photo reference, not a 360-degree panorama or current-condition survey.",
+        "Commons geotag is retained as a reference point; the actual camera position and view direction are unverified.",
+        "Commons description DateTimeOriginal: 3 May 2011 (original upload date). This explicitly describes an upload date and is not treated as capture time.",
+        "uploadedAt is the timestamp of the currently archived Wikimedia Commons file version, not capture time.",
+        "Camera EXIF DateTimeOriginal reports 2011.05.01 07.43.30; camera clock and timezone are unverified. capturedAt remains null."
+      ],
+      "dateMetadata": {
+        "descriptionDateText": "3 May 2011 (original upload date)",
+        "descriptionDateMeaning": "original_upload_date",
+        "captureDateConfidence": "unverified_exif",
+        "exif": {
+          "DateTime": "2011.05.01 07.43.30",
+          "DateTimeOriginal": "2011.05.01 07.43.30",
+          "DateTimeDigitized": "2011.05.01 07.43.30"
+        }
+      },
+      "bytes": 279121,
+      "sha256": "2d9d204c140b9730daf35b4c8678bade890b44a88c824599ae18a46d9c6d71af"
+    },
+    {
+      "id": "commons-53394237",
+      "title": "Medical school facade",
+      "originalTitle": "File:Медучилище - panoramio (1).jpg",
+      "provider": "Wikimedia Commons",
+      "kind": "reference_photo",
+      "position": {
+        "lat": 48.966724,
+        "lon": 37.818718
+      },
+      "positionMeaning": "reference_location",
+      "positionSource": "Commons geotag (camera position unverified)",
+      "capturedAt": null,
+      "uploadedAt": "2016-11-21T22:57:17Z",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:%D0%9C%D0%B5%D0%B4%D1%83%D1%87%D0%B8%D0%BB%D0%B8%D1%89%D0%B5_-_panoramio_(1).jpg",
+      "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/e/e7/%D0%9C%D0%B5%D0%B4%D1%83%D1%87%D0%B8%D0%BB%D0%B8%D1%89%D0%B5_-_panoramio_%281%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e7/%D0%9C%D0%B5%D0%B4%D1%83%D1%87%D0%B8%D0%BB%D0%B8%D1%89%D0%B5_-_panoramio_%281%29.jpg/1280px-%D0%9C%D0%B5%D0%B4%D1%83%D1%87%D0%B8%D0%BB%D0%B8%D1%89%D0%B5_-_panoramio_%281%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "localFile": "medical-school.jpg",
+      "license": {
+        "name": "CC BY 3.0",
+        "url": "https://creativecommons.org/licenses/by/3.0"
+      },
+      "attribution": "dc_ScAn",
+      "width": 1280,
+      "height": 720,
+      "notes": [
+        "Historical photo reference, not a 360-degree panorama or current-condition survey.",
+        "Commons geotag is retained as a reference point; the actual camera position and view direction are unverified.",
+        "Commons description DateTimeOriginal: 3 May 2011 (original upload date). This explicitly describes an upload date and is not treated as capture time.",
+        "uploadedAt is the timestamp of the currently archived Wikimedia Commons file version, not capture time.",
+        "Camera EXIF DateTimeOriginal reports 2011.05.01 07.38.14; camera clock and timezone are unverified. capturedAt remains null."
+      ],
+      "dateMetadata": {
+        "descriptionDateText": "3 May 2011 (original upload date)",
+        "descriptionDateMeaning": "original_upload_date",
+        "captureDateConfidence": "unverified_exif",
+        "exif": {
+          "DateTime": "2011.05.01 07.38.14",
+          "DateTimeOriginal": "2011.05.01 07.38.14",
+          "DateTimeDigitized": "2011.05.01 07.38.14"
+        }
+      },
+      "bytes": 372330,
+      "sha256": "322dae4773a696353953990c44162652b284578e9d192bde4b09dcdd8e7b506b"
+    },
+    {
+      "id": "commons-53394611",
+      "title": "Pond and surrounding vegetation",
+      "originalTitle": "File:Панорама пруда - panoramio.jpg",
+      "provider": "Wikimedia Commons",
+      "kind": "reference_photo",
+      "position": {
+        "lat": 48.960412,
+        "lon": 37.813611
+      },
+      "positionMeaning": "reference_location",
+      "positionSource": "Commons geotag (camera position unverified)",
+      "capturedAt": null,
+      "uploadedAt": "2016-11-21T23:10:18Z",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:%D0%9F%D0%B0%D0%BD%D0%BE%D1%80%D0%B0%D0%BC%D0%B0_%D0%BF%D1%80%D1%83%D0%B4%D0%B0_-_panoramio.jpg",
+      "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/4/4c/%D0%9F%D0%B0%D0%BD%D0%BE%D1%80%D0%B0%D0%BC%D0%B0_%D0%BF%D1%80%D1%83%D0%B4%D0%B0_-_panoramio.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4c/%D0%9F%D0%B0%D0%BD%D0%BE%D1%80%D0%B0%D0%BC%D0%B0_%D0%BF%D1%80%D1%83%D0%B4%D0%B0_-_panoramio.jpg/1280px-%D0%9F%D0%B0%D0%BD%D0%BE%D1%80%D0%B0%D0%BC%D0%B0_%D0%BF%D1%80%D1%83%D0%B4%D0%B0_-_panoramio.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "localFile": "pond-panorama.jpg",
+      "license": {
+        "name": "CC BY 3.0",
+        "url": "https://creativecommons.org/licenses/by/3.0"
+      },
+      "attribution": "dc_ScAn",
+      "width": 1280,
+      "height": 271,
+      "notes": [
+        "Historical photo reference, not a 360-degree panorama or current-condition survey.",
+        "Commons geotag is retained as a reference point; the actual camera position and view direction are unverified.",
+        "Commons description DateTimeOriginal: 3 May 2011 (original upload date). This explicitly describes an upload date and is not treated as capture time.",
+        "uploadedAt is the timestamp of the currently archived Wikimedia Commons file version, not capture time.",
+        "No camera EXIF capture date was returned; capture date is unknown."
+      ],
+      "dateMetadata": {
+        "descriptionDateText": "3 May 2011 (original upload date)",
+        "descriptionDateMeaning": "original_upload_date",
+        "captureDateConfidence": "unknown",
+        "exif": {}
+      },
+      "bytes": 128488,
+      "sha256": "c1aed04909daeb3a21c24abd0e3f08305402eda1d4b0104bc144cdde3c71bc47"
+    },
+    {
+      "id": "commons-19961908",
+      "title": "Lyman city entrance streetscape",
+      "originalTitle": "File:Panoramio - V&A Dudush - Красный Лиман.jpg",
+      "provider": "Wikimedia Commons",
+      "kind": "reference_photo",
+      "position": {
+        "lat": 48.96816,
+        "lon": 37.842246
+      },
+      "positionMeaning": "reference_location",
+      "positionSource": "Commons geotag (camera position unverified)",
+      "capturedAt": null,
+      "uploadedAt": "2012-06-19T23:07:45Z",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Panoramio_-_V%26A_Dudush_-_%D0%9A%D1%80%D0%B0%D1%81%D0%BD%D1%8B%D0%B9_%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD.jpg",
+      "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/b/b3/Panoramio_-_V%26A_Dudush_-_%D0%9A%D1%80%D0%B0%D1%81%D0%BD%D1%8B%D0%B9_%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/b/b3/Panoramio_-_V%26A_Dudush_-_%D0%9A%D1%80%D0%B0%D1%81%D0%BD%D1%8B%D0%B9_%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "localFile": "city-entrance.jpg",
+      "license": {
+        "name": "CC BY 3.0",
+        "url": "https://creativecommons.org/licenses/by/3.0"
+      },
+      "attribution": "V&A Dudush",
+      "width": 1080,
+      "height": 698,
+      "notes": [
+        "Historical photo reference, not a 360-degree panorama or current-condition survey.",
+        "Commons geotag is retained as a reference point; the actual camera position and view direction are unverified.",
+        "Commons description DateTimeOriginal: 12 May 2009 (upload date). This explicitly describes an upload date and is not treated as capture time.",
+        "uploadedAt is the timestamp of the currently archived Wikimedia Commons file version, not capture time.",
+        "No camera EXIF capture date was returned; capture date is unknown."
+      ],
+      "dateMetadata": {
+        "descriptionDateText": "12 May 2009 (upload date)",
+        "descriptionDateMeaning": "original_upload_date",
+        "captureDateConfidence": "unknown",
+        "exif": {}
+      },
+      "bytes": 539735,
+      "sha256": "9955ec1952580adcf07ec283aaa73dcd57bbe6519ef19e7c8beafabf356d64f7"
+    },
+    {
+      "id": "commons-147077476",
+      "title": "Lyman gymnasium facade",
+      "originalTitle": "File:Гімназія, Лиман.jpg",
+      "provider": "Wikimedia Commons",
+      "kind": "reference_photo",
+      "position": null,
+      "positionMeaning": "unknown",
+      "positionSource": "No geotag in Commons API response; no position assigned",
+      "capturedAt": null,
+      "uploadedAt": "2024-04-04T12:55:46Z",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:%D0%93%D1%96%D0%BC%D0%BD%D0%B0%D0%B7%D1%96%D1%8F,_%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD.jpg",
+      "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/f/fc/%D0%93%D1%96%D0%BC%D0%BD%D0%B0%D0%B7%D1%96%D1%8F%2C_%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fc/%D0%93%D1%96%D0%BC%D0%BD%D0%B0%D0%B7%D1%96%D1%8F%2C_%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD.jpg/1280px-%D0%93%D1%96%D0%BC%D0%BD%D0%B0%D0%B7%D1%96%D1%8F%2C_%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "localFile": "lyman-gymnasium.jpg",
+      "license": {
+        "name": "CC BY-SA 4.0",
+        "url": "https://creativecommons.org/licenses/by-sa/4.0"
+      },
+      "attribution": "Artemco",
+      "width": 1280,
+      "height": 960,
+      "bytes": 445441,
+      "sha256": "bdc5aa1070c8be9346a1992bd4011bb68164209c188d52df671dc73b3e67e372",
+      "notes": [
+        "Historical civilian reference; not a current-condition survey.",
+        "Source description reports a capture date; retained as an attributed date with unknown timezone and unverified camera clock.",
+        "No geotag was returned; building identity can support manual association but does not define a camera or object coordinate."
+      ],
+      "dateMetadata": {
+        "descriptionDateText": "2018-06-03 14:29:45",
+        "descriptionDateMeaning": "source_reported_capture_date",
+        "captureDateConfidence": "source_reported_unverified",
+        "exif": {
+          "DateTime": "2024:04:04 14:29:47",
+          "DateTimeOriginal": "2018:06:03 14:29:45",
+          "DateTimeDigitized": "2018:06:03 14:29:45"
+        }
+      },
+      "sourceDescription": "Лиман, гімназія, 1936, до 2002 школа № 6",
+      "visualReviewStatus": "AI_assisted_review_complete",
+      "visualReview": {
+        "priority": "high",
+        "summary": "Three-storey grey rendered facade with paired columns/pilasters, recessed rectangles, white rectangular window frames, glazed projecting entrance and dark ornamental railings. Roof surface is hidden behind the parapet; no roof shape or colour inferred.",
+        "roofVisible": false
+      }
+    },
+    {
+      "id": "commons-147097142",
+      "title": "School No. 2 facade",
+      "originalTitle": "File:М. Лиман, школа № 2.jpg",
+      "provider": "Wikimedia Commons",
+      "kind": "reference_photo",
+      "position": null,
+      "positionMeaning": "unknown",
+      "positionSource": "No geotag in Commons API response; no position assigned",
+      "capturedAt": null,
+      "uploadedAt": "2024-04-05T05:20:47Z",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:%D0%9C._%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD,_%D1%88%D0%BA%D0%BE%D0%BB%D0%B0_%E2%84%96_2.jpg",
+      "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/4/4b/%D0%9C._%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD%2C_%D1%88%D0%BA%D0%BE%D0%BB%D0%B0_%E2%84%96_2.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4b/%D0%9C._%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD%2C_%D1%88%D0%BA%D0%BE%D0%BB%D0%B0_%E2%84%96_2.jpg/1280px-%D0%9C._%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD%2C_%D1%88%D0%BA%D0%BE%D0%BB%D0%B0_%E2%84%96_2.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "localFile": "lyman-school-2.jpg",
+      "license": {
+        "name": "CC BY-SA 4.0",
+        "url": "https://creativecommons.org/licenses/by-sa/4.0"
+      },
+      "attribution": "Artemco",
+      "width": 1280,
+      "height": 853,
+      "bytes": 334357,
+      "sha256": "0cc983c47f7c4b925405a443d132a9ddd20732202dffc9f4c208f08959708f63",
+      "notes": [
+        "Historical civilian reference; not a current-condition survey.",
+        "Source description reports a capture date; retained as an attributed date with unknown timezone and unverified camera clock.",
+        "No geotag was returned; building identity can support manual association but does not define a camera or object coordinate."
+      ],
+      "dateMetadata": {
+        "descriptionDateText": "2018-06-03 14:48:01",
+        "descriptionDateMeaning": "source_reported_capture_date",
+        "captureDateConfidence": "source_reported_unverified",
+        "exif": {
+          "DateTime": "2024:04:04 21:52:04",
+          "DateTimeOriginal": "2018:06:03 14:48:01",
+          "DateTimeDigitized": "2018:06:03 14:48:01"
+        }
+      },
+      "sourceDescription": "м. Лиман, школа № 2",
+      "visualReviewStatus": "AI_assisted_review_complete",
+      "visualReview": {
+        "priority": "high",
+        "summary": "Three-storey pale exposed-brick school, white rectangular windows; low blue-and-white precast decorative fence, white barrier gate, asphalt court and deciduous trees. Roof plane is not visible.",
+        "roofVisible": false
+      }
+    },
+    {
+      "id": "commons-147112787",
+      "title": "City council facade",
+      "originalTitle": "File:Лиманська міська рада.jpg",
+      "provider": "Wikimedia Commons",
+      "kind": "reference_photo",
+      "position": null,
+      "positionMeaning": "unknown",
+      "positionSource": "No geotag in Commons API response; no position assigned",
+      "capturedAt": null,
+      "uploadedAt": "2024-04-05T15:55:42Z",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD%D1%81%D1%8C%D0%BA%D0%B0_%D0%BC%D1%96%D1%81%D1%8C%D0%BA%D0%B0_%D1%80%D0%B0%D0%B4%D0%B0.jpg",
+      "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/a/aa/%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD%D1%81%D1%8C%D0%BA%D0%B0_%D0%BC%D1%96%D1%81%D1%8C%D0%BA%D0%B0_%D1%80%D0%B0%D0%B4%D0%B0.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/aa/%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD%D1%81%D1%8C%D0%BA%D0%B0_%D0%BC%D1%96%D1%81%D1%8C%D0%BA%D0%B0_%D1%80%D0%B0%D0%B4%D0%B0.jpg/1280px-%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD%D1%81%D1%8C%D0%BA%D0%B0_%D0%BC%D1%96%D1%81%D1%8C%D0%BA%D0%B0_%D1%80%D0%B0%D0%B4%D0%B0.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "localFile": "lyman-city-council.jpg",
+      "license": {
+        "name": "CC BY-SA 4.0",
+        "url": "https://creativecommons.org/licenses/by-sa/4.0"
+      },
+      "attribution": "Artemco",
+      "width": 1280,
+      "height": 960,
+      "bytes": 235493,
+      "sha256": "d11a204fb20be486e9b206ef5c8291f1501d43ec1c4da7241a01f27948628b92",
+      "notes": [
+        "Historical civilian reference; not a current-condition survey.",
+        "Source description reports a capture date; retained as an attributed date with unknown timezone and unverified camera clock.",
+        "No geotag was returned; building identity can support manual association but does not define a camera or object coordinate."
+      ],
+      "dateMetadata": {
+        "descriptionDateText": "2018-06-03 14:32:18",
+        "descriptionDateMeaning": "source_reported_capture_date",
+        "captureDateConfidence": "source_reported_unverified",
+        "exif": {
+          "DateTime": "2024:04:04 21:46:24",
+          "DateTimeOriginal": "2018:06:03 14:32:18",
+          "DateTimeDigitized": "2018:06:03 14:32:18"
+        }
+      },
+      "sourceDescription": "Лиманська міська рада",
+      "visualReviewStatus": "AI_assisted_review_complete",
+      "visualReview": {
+        "priority": "high",
+        "summary": "Three-storey pale beige rendered facade with regular large white-framed windows, glazed entrance under shallow canopy, dark tall conifers and red-grey patterned paving. Roof plane is hidden by parapet.",
+        "roofVisible": false
+      }
+    },
+    {
+      "id": "commons-73009966",
+      "title": "Historic building at 21a Pryvokzalna Street",
+      "originalTitle": "File:Лиман, улица Привокзальная, 21а.jpg",
+      "provider": "Wikimedia Commons",
+      "kind": "reference_photo",
+      "position": null,
+      "positionMeaning": "unknown",
+      "positionSource": "No geotag in Commons API response; no position assigned",
+      "capturedAt": null,
+      "uploadedAt": "2018-09-24T12:52:13Z",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD,_%D1%83%D0%BB%D0%B8%D1%86%D0%B0_%D0%9F%D1%80%D0%B8%D0%B2%D0%BE%D0%BA%D0%B7%D0%B0%D0%BB%D1%8C%D0%BD%D0%B0%D1%8F,_21%D0%B0.jpg",
+      "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/c/ca/%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD%2C_%D1%83%D0%BB%D0%B8%D1%86%D0%B0_%D0%9F%D1%80%D0%B8%D0%B2%D0%BE%D0%BA%D0%B7%D0%B0%D0%BB%D1%8C%D0%BD%D0%B0%D1%8F%2C_21%D0%B0.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/ca/%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD%2C_%D1%83%D0%BB%D0%B8%D1%86%D0%B0_%D0%9F%D1%80%D0%B8%D0%B2%D0%BE%D0%BA%D0%B7%D0%B0%D0%BB%D1%8C%D0%BD%D0%B0%D1%8F%2C_21%D0%B0.jpg/1280px-%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD%2C_%D1%83%D0%BB%D0%B8%D1%86%D0%B0_%D0%9F%D1%80%D0%B8%D0%B2%D0%BE%D0%BA%D0%B7%D0%B0%D0%BB%D1%8C%D0%BD%D0%B0%D1%8F%2C_21%D0%B0.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "localFile": "pryvokzalna-21a.jpg",
+      "license": {
+        "name": "CC BY-SA 4.0",
+        "url": "https://creativecommons.org/licenses/by-sa/4.0"
+      },
+      "attribution": "Artemka",
+      "width": 1280,
+      "height": 960,
+      "bytes": 345418,
+      "sha256": "709476e7af681d151d083873cc1293bd94bb379362279642d850fa78e2879a10",
+      "notes": [
+        "Historical civilian reference; not a current-condition survey.",
+        "Source description reports a capture date; retained as an attributed date with unknown timezone and unverified camera clock.",
+        "No geotag was returned; building identity can support manual association but does not define a camera or object coordinate."
+      ],
+      "dateMetadata": {
+        "descriptionDateText": "2018-06-03 15:57:03",
+        "descriptionDateMeaning": "source_reported_capture_date",
+        "captureDateConfidence": "source_reported_unverified",
+        "exif": {
+          "DateTime": "2018:09:24 15:49:42",
+          "DateTimeOriginal": "2018:06:03 15:57:03",
+          "DateTimeDigitized": "2018:06:03 15:57:03"
+        }
+      },
+      "sourceDescription": "Будинок, у якому знаходився перший ревком, Лиман, вул. Привокзальна (Кірова), 21а",
+      "visualReviewStatus": "AI_assisted_review_complete",
+      "visualReview": {
+        "priority": "high",
+        "summary": "Two-storey grey exposed-brick building, decorative upper-window metal grilles, blue lower window frames, corrugated roof edge, conifers and curved ornamental lamp posts with hanging baskets. Main roof shape cannot be resolved from this angle.",
+        "roofVisible": "edge_only"
+      }
+    },
+    {
+      "id": "commons-147112785",
+      "title": "Monastery residential building",
+      "originalTitle": "File:Житловий корпус Свято-Покровського жіночого монастира.jpg",
+      "provider": "Wikimedia Commons",
+      "kind": "reference_photo",
+      "position": null,
+      "positionMeaning": "unknown",
+      "positionSource": "No geotag in Commons API response; no position assigned",
+      "capturedAt": null,
+      "uploadedAt": "2024-04-05T15:55:40Z",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:%D0%96%D0%B8%D1%82%D0%BB%D0%BE%D0%B2%D0%B8%D0%B9_%D0%BA%D0%BE%D1%80%D0%BF%D1%83%D1%81_%D0%A1%D0%B2%D1%8F%D1%82%D0%BE-%D0%9F%D0%BE%D0%BA%D1%80%D0%BE%D0%B2%D1%81%D1%8C%D0%BA%D0%BE%D0%B3%D0%BE_%D0%B6%D1%96%D0%BD%D0%BE%D1%87%D0%BE%D0%B3%D0%BE_%D0%BC%D0%BE%D0%BD%D0%B0%D1%81%D1%82%D0%B8%D1%80%D0%B0.jpg",
+      "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/4/40/%D0%96%D0%B8%D1%82%D0%BB%D0%BE%D0%B2%D0%B8%D0%B9_%D0%BA%D0%BE%D1%80%D0%BF%D1%83%D1%81_%D0%A1%D0%B2%D1%8F%D1%82%D0%BE-%D0%9F%D0%BE%D0%BA%D1%80%D0%BE%D0%B2%D1%81%D1%8C%D0%BA%D0%BE%D0%B3%D0%BE_%D0%B6%D1%96%D0%BD%D0%BE%D1%87%D0%BE%D0%B3%D0%BE_%D0%BC%D0%BE%D0%BD%D0%B0%D1%81%D1%82%D0%B8%D1%80%D0%B0.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/40/%D0%96%D0%B8%D1%82%D0%BB%D0%BE%D0%B2%D0%B8%D0%B9_%D0%BA%D0%BE%D1%80%D0%BF%D1%83%D1%81_%D0%A1%D0%B2%D1%8F%D1%82%D0%BE-%D0%9F%D0%BE%D0%BA%D1%80%D0%BE%D0%B2%D1%81%D1%8C%D0%BA%D0%BE%D0%B3%D0%BE_%D0%B6%D1%96%D0%BD%D0%BE%D1%87%D0%BE%D0%B3%D0%BE_%D0%BC%D0%BE%D0%BD%D0%B0%D1%81%D1%82%D0%B8%D1%80%D0%B0.jpg/1280px-%D0%96%D0%B8%D1%82%D0%BB%D0%BE%D0%B2%D0%B8%D0%B9_%D0%BA%D0%BE%D1%80%D0%BF%D1%83%D1%81_%D0%A1%D0%B2%D1%8F%D1%82%D0%BE-%D0%9F%D0%BE%D0%BA%D1%80%D0%BE%D0%B2%D1%81%D1%8C%D0%BA%D0%BE%D0%B3%D0%BE_%D0%B6%D1%96%D0%BD%D0%BE%D1%87%D0%BE%D0%B3%D0%BE_%D0%BC%D0%BE%D0%BD%D0%B0%D1%81%D1%82%D0%B8%D1%80%D0%B0.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "localFile": "monastery-residence.jpg",
+      "license": {
+        "name": "CC BY-SA 4.0",
+        "url": "https://creativecommons.org/licenses/by-sa/4.0"
+      },
+      "attribution": "Artemco",
+      "width": 1280,
+      "height": 853,
+      "bytes": 253461,
+      "sha256": "d388d13df5e82a49e6e38714a76e42f5e4b35e01a5b110a889ae2c238b37c902",
+      "notes": [
+        "Historical civilian reference; not a current-condition survey.",
+        "Source description reports a capture date; retained as an attributed date with unknown timezone and unverified camera clock.",
+        "No geotag was returned; building identity can support manual association but does not define a camera or object coordinate."
+      ],
+      "dateMetadata": {
+        "descriptionDateText": "2018-06-03 13:52:02",
+        "descriptionDateMeaning": "source_reported_capture_date",
+        "captureDateConfidence": "source_reported_unverified",
+        "exif": {
+          "DateTime": "2024:04:04 13:30:20",
+          "DateTimeOriginal": "2018:06:03 13:52:02",
+          "DateTimeDigitized": "2018:06:03 13:52:02"
+        }
+      },
+      "sourceDescription": "житловий корпус монастира",
+      "visualReviewStatus": "AI_assisted_review_complete",
+      "visualReview": {
+        "priority": "high",
+        "summary": "Two full facade storeys plus dormer row; light exposed brick with darker arched trim; red-brown pitched roof and gabled dormers, masonry chimneys, white perimeter wall with corrugated cap. Full roof shape and roof material remain uncertain.",
+        "roofVisible": true,
+        "roofColourApproximate": "#684c43",
+        "roofTypeNotes": "Pitched roof with repeated gabled dormers; do not force overall shape to simple gable/hip without another view."
+      }
+    },
+    {
+      "id": "commons-147112786",
+      "title": "Pokrovskyi monastery exterior",
+      "originalTitle": "File:Свято-Покровський жіночий монастир, Лиман.jpg",
+      "provider": "Wikimedia Commons",
+      "kind": "reference_photo",
+      "position": null,
+      "positionMeaning": "unknown",
+      "positionSource": "No geotag in Commons API response; no position assigned",
+      "capturedAt": null,
+      "uploadedAt": "2024-04-05T15:55:40Z",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:%D0%A1%D0%B2%D1%8F%D1%82%D0%BE-%D0%9F%D0%BE%D0%BA%D1%80%D0%BE%D0%B2%D1%81%D1%8C%D0%BA%D0%B8%D0%B9_%D0%B6%D1%96%D0%BD%D0%BE%D1%87%D0%B8%D0%B9_%D0%BC%D0%BE%D0%BD%D0%B0%D1%81%D1%82%D0%B8%D1%80,_%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD.jpg",
+      "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/7/7a/%D0%A1%D0%B2%D1%8F%D1%82%D0%BE-%D0%9F%D0%BE%D0%BA%D1%80%D0%BE%D0%B2%D1%81%D1%8C%D0%BA%D0%B8%D0%B9_%D0%B6%D1%96%D0%BD%D0%BE%D1%87%D0%B8%D0%B9_%D0%BC%D0%BE%D0%BD%D0%B0%D1%81%D1%82%D0%B8%D1%80%2C_%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7a/%D0%A1%D0%B2%D1%8F%D1%82%D0%BE-%D0%9F%D0%BE%D0%BA%D1%80%D0%BE%D0%B2%D1%81%D1%8C%D0%BA%D0%B8%D0%B9_%D0%B6%D1%96%D0%BD%D0%BE%D1%87%D0%B8%D0%B9_%D0%BC%D0%BE%D0%BD%D0%B0%D1%81%D1%82%D0%B8%D1%80%2C_%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD.jpg/1280px-%D0%A1%D0%B2%D1%8F%D1%82%D0%BE-%D0%9F%D0%BE%D0%BA%D1%80%D0%BE%D0%B2%D1%81%D1%8C%D0%BA%D0%B8%D0%B9_%D0%B6%D1%96%D0%BD%D0%BE%D1%87%D0%B8%D0%B9_%D0%BC%D0%BE%D0%BD%D0%B0%D1%81%D1%82%D0%B8%D1%80%2C_%D0%9B%D0%B8%D0%BC%D0%B0%D0%BD.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "localFile": "pokrovskyi-monastery.jpg",
+      "license": {
+        "name": "CC BY-SA 4.0",
+        "url": "https://creativecommons.org/licenses/by-sa/4.0"
+      },
+      "attribution": "Artemco",
+      "width": 1280,
+      "height": 960,
+      "bytes": 257228,
+      "sha256": "008b7295c61b8a29a179bca2405701ac68796ce5dbfb527822ce60976ddcd5a3",
+      "notes": [
+        "Historical civilian reference; not a current-condition survey.",
+        "Source description reports a capture date; retained as an attributed date with unknown timezone and unverified camera clock.",
+        "No geotag was returned; building identity can support manual association but does not define a camera or object coordinate."
+      ],
+      "dateMetadata": {
+        "descriptionDateText": "2018-06-03 13:58:37",
+        "descriptionDateMeaning": "source_reported_capture_date",
+        "captureDateConfidence": "source_reported_unverified",
+        "exif": {
+          "DateTime": "2024:04:04 13:41:07",
+          "DateTimeOriginal": "2018:06:03 13:58:37",
+          "DateTimeDigitized": "2018:06:03 13:58:37"
+        }
+      },
+      "sourceDescription": "Свято-Покровський жіночий монастир",
+      "visualReviewStatus": "AI_assisted_review_complete",
+      "visualReview": {
+        "priority": "medium",
+        "summary": "White monastery exterior with gold onion-shaped central cap, dark reddish-brown patterned pyramidal/pitched secondary roofs, arched openings, white wall and sparse ornamental planting. Complex custom geometry; not representable by one simple roof type.",
+        "roofVisible": true,
+        "roofColourApproximate": "#5b4942",
+        "roofTypeNotes": "Complex mixture of pyramidal roofs, pitched lower roof sections, and gold onion cap."
+      }
+    },
+    {
+      "id": "commons-147112781",
+      "title": "Peter and Paul church (historical)",
+      "originalTitle": "File:Петропавлівська церква, 1848.jpg",
+      "provider": "Wikimedia Commons",
+      "kind": "reference_photo",
+      "position": null,
+      "positionMeaning": "unknown",
+      "positionSource": "No geotag in Commons API response; no position assigned",
+      "capturedAt": null,
+      "uploadedAt": "2024-04-05T15:55:36Z",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:%D0%9F%D0%B5%D1%82%D1%80%D0%BE%D0%BF%D0%B0%D0%B2%D0%BB%D1%96%D0%B2%D1%81%D1%8C%D0%BA%D0%B0_%D1%86%D0%B5%D1%80%D0%BA%D0%B2%D0%B0,_1848.jpg",
+      "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/5/5d/%D0%9F%D0%B5%D1%82%D1%80%D0%BE%D0%BF%D0%B0%D0%B2%D0%BB%D1%96%D0%B2%D1%81%D1%8C%D0%BA%D0%B0_%D1%86%D0%B5%D1%80%D0%BA%D0%B2%D0%B0%2C_1848.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5d/%D0%9F%D0%B5%D1%82%D1%80%D0%BE%D0%BF%D0%B0%D0%B2%D0%BB%D1%96%D0%B2%D1%81%D1%8C%D0%BA%D0%B0_%D1%86%D0%B5%D1%80%D0%BA%D0%B2%D0%B0%2C_1848.jpg/1280px-%D0%9F%D0%B5%D1%82%D1%80%D0%BE%D0%BF%D0%B0%D0%B2%D0%BB%D1%96%D0%B2%D1%81%D1%8C%D0%BA%D0%B0_%D1%86%D0%B5%D1%80%D0%BA%D0%B2%D0%B0%2C_1848.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "localFile": "peter-paul-church.jpg",
+      "license": {
+        "name": "CC BY-SA 4.0",
+        "url": "https://creativecommons.org/licenses/by-sa/4.0"
+      },
+      "attribution": "Artemco",
+      "width": 1280,
+      "height": 960,
+      "bytes": 263323,
+      "sha256": "470d584a85bb7d2897010e2db941b7789693f589905f0ab03a703950167a55c4",
+      "notes": [
+        "Historical civilian reference; not a current-condition survey.",
+        "Source description reports a capture date; retained as an attributed date with unknown timezone and unverified camera clock.",
+        "No geotag was returned; building identity can support manual association but does not define a camera or object coordinate.",
+        "Source description says this historical church burned in 2020; the 2018 image must not be treated as a currently standing building."
+      ],
+      "dateMetadata": {
+        "descriptionDateText": "2018-06-03 13:30:30",
+        "descriptionDateMeaning": "source_reported_capture_date",
+        "captureDateConfidence": "source_reported_unverified",
+        "exif": {
+          "DateTime": "2024:04:04 13:03:08",
+          "DateTimeOriginal": "2018:06:03 13:30:30",
+          "DateTimeDigitized": "2018:06:03 13:30:30"
+        }
+      },
+      "sourceDescription": "Петропавлівська церква, 1848, що згоріла в 2020",
+      "visualReviewStatus": "AI_assisted_review_complete",
+      "visualReview": {
+        "priority": "historical_only",
+        "summary": "Blue horizontal timber cladding with white trim, green pitched roof sections and tall pyramidal spire, gold onion caps, narrow arched windows and blue metal rail fence. Source reports church burned in 2020; useful for historical visual reconstruction only.",
+        "roofVisible": true,
+        "roofColourApproximate": "#355b4c",
+        "roofTypeNotes": "Composite roof with pitched sections, tall pyramidal spire and onion caps."
+      }
+    },
+    {
+      "id": "commons-147112782",
+      "title": "Iverska church exterior",
+      "originalTitle": "File:Церква Іверської ікони Богоматері.jpg",
+      "provider": "Wikimedia Commons",
+      "kind": "reference_photo",
+      "position": null,
+      "positionMeaning": "unknown",
+      "positionSource": "No geotag in Commons API response; no position assigned",
+      "capturedAt": null,
+      "uploadedAt": "2024-04-05T15:55:37Z",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:%D0%A6%D0%B5%D1%80%D0%BA%D0%B2%D0%B0_%D0%86%D0%B2%D0%B5%D1%80%D1%81%D1%8C%D0%BA%D0%BE%D1%97_%D1%96%D0%BA%D0%BE%D0%BD%D0%B8_%D0%91%D0%BE%D0%B3%D0%BE%D0%BC%D0%B0%D1%82%D0%B5%D1%80%D1%96.jpg",
+      "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/7/7f/%D0%A6%D0%B5%D1%80%D0%BA%D0%B2%D0%B0_%D0%86%D0%B2%D0%B5%D1%80%D1%81%D1%8C%D0%BA%D0%BE%D1%97_%D1%96%D0%BA%D0%BE%D0%BD%D0%B8_%D0%91%D0%BE%D0%B3%D0%BE%D0%BC%D0%B0%D1%82%D0%B5%D1%80%D1%96.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7f/%D0%A6%D0%B5%D1%80%D0%BA%D0%B2%D0%B0_%D0%86%D0%B2%D0%B5%D1%80%D1%81%D1%8C%D0%BA%D0%BE%D1%97_%D1%96%D0%BA%D0%BE%D0%BD%D0%B8_%D0%91%D0%BE%D0%B3%D0%BE%D0%BC%D0%B0%D1%82%D0%B5%D1%80%D1%96.jpg/1280px-%D0%A6%D0%B5%D1%80%D0%BA%D0%B2%D0%B0_%D0%86%D0%B2%D0%B5%D1%80%D1%81%D1%8C%D0%BA%D0%BE%D1%97_%D1%96%D0%BA%D0%BE%D0%BD%D0%B8_%D0%91%D0%BE%D0%B3%D0%BE%D0%BC%D0%B0%D1%82%D0%B5%D1%80%D1%96.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "localFile": "iverska-church.jpg",
+      "license": {
+        "name": "CC BY-SA 4.0",
+        "url": "https://creativecommons.org/licenses/by-sa/4.0"
+      },
+      "attribution": "Artemco",
+      "width": 1280,
+      "height": 1280,
+      "bytes": 332967,
+      "sha256": "9cd767dfb65e4e05b3a93e03faa6d4d6d2bba8b365658bd6c87e2479eb1809bc",
+      "notes": [
+        "Historical civilian reference; not a current-condition survey.",
+        "Source description reports a capture date; retained as an attributed date with unknown timezone and unverified camera clock.",
+        "No geotag was returned; building identity can support manual association but does not define a camera or object coordinate."
+      ],
+      "dateMetadata": {
+        "descriptionDateText": "2018-06-03 11:38:44",
+        "descriptionDateMeaning": "source_reported_capture_date",
+        "captureDateConfidence": "source_reported_unverified",
+        "exif": {
+          "DateTime": "2024:04:04 11:59:03",
+          "DateTimeOriginal": "2018:06:03 11:38:44",
+          "DateTimeDigitized": "2018:06:03 11:38:44"
+        }
+      },
+      "sourceDescription": "Церква Іверської ікони Богоматері",
+      "visualReviewStatus": "AI_assisted_review_complete",
+      "visualReview": {
+        "priority": "high",
+        "summary": "Light brick church with bright blue curved barrel-vault-like roof sections, tall blue pyramidal spire, pale central rounded roof, arched windows, grey patterned concrete-panel fence and dark ornamental gate. Requires custom roof model.",
+        "roofVisible": true,
+        "roofColourApproximate": "#276eb2",
+        "roofTypeNotes": "Blue curved vaults and pyramidal spire; pale rounded central cap. Complex geometry."
+      }
+    },
+    {
+      "id": "commons-153164984",
+      "title": "Cycling sports school BMX track in 2021",
+      "originalTitle": "File:Sports complex for cycling in Lyman, 2021-09-28 (01).jpg",
+      "provider": "Wikimedia Commons",
+      "kind": "reference_photo",
+      "position": null,
+      "positionMeaning": "unknown",
+      "positionSource": "No geotag in Commons API response; no position assigned",
+      "capturedAt": null,
+      "uploadedAt": "2024-09-26T04:09:32Z",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Sports_complex_for_cycling_in_Lyman,_2021-09-28_(01).jpg",
+      "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/9/96/Sports_complex_for_cycling_in_Lyman%2C_2021-09-28_%2801%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/9/96/Sports_complex_for_cycling_in_Lyman%2C_2021-09-28_%2801%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "localFile": "cycling-complex-exterior.jpg",
+      "license": {
+        "name": "CC BY 4.0",
+        "url": "https://creativecommons.org/licenses/by/4.0"
+      },
+      "attribution": "Donetsk Regional State Administration",
+      "width": 820,
+      "height": 546,
+      "bytes": 239029,
+      "sha256": "f2f39922d41485aae6b537d5e68faaba84ee2a5c669b4f23ea2f6ca4718cb99f",
+      "notes": [
+        "Historical civilian reference; not a current-condition survey.",
+        "Source description reports a capture date; retained as an attributed date with unknown timezone and unverified camera clock.",
+        "No geotag was returned; building identity can support manual association but does not define a camera or object coordinate."
+      ],
+      "dateMetadata": {
+        "descriptionDateText": "2021-09-28",
+        "descriptionDateMeaning": "source_reported_capture_date",
+        "captureDateConfidence": "source_reported_unverified",
+        "exif": {}
+      },
+      "sourceDescription": "Opening of Regional Specialized Children's and Youth Sports School of the Olympic Reserve for Cycling in Lyman (Donetsk region of Ukraine) on 28 September 2021 (an article).",
+      "visualReviewStatus": "AI_assisted_review_complete",
+      "visualReview": {
+        "priority": "medium",
+        "summary": "Elevated view of BMX track: dark compacted-earth berms and rollers, red start ramp and banked surfaces, white edge markings, yellow-blue spectator seating, mesh perimeter fence and tall floodlight posts. No useful building roof detail.",
+        "roofVisible": false
+      }
+    },
+    {
+      "id": "commons-4663145",
+      "title": "Passenger station entrance detail in 2010",
+      "originalTitle": "File:Krasniy Liman - 20100725.jpg",
+      "provider": "Wikimedia Commons",
+      "kind": "reference_photo",
+      "position": null,
+      "positionMeaning": "unknown",
+      "positionSource": "No geotag in Commons API response; no position assigned",
+      "capturedAt": null,
+      "uploadedAt": "2011-04-08T13:50:34Z",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Krasniy_Liman_-_20100725.jpg",
+      "originalUrl": "https://upload.wikimedia.org/wikipedia/commons/f/f6/Krasniy_Liman_-_20100725.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "downloadUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f6/Krasniy_Liman_-_20100725.jpg/1280px-Krasniy_Liman_-_20100725.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "localFile": "lyman-station-2010.jpg",
+      "license": {
+        "name": "CC BY-SA 3.0",
+        "url": "http://creativecommons.org/licenses/by-sa/3.0/"
+      },
+      "attribution": "Michael Pershyn",
+      "width": 1280,
+      "height": 960,
+      "bytes": 233410,
+      "sha256": "4ed170c9a80cfaeaf416ab3abb4d36e4bff3a6a5e1779c4cb5497749bc2f2d32",
+      "notes": [
+        "Historical civilian reference; not a current-condition survey.",
+        "Source description reports a capture date; retained as an attributed date with unknown timezone and unverified camera clock.",
+        "No geotag was returned; building identity can support manual association but does not define a camera or object coordinate."
+      ],
+      "dateMetadata": {
+        "descriptionDateText": "2010-07-25",
+        "descriptionDateMeaning": "source_reported_capture_date",
+        "captureDateConfidence": "source_reported_unverified",
+        "exif": {
+          "DateTime": "2010:07:25 12:26:35",
+          "DateTimeOriginal": "2010:07:25 12:26:35",
+          "DateTimeDigitized": "2010:07:25 12:26:35"
+        }
+      },
+      "sourceDescription": "A train station in Krasnyi Lyman",
+      "visualReviewStatus": "AI_assisted_review_complete",
+      "visualReview": {
+        "priority": "medium",
+        "summary": "Close-up of passenger station entrance with pale green plaster, broad white arched mouldings, triangular pediment/cornice, red and blue raised sign letters and white window framing. It is a facade detail, not an overall station view or roof survey.",
+        "roofVisible": false
+      }
+    }
+  ],
+  "observations": [
+    {
+      "id": "culture-facade",
+      "photoId": "commons-53394255",
+      "kind": "building",
+      "type": "building_style",
+      "description": "White rendered vertical piers frame pink-beige rectangular cladding panels. Tall windows repeat in bays; the stepped parapet hides the roof, so its shape is unknown.",
+      "confidence": "high",
+      "evidence": "visible",
+      "attributes": {
+        "wallColor": "#d9d9d3",
+        "wallMaterial": "mixed",
+        "windowStyle": "Tall rectangular glazed bays with smaller upper panes",
+        "roofNote": "Roof hidden behind stepped parapet; do not infer flat roof from this view."
+      },
+      "placement": null,
+      "source": "visual_review",
+      "reviewer": "AI-assisted visual review",
+      "reviewedAt": "2026-10-06",
+      "updatedAt": "2026-10-05T23:57:12Z"
+    },
+    {
+      "id": "culture-entrance",
+      "photoId": "commons-53394255",
+      "kind": "building",
+      "type": "entrance_detail",
+      "description": "Three timber-coloured double-door entrances share a shallow corrugated canopy above broad steps. The ramp visible at the right is a local detail, not a measured accessible route.",
+      "confidence": "high",
+      "evidence": "visible",
+      "attributes": {
+        "style": "Broad entrance steps; shallow metal canopy; timber-coloured doors"
+      },
+      "placement": null,
+      "source": "visual_review",
+      "reviewer": "AI-assisted visual review",
+      "reviewedAt": "2026-10-06",
+      "updatedAt": "2026-10-05T23:57:12Z"
+    },
+    {
+      "id": "culture-paving",
+      "photoId": "commons-53394255",
+      "kind": "surface",
+      "type": "paving",
+      "description": "Large square grey paving slabs form a grid in the forecourt, with dark weathered joints and some grass at edges.",
+      "confidence": "high",
+      "evidence": "visible",
+      "attributes": {
+        "paving": "Large square concrete-like slabs with weathered joints"
+      },
+      "placement": null,
+      "source": "visual_review",
+      "reviewer": "AI-assisted visual review",
+      "reviewedAt": "2026-10-06",
+      "updatedAt": "2026-10-05T23:57:12Z"
+    },
+    {
+      "id": "culture-trees",
+      "photoId": "commons-53394255",
+      "kind": "vegetation",
+      "type": "conifer",
+      "description": "Tall dark conifers frame the facade on both sides. Their exact species, heights and positions cannot be measured from this photo.",
+      "confidence": "high",
+      "evidence": "visible",
+      "attributes": {
+        "vegetation": "Tall evergreen conifers beside the front forecourt"
+      },
+      "placement": null,
+      "source": "visual_review",
+      "reviewer": "AI-assisted visual review",
+      "reviewedAt": "2026-10-06",
+      "updatedAt": "2026-10-05T23:57:12Z"
+    },
+    {
+      "id": "school-facade",
+      "photoId": "commons-53394237",
+      "kind": "building",
+      "type": "building_style",
+      "description": "Four rows of windows are visible in a pale exposed-brick facade, with green frames, a dark masonry base and a stepped parapet. Four visible storeys are an observation, not a measured building height.",
+      "confidence": "high",
+      "evidence": "visible",
+      "attributes": {
+        "wallColor": "#c9c9ba",
+        "wallMaterial": "brick",
+        "levels": 4,
+        "windowStyle": "Green rectangular window frames in regular bays",
+        "roofNote": "Roof surface not visible; shape unknown."
+      },
+      "placement": null,
+      "source": "visual_review",
+      "reviewer": "AI-assisted visual review",
+      "reviewedAt": "2026-10-06",
+      "updatedAt": "2026-10-05T23:57:12Z"
+    },
+    {
+      "id": "school-entrance",
+      "photoId": "commons-53394237",
+      "kind": "building",
+      "type": "entrance_detail",
+      "description": "The entrance projects forward with reddish steps and doors, a shallow light canopy, a clock and a painted decorative panel. These need custom geometry or a prefab to reproduce faithfully.",
+      "confidence": "high",
+      "evidence": "visible",
+      "attributes": {
+        "style": "Projecting entrance with red-brown steps and doors, shallow canopy and decorative wall panel"
+      },
+      "placement": null,
+      "source": "visual_review",
+      "reviewer": "AI-assisted visual review",
+      "reviewedAt": "2026-10-06",
+      "updatedAt": "2026-10-05T23:57:12Z"
+    },
+    {
+      "id": "school-paving",
+      "photoId": "commons-53394237",
+      "kind": "surface",
+      "type": "paving",
+      "description": "Large rectangular grey paving slabs form the courtyard; pale painted curbs border narrow planted strips.",
+      "confidence": "high",
+      "evidence": "visible",
+      "attributes": {
+        "paving": "Grey concrete-like slab grid; white-painted low curbs"
+      },
+      "placement": null,
+      "source": "visual_review",
+      "reviewer": "AI-assisted visual review",
+      "reviewedAt": "2026-10-06",
+      "updatedAt": "2026-10-05T23:57:12Z"
+    },
+    {
+      "id": "school-trees",
+      "photoId": "commons-53394237",
+      "kind": "vegetation",
+      "type": "deciduous_tree",
+      "description": "Deciduous trees stand in narrow planted strips beside the courtyard. Lower trunks are painted white; foliage is sparse in this historical view.",
+      "confidence": "high",
+      "evidence": "visible",
+      "attributes": {
+        "vegetation": "Deciduous trees, white-painted lower trunks, grass strips"
+      },
+      "placement": null,
+      "source": "visual_review",
+      "reviewer": "AI-assisted visual review",
+      "reviewedAt": "2026-10-06",
+      "updatedAt": "2026-10-05T23:57:12Z"
+    },
+    {
+      "id": "church-facade",
+      "photoId": "commons-53394358",
+      "kind": "building",
+      "type": "building_style",
+      "description": "Tan exposed brick, dark arched openings, a blue segmented dome and gold onion-shaped caps are visible. This special roof requires a custom model; the standard flat/gabled/hipped generator cannot reproduce it.",
+      "confidence": "high",
+      "evidence": "visible",
+      "attributes": {
+        "wallColor": "#bd9d75",
+        "wallMaterial": "brick",
+        "roofColor": "#327999",
+        "windowStyle": "Tall arched windows",
+        "roofNote": "Blue main dome and gold onion-shaped caps; custom roof model required."
+      },
+      "placement": null,
+      "source": "visual_review",
+      "reviewer": "AI-assisted visual review",
+      "reviewedAt": "2026-10-06",
+      "updatedAt": "2026-10-05T23:57:12Z"
+    },
+    {
+      "id": "church-fence",
+      "photoId": "commons-53394358",
+      "kind": "prop",
+      "type": "fence",
+      "description": "A dark metal fence with narrow vertical bars and curved tops runs across the foreground. The line, height and gates need separate mapping; this is a style reference only.",
+      "confidence": "high",
+      "evidence": "visible",
+      "attributes": {
+        "material": "metal",
+        "colour": "#292b27",
+        "style": "Thin vertical bars and curved top ornaments"
+      },
+      "placement": null,
+      "source": "visual_review",
+      "reviewer": "AI-assisted visual review",
+      "reviewedAt": "2026-10-06",
+      "updatedAt": "2026-10-05T23:57:12Z"
+    },
+    {
+      "id": "church-vegetation",
+      "photoId": "commons-53394358",
+      "kind": "vegetation",
+      "type": "mixed_trees",
+      "description": "Deciduous trees partly obscure the facade, with a tall conifer to the right. Do not interpret the reference geotag as any tree position.",
+      "confidence": "high",
+      "evidence": "visible",
+      "attributes": {
+        "vegetation": "Mixed deciduous trees and conifers close to facade"
+      },
+      "placement": null,
+      "source": "visual_review",
+      "reviewer": "AI-assisted visual review",
+      "reviewedAt": "2026-10-06",
+      "updatedAt": "2026-10-05T23:57:12Z"
+    },
+    {
+      "id": "pond-reeds",
+      "photoId": "commons-53394611",
+      "kind": "vegetation",
+      "type": "reeds",
+      "description": "Dense pale reeds border the near left and right banks; the centre of the near bank is more open.",
+      "confidence": "high",
+      "evidence": "visible",
+      "attributes": {
+        "vegetation": "Bands of tall dry reeds along pond margins"
+      },
+      "placement": null,
+      "source": "visual_review",
+      "reviewer": "AI-assisted visual review",
+      "reviewedAt": "2026-10-06",
+      "updatedAt": "2026-10-05T23:57:12Z"
+    },
+    {
+      "id": "pond-trees",
+      "photoId": "commons-53394611",
+      "kind": "vegetation",
+      "type": "waterside_trees",
+      "description": "Drooping deciduous crowns appear around the far bank among darker evergreen trees. Species and individual positions are uncertain.",
+      "confidence": "medium",
+      "evidence": "visible",
+      "attributes": {
+        "vegetation": "Mixed waterside trees with some weeping crowns"
+      },
+      "placement": null,
+      "source": "visual_review",
+      "reviewer": "AI-assisted visual review",
+      "reviewedAt": "2026-10-06",
+      "updatedAt": "2026-10-05T23:57:12Z"
+    },
+    {
+      "id": "entrance-marker",
+      "photoId": "commons-19961908",
+      "kind": "prop",
+      "type": "city_sign",
+      "description": "A large masonry city-entry marker has a white sloping base and raised red lettering. A custom landmark prefab would capture the appearance; the geotag is not a surveyed sign position.",
+      "confidence": "high",
+      "evidence": "visible",
+      "attributes": {
+        "material": "masonry",
+        "colour": "#e5e3d8",
+        "style": "White concrete-like plinth, vertical slab, raised red letters"
+      },
+      "placement": null,
+      "source": "visual_review",
+      "reviewer": "AI-assisted visual review",
+      "reviewedAt": "2026-10-06",
+      "updatedAt": "2026-10-05T23:57:12Z"
+    },
+    {
+      "id": "entrance-road",
+      "photoId": "commons-19961908",
+      "kind": "surface",
+      "type": "road_surface",
+      "description": "A weathered asphalt road and broad paved junction meet grassy and dirt verges. No continuous lane markings are clearly visible in this view.",
+      "confidence": "high",
+      "evidence": "visible",
+      "attributes": {
+        "paving": "Weathered grey asphalt with unpaved shoulder"
+      },
+      "placement": null,
+      "source": "visual_review",
+      "reviewer": "AI-assisted visual review",
+      "reviewedAt": "2026-10-06",
+      "updatedAt": "2026-10-05T23:57:12Z"
+    },
+    {
+      "id": "entrance-pines",
+      "photoId": "commons-19961908",
+      "kind": "vegetation",
+      "type": "conifer",
+      "description": "Dense tall conifers line both sides of the approach road and stand behind the city marker.",
+      "confidence": "high",
+      "evidence": "visible",
+      "attributes": {
+        "vegetation": "Dense evergreen roadside woodland"
+      },
+      "placement": null,
+      "source": "visual_review",
+      "reviewer": "AI-assisted visual review",
+      "reviewedAt": "2026-10-06",
+      "updatedAt": "2026-10-05T23:57:12Z"
+    },
+    {
+      "id": "gymnasium-facade",
+      "photoId": "commons-147077476",
+      "kind": "building",
+      "type": "building_style",
+      "description": "Three visible storeys have a grey rendered facade, paired columns, shallow rectangular panels and white window frames. Wall colour is an approximate visual estimate; the parapet hides the roof.",
+      "confidence": "medium",
+      "evidence": "visible",
+      "attributes": {
+        "wallMaterial": "plaster",
+        "wallColor": "#858780",
+        "levels": 3,
+        "windowStyle": "White rectangular frames between vertical piers",
+        "roofNote": "Roof plane hidden behind parapet; shape and colour remain unknown."
+      },
+      "placement": null,
+      "source": "visual_review",
+      "reviewer": "AI-assisted visual review",
+      "reviewedAt": "2026-10-06",
+      "updatedAt": "2026-10-06T00:33:14Z"
+    },
+    {
+      "id": "gymnasium-entrance",
+      "photoId": "commons-147077476",
+      "kind": "building",
+      "type": "entrance_detail",
+      "description": "A white-framed glazed entrance projects in front of the facade, with a red-brown brick base, broad shallow steps and a railing above.",
+      "confidence": "high",
+      "evidence": "visible",
+      "attributes": {
+        "style": "Glazed entrance enclosure with white rectangular mullions and red-brown brick base"
+      },
+      "placement": null,
+      "source": "visual_review",
+      "reviewer": "AI-assisted visual review",
+      "reviewedAt": "2026-10-06",
+      "updatedAt": "2026-10-06T00:33:14Z"
+    },
+    {
+      "id": "gymnasium-railings",
+      "photoId": "commons-147077476",
+      "kind": "prop",
+      "type": "fence",
+      "description": "Dark metal railing above the entrance repeats circular and diagonal ornaments beneath a red-brown top rail. Its dimensions and line are not mapped.",
+      "confidence": "high",
+      "evidence": "visible",
+      "attributes": {
+        "material": "metal",
+        "style": "Circles and diagonals in dark ornamental railing"
+      },
+      "placement": null,
+      "source": "visual_review",
+      "reviewer": "AI-assisted visual review",
+      "reviewedAt": "2026-10-06",
+      "updatedAt": "2026-10-06T00:33:14Z"
+    },
+    {
+      "id": "school2-facade",
+      "photoId": "commons-147097142",
+      "kind": "building",
+      "type": "building_style",
+      "description": "Three rows of large rectangular windows sit in a pale exposed-brick facade. The approximate colour is affected by sun and shade. No roof surface is visible.",
+      "confidence": "medium",
+      "evidence": "visible",
+      "attributes": {
+        "wallMaterial": "brick",
+        "wallColor": "#b9bbb2",
+        "levels": 3,
+        "windowStyle": "Regular large white-framed rectangular windows",
+        "roofNote": "Roof surface not visible; do not infer a flat roof from the parapet."
+      },
+      "placement": null,
+      "source": "visual_review",
+      "reviewer": "AI-assisted visual review",
+      "reviewedAt": "2026-10-06",
+      "updatedAt": "2026-10-06T00:33:14Z"
+    },
+    {
+      "id": "school2-fence",
+      "photoId": "commons-147097142",
+      "kind": "prop",
+      "type": "fence",
+      "description": "Low blue precast-looking panels with white posts and inset baluster-like openings border the school approach.",
+      "confidence": "high",
+      "evidence": "visible",
+      "attributes": {
+        "material": "concrete",
+        "style": "Blue lower panels, white posts and white ornamental upper openings"
+      },
+      "placement": null,
+      "source": "visual_review",
+      "reviewer": "AI-assisted visual review",
+      "reviewedAt": "2026-10-06",
+      "updatedAt": "2026-10-06T00:33:14Z"
+    },
+    {
+      "id": "school2-gate",
+      "photoId": "commons-147097142",
+      "kind": "prop",
+      "type": "gate",
+      "description": "A white metal barrier gate spans the asphalt approach on upright posts. No dimensions or exact position are established.",
+      "confidence": "high",
+      "evidence": "visible",
+      "attributes": {
+        "material": "metal",
+        "colour": "#e1e1d8",
+        "style": "Long white horizontal barrier with diagonal bracing"
+      },
+      "placement": null,
+      "source": "visual_review",
+      "reviewer": "AI-assisted visual review",
+      "reviewedAt": "2026-10-06",
+      "updatedAt": "2026-10-06T00:33:14Z"
+    },
+    {
+      "id": "school2-trees",
+      "photoId": "commons-147097142",
+      "kind": "vegetation",
+      "type": "deciduous_tree",
+      "description": "Leafy deciduous trees shade the grassy strip alongside the low decorative fence; exact tree species and positions are unknown.",
+      "confidence": "high",
+      "evidence": "visible",
+      "attributes": {
+        "vegetation": "Broad deciduous crowns along a narrow grass verge"
+      },
+      "placement": null,
+      "source": "visual_review",
+      "reviewer": "AI-assisted visual review",
+      "reviewedAt": "2026-10-06",
+      "updatedAt": "2026-10-06T00:33:14Z"
+    },
+    {
+      "id": "council-facade",
+      "photoId": "commons-147112787",
+      "kind": "building",
+      "type": "building_style",
+      "description": "Three visible storeys have a pale beige rendered facade and large regularly spaced white windows. The approximate facade colour is a visual estimate, and the roof is concealed.",
+      "confidence": "medium",
+      "evidence": "visible",
+      "attributes": {
+        "wallMaterial": "plaster",
+        "wallColor": "#cec9ba",
+        "levels": 3,
+        "windowStyle": "Large white rectangular frames in even bays",
+        "roofNote": "Roof plane hidden by parapet; shape unknown."
+      },
+      "placement": null,
+      "source": "visual_review",
+      "reviewer": "AI-assisted visual review",
+      "reviewedAt": "2026-10-06",
+      "updatedAt": "2026-10-06T00:33:14Z"
+    },
+    {
+      "id": "council-entrance",
+      "photoId": "commons-147112787",
+      "kind": "building",
+      "type": "entrance_detail",
+      "description": "White-framed entrance glazing sits under a shallow canopy at the base of the facade.",
+      "confidence": "high",
+      "evidence": "visible",
+      "attributes": {
+        "style": "Glazed white entrance doors and broad shallow canopy"
+      },
+      "placement": null,
+      "source": "visual_review",
+      "reviewer": "AI-assisted visual review",
+      "reviewedAt": "2026-10-06",
+      "updatedAt": "2026-10-06T00:33:14Z"
+    },
+    {
+      "id": "council-paving",
+      "photoId": "commons-147112787",
+      "kind": "surface",
+      "type": "paving",
+      "description": "Red and grey rectangular pavers form repeating bands and square-grid patterns beside pale curbs.",
+      "confidence": "high",
+      "evidence": "visible",
+      "attributes": {
+        "paving": "Red-grey rectangular pavers in bands and grid-like pattern"
+      },
+      "placement": null,
+      "source": "visual_review",
+      "reviewer": "AI-assisted visual review",
+      "reviewedAt": "2026-10-06",
+      "updatedAt": "2026-10-06T00:33:14Z"
+    },
+    {
+      "id": "council-conifers",
+      "photoId": "commons-147112787",
+      "kind": "vegetation",
+      "type": "conifer",
+      "description": "Tall conifers with dense dark pyramidal crowns stand along the front of the building; these are appearance references without mapped tree positions.",
+      "confidence": "high",
+      "evidence": "visible",
+      "attributes": {
+        "vegetation": "Dense dark pyramidal evergreen crowns in a frontage row"
+      },
+      "placement": null,
+      "source": "visual_review",
+      "reviewer": "AI-assisted visual review",
+      "reviewedAt": "2026-10-06",
+      "updatedAt": "2026-10-06T00:33:14Z"
+    },
+    {
+      "id": "pryvokzalna-facade",
+      "photoId": "commons-73009966",
+      "kind": "building",
+      "type": "building_style",
+      "description": "A two-storey grey exposed-brick facade has decorative upper-window grilles, blue lower frames and a corrugated-looking roof edge. Its approximate wall colour is a visual estimate; the full roof shape is unresolved.",
+      "confidence": "medium",
+      "evidence": "visible",
+      "attributes": {
+        "wallMaterial": "brick",
+        "wallColor": "#a4a69c",
+        "levels": 2,
+        "windowStyle": "Pale ornamental grilles above; blue lower window frames",
+        "roofNote": "Only the roof edge is visible; overall roof shape and material are unverified."
+      },
+      "placement": null,
+      "source": "visual_review",
+      "reviewer": "AI-assisted visual review",
+      "reviewedAt": "2026-10-06",
+      "updatedAt": "2026-10-06T00:33:14Z"
+    },
+    {
+      "id": "pryvokzalna-ornamental-posts",
+      "photoId": "commons-73009966",
+      "kind": "prop",
+      "type": "decorative_post",
+      "description": "Slender dark ornamental posts with curved spiral arms and hanging planters stand among the trees. The image does not establish a light fixture on every post.",
+      "confidence": "medium",
+      "evidence": "visible",
+      "attributes": {
+        "material": "metal",
+        "style": "Dark slender post with paired curved spiral arms and hanging planter"
+      },
+      "placement": null,
+      "source": "visual_review",
+      "reviewer": "AI-assisted visual review",
+      "reviewedAt": "2026-10-06",
+      "updatedAt": "2026-10-06T00:33:14Z"
+    },
+    {
+      "id": "pryvokzalna-conifers",
+      "photoId": "commons-73009966",
+      "kind": "vegetation",
+      "type": "conifer",
+      "description": "Dense conifers fill the narrow planted strip near the facade, beside white-painted low curbs.",
+      "confidence": "high",
+      "evidence": "visible",
+      "attributes": {
+        "vegetation": "Conifers of varied heights in a narrow planted bed"
+      },
+      "placement": null,
+      "source": "visual_review",
+      "reviewer": "AI-assisted visual review",
+      "reviewedAt": "2026-10-06",
+      "updatedAt": "2026-10-06T00:33:14Z"
+    },
+    {
+      "id": "monastery-residence-facade",
+      "photoId": "commons-147112785",
+      "kind": "building",
+      "type": "building_style",
+      "description": "Two full facade storeys plus a dormer row show pale brick, darker arched trim and a red-brown pitched roof. The roof colour is approximate; the complete roof cannot be classified from this view.",
+      "confidence": "medium",
+      "evidence": "visible",
+      "attributes": {
+        "wallMaterial": "brick",
+        "levels": 2,
+        "roofColor": "#684c43",
+        "windowStyle": "Arched dark brick trim around pale window frames",
+        "roofNote": "Pitched roof with repeated gabled dormers. Overall shape and roof material need another view."
+      },
+      "placement": null,
+      "source": "visual_review",
+      "reviewer": "AI-assisted visual review",
+      "reviewedAt": "2026-10-06",
+      "updatedAt": "2026-10-06T00:33:14Z"
+    },
+    {
+      "id": "monastery-residence-roof-details",
+      "photoId": "commons-147112785",
+      "kind": "building",
+      "type": "roof_detail",
+      "description": "Repeated gabled dormers and masonry chimney stacks break the visible roof surface. Their dimensions and spacing are not measured.",
+      "confidence": "high",
+      "evidence": "visible",
+      "attributes": {
+        "style": "Repeated small gabled dormers and masonry chimneys",
+        "roofNote": "Custom roof-detail geometry would be needed; no building-wide simple roof type assigned."
+      },
+      "placement": null,
+      "source": "visual_review",
+      "reviewer": "AI-assisted visual review",
+      "reviewedAt": "2026-10-06",
+      "updatedAt": "2026-10-06T00:33:14Z"
+    },
+    {
+      "id": "monastery-residence-wall",
+      "photoId": "commons-147112785",
+      "kind": "prop",
+      "type": "wall",
+      "description": "A white perimeter wall with a corrugated cap runs across the foreground.",
+      "confidence": "high",
+      "evidence": "visible",
+      "attributes": {
+        "material": "masonry",
+        "style": "White solid wall topped with a corrugated cap"
+      },
+      "placement": null,
+      "source": "visual_review",
+      "reviewer": "AI-assisted visual review",
+      "reviewedAt": "2026-10-06",
+      "updatedAt": "2026-10-06T00:33:14Z"
+    },
+    {
+      "id": "pokrovskyi-facade",
+      "photoId": "commons-147112786",
+      "kind": "building",
+      "type": "building_style",
+      "description": "White walls, arched openings, a gold onion-shaped cap and dark red-brown secondary roof surfaces are visible. The roof colour describes those secondary surfaces only and is approximate.",
+      "confidence": "medium",
+      "evidence": "visible",
+      "attributes": {
+        "wallMaterial": "plaster",
+        "roofColor": "#5b4942",
+        "windowStyle": "Arched openings and windows",
+        "roofNote": "Mixed pyramidal/pitched sections and a gold onion cap require custom geometry; one simple shape would be misleading."
+      },
+      "placement": null,
+      "source": "visual_review",
+      "reviewer": "AI-assisted visual review",
+      "reviewedAt": "2026-10-06",
+      "updatedAt": "2026-10-06T00:33:14Z"
+    },
+    {
+      "id": "pokrovskyi-wall-planting",
+      "photoId": "commons-147112786",
+      "kind": "prop",
+      "type": "wall",
+      "description": "A white perimeter wall and sparse ornamental planting frame the monastery exterior.",
+      "confidence": "high",
+      "evidence": "visible",
+      "attributes": {
+        "material": "masonry",
+        "style": "White solid perimeter wall beside small ornamental plants"
+      },
+      "placement": null,
+      "source": "visual_review",
+      "reviewer": "AI-assisted visual review",
+      "reviewedAt": "2026-10-06",
+      "updatedAt": "2026-10-06T00:33:14Z"
+    },
+    {
+      "id": "peter-paul-historical-facade",
+      "photoId": "commons-147112781",
+      "kind": "building",
+      "type": "building_style",
+      "description": "This historical view shows blue horizontal timber cladding, white trim, green roof sections and gold onion caps. Its source reports a 2020 fire; it is a historical appearance reference.",
+      "confidence": "medium",
+      "evidence": "visible",
+      "attributes": {
+        "wallMaterial": "wood",
+        "roofColor": "#355b4c",
+        "windowStyle": "Narrow arched windows with white trim",
+        "roofNote": "Composite green pitched sections, pyramidal spire and gold onion caps; custom roof model needed. Approximate green applies only to green sections."
+      },
+      "placement": null,
+      "source": "visual_review",
+      "reviewer": "AI-assisted visual review",
+      "reviewedAt": "2026-10-06",
+      "updatedAt": "2026-10-06T00:33:14Z"
+    },
+    {
+      "id": "peter-paul-fence",
+      "photoId": "commons-147112781",
+      "kind": "prop",
+      "type": "fence",
+      "description": "A blue painted metal railing fence borders the historical church exterior.",
+      "confidence": "high",
+      "evidence": "visible",
+      "attributes": {
+        "material": "metal",
+        "style": "Blue vertical railing panels"
+      },
+      "placement": null,
+      "source": "visual_review",
+      "reviewer": "AI-assisted visual review",
+      "reviewedAt": "2026-10-06",
+      "updatedAt": "2026-10-06T00:33:14Z"
+    },
+    {
+      "id": "iverska-facade",
+      "photoId": "commons-147112782",
+      "kind": "building",
+      "type": "building_style",
+      "description": "Light exposed brick surrounds arched windows beneath blue curved roof sections and a tall blue spire, with a pale rounded central cap. Blue is approximate and is not the colour of every roof surface.",
+      "confidence": "medium",
+      "evidence": "visible",
+      "attributes": {
+        "wallMaterial": "brick",
+        "roofColor": "#276eb2",
+        "windowStyle": "Tall arched windows",
+        "roofNote": "Curved blue vaults, pyramidal spire and pale rounded cap need custom roof geometry."
+      },
+      "placement": null,
+      "source": "visual_review",
+      "reviewer": "AI-assisted visual review",
+      "reviewedAt": "2026-10-06",
+      "updatedAt": "2026-10-06T00:33:14Z"
+    },
+    {
+      "id": "iverska-fence",
+      "photoId": "commons-147112782",
+      "kind": "prop",
+      "type": "fence",
+      "description": "Grey precast-looking concrete fence panels repeat a decorative relief pattern along the perimeter.",
+      "confidence": "high",
+      "evidence": "visible",
+      "attributes": {
+        "material": "concrete",
+        "style": "Grey patterned concrete panels between upright posts"
+      },
+      "placement": null,
+      "source": "visual_review",
+      "reviewer": "AI-assisted visual review",
+      "reviewedAt": "2026-10-06",
+      "updatedAt": "2026-10-06T00:33:14Z"
+    },
+    {
+      "id": "iverska-gate",
+      "photoId": "commons-147112782",
+      "kind": "prop",
+      "type": "gate",
+      "description": "A dark ornamental metal gate interrupts the patterned perimeter fence.",
+      "confidence": "high",
+      "evidence": "visible",
+      "attributes": {
+        "material": "metal",
+        "style": "Dark open ornamental gate with narrow vertical bars"
+      },
+      "placement": null,
+      "source": "visual_review",
+      "reviewer": "AI-assisted visual review",
+      "reviewedAt": "2026-10-06",
+      "updatedAt": "2026-10-06T00:33:14Z"
+    },
+    {
+      "id": "cycling-track-surface",
+      "photoId": "commons-153164984",
+      "kind": "surface",
+      "type": "sports_surface",
+      "description": "An elevated historical view shows dark compacted-earth BMX berms and rollers, red sections near the start and white edge markings. Surface appearance is visible; gradients are not measured.",
+      "confidence": "high",
+      "evidence": "visible",
+      "attributes": {
+        "paving": "Dark compacted-earth rollers and berms, red start area, white painted edge lines"
+      },
+      "placement": null,
+      "source": "visual_review",
+      "reviewer": "AI-assisted visual review",
+      "reviewedAt": "2026-10-06",
+      "updatedAt": "2026-10-06T00:33:14Z"
+    },
+    {
+      "id": "cycling-seating",
+      "photoId": "commons-153164984",
+      "kind": "prop",
+      "type": "spectator_seating",
+      "description": "Yellow and blue rows of spectator seats sit beside the BMX track. A seating prefab would be needed to reproduce the arrangement.",
+      "confidence": "high",
+      "evidence": "visible",
+      "attributes": {
+        "style": "Rows of alternating yellow and blue spectator seats"
+      },
+      "placement": null,
+      "source": "visual_review",
+      "reviewer": "AI-assisted visual review",
+      "reviewedAt": "2026-10-06",
+      "updatedAt": "2026-10-06T00:33:14Z"
+    },
+    {
+      "id": "cycling-fence",
+      "photoId": "commons-153164984",
+      "kind": "prop",
+      "type": "fence",
+      "description": "Mesh fence panels and slender posts enclose parts of the sports ground.",
+      "confidence": "high",
+      "evidence": "visible",
+      "attributes": {
+        "material": "metal",
+        "style": "Open wire-mesh panels on slender metal posts"
+      },
+      "placement": null,
+      "source": "visual_review",
+      "reviewer": "AI-assisted visual review",
+      "reviewedAt": "2026-10-06",
+      "updatedAt": "2026-10-06T00:33:14Z"
+    },
+    {
+      "id": "cycling-floodlights",
+      "photoId": "commons-153164984",
+      "kind": "prop",
+      "type": "street_lamp",
+      "description": "Tall floodlight posts stand around the sports ground. Height, number of lamps and exact locations are not measured from this reference.",
+      "confidence": "medium",
+      "evidence": "visible",
+      "attributes": {
+        "material": "metal",
+        "style": "Tall sports-ground floodlight pole; use an appropriate floodlight prefab"
+      },
+      "placement": null,
+      "source": "visual_review",
+      "reviewer": "AI-assisted visual review",
+      "reviewedAt": "2026-10-06",
+      "updatedAt": "2026-10-06T00:33:14Z"
+    },
+    {
+      "id": "station-entrance-facade",
+      "photoId": "commons-4663145",
+      "kind": "building",
+      "type": "entrance_detail",
+      "description": "The station entrance close-up shows pale green plaster, broad white arched mouldings and white window framing. It does not establish the building-wide floor count or roof type.",
+      "confidence": "high",
+      "evidence": "visible",
+      "attributes": {
+        "wallMaterial": "plaster",
+        "windowStyle": "White frames within broad arched facade mouldings",
+        "roofNote": "Facade close-up only; overall roof is outside the view."
+      },
+      "placement": null,
+      "source": "visual_review",
+      "reviewer": "AI-assisted visual review",
+      "reviewedAt": "2026-10-06",
+      "updatedAt": "2026-10-06T00:33:14Z"
+    },
+    {
+      "id": "station-cornice-sign",
+      "photoId": "commons-4663145",
+      "kind": "building",
+      "type": "facade_detail",
+      "description": "A triangular pediment and white cornice frame raised red and blue sign lettering above the entrance.",
+      "confidence": "high",
+      "evidence": "visible",
+      "attributes": {
+        "style": "White triangular pediment and cornice with raised red-blue lettering"
+      },
+      "placement": null,
+      "source": "visual_review",
+      "reviewer": "AI-assisted visual review",
+      "reviewedAt": "2026-10-06",
+      "updatedAt": "2026-10-06T00:33:14Z"
+    }
+  ],
+  "notes": [
+    "Fifteen individual historical photographs are available locally. They do not provide continuous street coverage or current city conditions.",
+    "Visual attributes are reviewed from these images; colour values are approximate under the photographed lighting.",
+    "Unlinked observations are style references. No building or prop has been automatically matched to a photo geotag.",
+    "Ten added references have no returned geotag; their camera and object coordinates remain unknown.",
+    "Source-reported capture dates are attributed in dateMetadata, while capturedAt remains null.",
+    "Four new photographs support approximate roof-section colours and component notes; they do not establish simple building-wide roof types."
+  ]
+}

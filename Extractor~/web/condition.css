@@ -1,0 +1,19 @@
+/* Building condition panel and review popup */
+.condition-section { border-top: 1px solid var(--line, #d8dde3); }
+.condition-source-list { display: grid; gap: 6px; margin: 6px 0 10px; }
+.condition-source { font-size: 12px; line-height: 1.35; padding: 6px 8px; border: 1px solid var(--line, #d8dde3); border-radius: 6px; }
+.condition-source b { display: block; font-weight: 600; }
+.condition-source small { color: #6b7685; }
+.condition-radar-item { font-size: 12px; line-height: 1.4; padding: 6px 8px; border: 1px solid var(--line, #d8dde3); border-radius: 6px; margin-bottom: 6px; }
+.condition-radar-item label { display: flex; gap: 6px; align-items: center; margin-top: 4px; }
+.condition-form { min-width: 250px; display: grid; gap: 6px; font-size: 12px; }
+.condition-form h4 { margin: 0; font-size: 13px; }
+.condition-form label { display: grid; gap: 2px; }
+.condition-form select, .condition-form input[type=date], .condition-form input[type=text] { width: 100%; box-sizing: border-box; }
+.condition-states { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+.condition-state { display: flex; gap: 6px; align-items: center; padding: 3px 6px; border: 1px solid var(--line, #d8dde3); border-radius: 6px; cursor: pointer; }
+.condition-state input { margin: 0; }
+.condition-state .swatch { width: 10px; height: 10px; border-radius: 2px; flex: none; }
+.condition-evidence { font-size: 11px; color: #54606e; max-height: 90px; overflow: auto; border-top: 1px solid var(--line, #d8dde3); padding-top: 4px; }
+.condition-form .condition-actions { display: flex; gap: 6px; }
+body.condition-reviewing .leaflet-container { cursor: crosshair; }
