@@ -33,7 +33,7 @@ keeps the commit it first downloaded, recorded in `Packages/packages-lock.json`,
 
 1. **Tools > Geo World > Set up rendering for large worlds** (GPU Resident Drawer, occlusion culling).
 2. **Tools > Geo World > Generator window** › **New area…**: find a place on the map of Ukraine (search, or pan and
-   zoom), press Draw area and drag the area (drag its corners to change it; at most 100 km²), name it, and press
+   zoom), press Draw area and drag the area (drag it to move it and its corners to resize it; at most 100 km²), name it, and press
    Extract. The Building Extractor app, which comes with
    the package (with its own Python on Windows: nothing to install), fetches the buildings, roads, terrain and the
    radar damage estimate in the background; a small town takes a few minutes. The export is then selected in the

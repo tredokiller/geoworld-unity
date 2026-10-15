@@ -53,5 +53,19 @@ namespace GeoWorld.Editor.Tests
             Assert.That(stripWidth * stripHeight, Is.LessThan(GeoAreaWindow.MaxKm2));
             Assert.That(stripWidth, Is.GreaterThan(45));
         }
+
+        [Test] public void AMovedAreaKeepsItsSizeOnTheGround()
+        {
+            const double s = 49.6, w = 36.4, n = 49.68, e = 36.52;
+            var before = GeoAreaWindow.SizeKm(s, w, n, e);
+            // 3 degrees south (a degree of longitude is longer there) and half a degree east
+            var (s2, w2, n2, e2) = GeoAreaWindow.Moved(s, w, n, e, -3, 0.5);
+            var after = GeoAreaWindow.SizeKm(s2, w2, n2, e2);
+            Assert.That(after.width, Is.EqualTo(before.width).Within(1e-9));
+            Assert.That(after.height, Is.EqualTo(before.height).Within(1e-9));
+            Assert.That(s2, Is.EqualTo(s - 3).Within(1e-12));
+            Assert.That((w2 + e2) / 2, Is.EqualTo((w + e) / 2 + 0.5).Within(1e-12));
+            Assert.That(e2 - w2, Is.LessThan(e - w)); // fewer degrees for the same kilometres
+        }
     }
 }

@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.1
+
+- New area: drag the area to move it (its size on the ground is kept); right or middle drag pans the map anywhere
+
 ## 1.5.0
 
 - Tree prefabs (Advanced settings > Trees): your own trees, each scaled to its mapped or generated height; the terrain's own trees in a merged world (drawn by Unity's terrain, paintable with its tree brush), a copy per tree in an editable one; drop prefabs on the list
