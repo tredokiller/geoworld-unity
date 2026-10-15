@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using NUnit.Framework;
 
@@ -23,6 +24,34 @@ namespace GeoWorld.Editor.Tests
             var (width, height) = GeoAreaWindow.SizeKm(49.0, 36.0, 49.01, 36.01);
             Assert.That(height, Is.EqualTo(1.113).Within(0.002));
             Assert.That(width, Is.EqualTo(0.730).Within(0.003));
+        }
+
+        [Test] public void AnAreaIsAtMostAHundredSquareKilometres()
+        {
+            const double lat = 49.6, lon = 36.4;
+            (double width, double height) Size(double cornerLat, double cornerLon) =>
+                GeoAreaWindow.SizeKm(Math.Min(lat, cornerLat), Math.Min(lon, cornerLon), Math.Max(lat, cornerLat), Math.Max(lon, cornerLon));
+            // dragged about 30 x 30 km to the north-east and to the south-west: stops at 100 km², square as dragged, on
+            // the side it was dragged to
+            foreach (var (dLat, dLon) in new[] { (0.27, 0.416), (-0.27, -0.416) })
+            {
+                var (cornerLat, cornerLon) = GeoAreaWindow.Limit(lat, lon, lat + dLat, lon + dLon);
+                var (width, height) = Size(cornerLat, cornerLon);
+                Assert.That(width * height, Is.EqualTo(GeoAreaWindow.MaxKm2).Within(0.01));
+                Assert.That(width / height, Is.EqualTo(1).Within(0.02));
+                Assert.That(Math.Sign(cornerLat - lat), Is.EqualTo(Math.Sign(dLat)));
+                Assert.That(Math.Sign(cornerLon - lon), Is.EqualTo(Math.Sign(dLon)));
+            }
+            // any shape up to the limit: a 50 x 1 km strip and a small area are left as they are
+            foreach (var (dLat, dLon) in new[] { (0.009, 0.694), (0.03, -0.05) })
+            {
+                var (cornerLat, cornerLon) = GeoAreaWindow.Limit(lat, lon, lat + dLat, lon + dLon);
+                Assert.That(cornerLat, Is.EqualTo(lat + dLat).Within(1e-12));
+                Assert.That(cornerLon, Is.EqualTo(lon + dLon).Within(1e-12));
+            }
+            var (stripWidth, stripHeight) = Size(lat + 0.009, lon + 0.694);
+            Assert.That(stripWidth * stripHeight, Is.LessThan(GeoAreaWindow.MaxKm2));
+            Assert.That(stripWidth, Is.GreaterThan(45));
         }
     }
 }

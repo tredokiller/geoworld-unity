@@ -35,6 +35,9 @@ namespace GeoWorld.Editor
             var toBake=new List<PropPlacement>();
             // a merged world's trees are GPU instances of a shared model, not copies of a mesh
             var terrainTrees=new List<PropPlacement>();
+            // your tree prefabs: the terrain's trees in a merged world, a copy per tree in an editable one
+            var custom=settings.trees?GeoTerrainTrees.Usable(settings.treePrefabs,notes):new GameObject[0];
+            var customHeights=System.Array.ConvertAll(custom,GeoTerrainTrees.Height);
             Transform Parent(string name)
             {if(!groups.TryGetValue(name,out var t)){t=new GameObject(name).transform;t.SetParent(group,false);groups[name]=t;}return t;}
             foreach(var old in kept)
@@ -47,7 +50,8 @@ namespace GeoWorld.Editor
             foreach(var p in plan)
             {
                 p.position.y=field.Sample(p.position.x,p.position.z);
-                if(baked&&GeoPropBaker.Bakes(p,settings)){if(p.kind=="tree")terrainTrees.Add(p);else toBake.Add(p);continue;}
+                bool customTree=p.kind=="tree"&&custom.Length>0&&p.source!="manual_photo";
+                if(baked&&(customTree||GeoPropBaker.Bakes(p,settings))){if(p.kind=="tree")terrainTrees.Add(p);else toBake.Add(p);continue;}
                 var go=new GameObject(p.kind.Replace('_',' ')+" | "+p.id);
                 go.transform.SetParent(Parent(p.source=="generated"?"Generated decoration":p.source=="manual_photo"?"Photo reference objects":"Mapped objects"),false);
                 go.transform.SetPositionAndRotation(p.position,Quaternion.Euler(0,p.yaw,0));
@@ -55,7 +59,15 @@ namespace GeoWorld.Editor
                 marker.placementSource=p.source;marker.evidence=p.evidence;marker.rotationSource=p.rotationSource;
                 marker.photoReference=p.photoReference;
                 var entry=settings.propCatalog?settings.propCatalog.Find(p.kind):null;
-                if(entry!=null)
+                if(customTree)
+                {
+                    GeoTerrainTrees.Pick(p,settings.decorationSeed,customHeights,out int index,out float scale);
+                    var model=(GameObject)PrefabUtility.InstantiatePrefab(custom[index],go.transform);
+                    model.transform.localPosition=Vector3.zero;model.transform.localRotation=Quaternion.identity;
+                    model.transform.localScale=custom[index].transform.localScale*scale;
+                    prefabCount++;
+                }
+                else if(entry!=null)
                 {
                     var model=(GameObject)PrefabUtility.InstantiatePrefab(entry.prefab,go.transform);
                     if(!model)throw new InvalidOperationException("Prop catalog entry must reference a prefab asset: "+p.kind);
@@ -71,7 +83,19 @@ namespace GeoWorld.Editor
                 root.propCount++;if(p.kind=="tree")root.treeCount++;
             }
             if(root.terrain)GeoTerrainTrees.ClearTerrainTrees(root.terrain);
-            int planted=GeoTerrainTrees.Plant(group,terrainTrees,settings.decorationSeed);
+            // with Nature Renderer chosen (and in the project) the trees are the terrain's own, and Nature Renderer draws them
+            bool nature=settings.natureRenderer&&root.terrain&&GeoNatureRendererTrees.Installed;
+            if(settings.natureRenderer&&!nature&&terrainTrees.Count>0)notes.Add("Nature Renderer is not in this project: the trees are drawn without it.");
+            if(root.terrain&&!nature)GeoNatureRendererTrees.Remove(root.terrain);
+            int planted;
+            if(custom.Length>0&&root.terrain)
+            {
+                // your prefabs as the terrain's trees: Unity's terrain draws them, or Nature Renderer
+                planted=GeoTerrainTrees.PlantCustom(root.terrain,terrainTrees,settings.decorationSeed,custom);
+                if(nature&&planted>0){GeoNatureRendererTrees.Prepare(root.terrain);GeoNatureRendererTrees.CheckPrefabs(custom,notes);}
+                else root.terrain.drawTreesAndFoliage=true;
+            }
+            else planted=nature?GeoNatureRendererTrees.Plant(root.terrain,terrainTrees,settings.decorationSeed):GeoTerrainTrees.Plant(group,terrainTrees,settings.decorationSeed);
             root.propCount+=planted;root.treeCount+=planted;
             int bakedChunks=0;
             if(toBake.Count>0)
@@ -81,7 +105,8 @@ namespace GeoWorld.Editor
                 root.propCount+=toBake.Count;root.treeCount+=toBake.Count(p=>p.kind=="tree");
             }
             notes.Add(root.propCount+" props / vegetation ("+prefabCount+" prefab instances, "+previewCount+" preview models, "+toBake.Count+" baked into "+bakedChunks+
-                " chunks, "+planted+" instanced trees, "+kept.Length+" kept edits). Mapped locations do not imply surveyed appearance; generated trees are labeled.");
+                " chunks, "+planted+(custom.Length>0?" terrain trees from "+custom.Length+" tree prefabs"+(nature?" drawn by Nature Renderer, ":", "):
+                nature?" terrain trees drawn by Nature Renderer, ":" instanced trees, ")+kept.Length+" kept edits). Mapped locations do not imply surveyed appearance; generated trees are labeled.");
         }
 
         public static void Rebuild(GeoWorldRoot world)

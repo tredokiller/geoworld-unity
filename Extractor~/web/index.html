@@ -26,14 +26,13 @@
       <ul id="search-results"></ul>
     </section>
 
-    <section id="references-section" class="references-section" aria-labelledby="references-heading">
-      <div class="row between"><h2 id="references-heading">Photo references</h2><span id="reference-count" class="reference-badge">Lyman</span></div>
-      <p id="reference-intro" class="hint">Loading the Lyman reference collection…</p>
+    <section id="references-section" class="references-section" aria-labelledby="references-heading" hidden>
+      <div class="row between"><h2 id="references-heading">Photo references</h2><span id="reference-count" class="reference-badge"></span></div>
+      <p id="reference-intro" class="hint">Loading the photo references…</p>
       <div class="row">
-        <button id="reference-explore" type="button" class="primary grow" disabled>Explore Lyman</button>
         <button id="reference-toggle" type="button" class="ghost small" aria-pressed="true" disabled>Hide points</button>
       </div>
-      <div id="reference-list" class="reference-list" aria-label="Lyman reference photos"></div>
+      <div id="reference-list" class="reference-list" aria-label="Reference photos"></div>
       <details id="reference-coverage"><summary>Imagery coverage &amp; dates</summary><div id="reference-coverage-list"></div></details>
       <p id="reference-guidance" class="hint">Review visible details, then link them to a building or place an object on the map.</p>
       <div class="reference-actions">
@@ -47,7 +46,7 @@
         <p class="hint">Use a north-up Web Mercator image export that you own or may use to derive building data. Supply its outer geographic bounds. An ordinary unaligned screenshot or an image in another projection will not match footprints.</p>
         <form id="overhead-import-form" class="reference-form">
           <label class="field">Image file<input id="overhead-file" type="file" accept="image/png,image/jpeg" required></label>
-          <label class="field">Image title<input id="overhead-title" maxlength="160" placeholder="Lyman aerial reference" required></label>
+          <label class="field">Image title<input id="overhead-title" maxlength="160" placeholder="Aerial reference" required></label>
           <label class="field">Image projection<select id="overhead-crs" required><option value="EPSG:3857">Web Mercator (EPSG:3857), north-up</option></select></label>
           <div class="reference-building-fields">
             <label class="field">North latitude<input id="overhead-north" type="number" step="any" min="-85" max="85" required></label>
@@ -281,7 +280,7 @@
   </div>
   <dialog id="reference-dialog" class="reference-dialog" aria-labelledby="reference-title">
     <div class="reference-dialog-heading">
-      <div><span id="reference-eyebrow" class="reference-eyebrow">Lyman · historical reference</span><h2 id="reference-title"></h2></div>
+      <div><span id="reference-eyebrow" class="reference-eyebrow">Historical reference</span><h2 id="reference-title"></h2></div>
       <button id="reference-close" type="button" class="ghost" aria-label="Close photo reference">Close</button>
     </div>
     <div class="reference-dialog-body">
@@ -325,7 +324,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
   <script src="app.js"></script>
   <script src="roof-colour.js"></script>
-  <script src="references.js"></script>
   <script src="condition.js"></script>
 </body>
 </html>

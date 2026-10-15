@@ -401,6 +401,21 @@ a fence or wall is built in real metres in 8 m pieces. They share the buildings'
 colliders and no Geo Placed Prop objects; props from a prop catalog or from photo references stay objects.
 Rebuild props and vegetation replaces the baked chunks.
 
+TREES: YOUR PREFABS AND NATURE RENDERER
+Tree Prefabs (Advanced settings, Props): your own trees, a LOD Group or a Mesh Renderer on the prefab's root and the
+pivot on the ground. Each tree takes one of them (always the same for the same tree) and is scaled, proportions kept,
+to its mapped or generated height, from half to twice the prefab's own size. In a merged world they are the
+terrain's own trees (paint more with the terrain's tree brush), drawn by Unity's terrain; in an editable world each
+tree is a copy of its prefab. Empty: Geo World's low-poly tree, drawn as GPU instances.
+Trees With Nature Renderer (a switch in the Geo World window, and in the Inspector, only where the project has
+Nature Renderer by Visual Design Cafe; Geo World does not depend on it): the trees are the terrain's own and Nature
+Renderer draws them, with its GPU culling, distances and LOD. The terrain gets the Nature Renderer component and a
+detail map (Nature Renderer does not start on a terrain without one; Geo World paints no grass). Nature Renderer
+only draws materials whose shader has its procedural instancing: Geo World writes such a copy of its tree shader and
+the tree prefabs that use it into Assets/GeoWorld/Nature Renderer; for your prefabs the report names the materials
+Nature Renderer cannot draw (right-click their shader, Nature Renderer > Patch Shader, and use the patched copy, or
+its Shader Graph node). Nature Renderer is licensed per seat and is not part of Geo World.
+
 FILES
 Runtime/: saved scene components and the preview camera.
 Editor/: JSON reader, terrain/mesh generation, import window, path handles and demo.

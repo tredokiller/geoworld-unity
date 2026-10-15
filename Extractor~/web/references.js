@@ -117,7 +117,6 @@
     const pointCount = catalog.photos.filter(hasPosition).length;
     $('reference-count').textContent = `${count} photos · ${pointCount} points`;
     $('reference-intro').textContent = `${count} photo references; ${pointCount} have map locations. Images without coordinates remain in the gallery.`;
-    $('reference-explore').disabled = false;
     $('reference-toggle').disabled = !pointCount && !catalog.observations.some(item => item.placement?.mode === 'point');
     $('reference-download').hidden = !count;
     const list = $('reference-list');
@@ -176,12 +175,6 @@
     }
   }
 
-  function boundsOfArea() {
-    const bounds = catalog && catalog.area && catalog.area.bounds;
-    if (Array.isArray(bounds) && bounds.length === 4 && bounds.every(Number.isFinite)) return [[bounds[1], bounds[0]], [bounds[3], bounds[2]]];
-    return bounds;
-  }
-
   function openPhoto(photo) {
     if (selectedPhoto?.id !== photo.id) { roofCandidate = null; roofSampleVersion++; }
     selectedPhoto = photo;
@@ -200,7 +193,7 @@
   function renderPhoto() {
     const photo = selectedPhoto;
     $('reference-title').textContent = photo.title;
-    $('reference-eyebrow').textContent = isOverhead(photo) ? 'Lyman · imported overhead image' : 'Lyman · historical reference';
+    $('reference-eyebrow').textContent = isOverhead(photo) ? 'Imported overhead image' : 'Historical reference';
     $('reference-position-guidance').textContent = isOverhead(photo)
       ? 'The map point marks the image extent centre, not a camera. Check image alignment, capture date and roof visibility before accepting any sampled colour. Roof shape is reviewed separately.'
       : 'Photo points are reference locations. The exact camera and object positions are not established. Photos without coordinates stay unplaced.';
@@ -648,12 +641,6 @@
     finally { mutating = false; updateEnrichmentButton(); }
   }
 
-  $('reference-explore').addEventListener('click', () => {
-    const bounds = boundsOfArea();
-    if (bounds) map.fitBounds(bounds, { padding: [45, 45], maxZoom: 15 });
-    else if (catalog.area.center) map.setView([catalog.area.center.lat, catalog.area.center.lon], 14);
-    setStatus('Purple numbered points are photo references. Open a photo to review its visible details.');
-  });
   $('reference-toggle').addEventListener('click', () => {
     pointsVisible = !pointsVisible;
     for (const layer of [photoLayer, observationLayer]) pointsVisible ? layer.addTo(map) : layer.remove();
@@ -692,7 +679,7 @@
   updateTypes();
   updatePackageLink(store.get('last-result', null));
   loadCatalog().catch(error => {
-    $('reference-intro').textContent = 'The Lyman photo collection could not be loaded.';
+    $('reference-intro').textContent = 'The photo references could not be loaded.';
     setStatus(error.message, true);
   });
 })();

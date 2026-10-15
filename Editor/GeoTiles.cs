@@ -558,8 +558,10 @@ namespace GeoWorld.Editor
         public string Hash(GeoBounds core, GenerationSettings settings)
         {
             var copy = JsonUtility.FromJson<GenerationSettings>(JsonUtility.ToJson(settings));
-            string libraries = Guid(copy.ruinLibrary) + "|" + Guid(copy.homeLibrary) + "|" + Guid(copy.propCatalog);
-            copy.ruinLibrary = null; copy.homeLibrary = null; copy.propCatalog = null;
+            // assets by their GUIDs (in the JSON they would be instance IDs, new in every editor session)
+            string libraries = Guid(copy.ruinLibrary) + "|" + Guid(copy.homeLibrary) + "|" + Guid(copy.propCatalog) + "|" +
+                               string.Join(",", (copy.treePrefabs ?? new GameObject[0]).Select(p => Guid(p)));
+            copy.ruinLibrary = null; copy.homeLibrary = null; copy.propCatalog = null; copy.treePrefabs = null;
             string text = string.Join("|", GeoTiles.Version, files, JsonUtility.ToJson(copy), libraries,
                 core.minX.ToString("R"), core.minZ.ToString("R"), tileSize.ToString("R"), baseY.ToString("R"), range.ToString("R"));
             using (var md5 = MD5.Create()) return BitConverter.ToString(md5.ComputeHash(Encoding.UTF8.GetBytes(text))).Replace("-", "");

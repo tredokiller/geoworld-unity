@@ -13,7 +13,7 @@ using UnityEngine.UIElements;
 namespace GeoWorld.Editor
 {
     // The Geo World window: pick an export of the Building Extractor app (a picture of the area, its size, roads,
-    // buildings and damage), choose tiles or one world and four switches, and generate; every other setting is under
+    // buildings and damage), choose tiles or one world and four switches (five where the project has Nature Renderer), and generate; every other setting is under
     // Advanced settings. The header shows the package's version and, when a newer one exists, an Update button.
     public class GeoWorldWindow : EditorWindow
     {
@@ -137,6 +137,10 @@ namespace GeoWorld.Editor
                 () => settings.roadMeshes, v => settings.roadMeshes = v));
             worldCard.Add(Option("Trees and vegetation", "Mapped trees, tree rows and green areas",
                 () => settings.trees && settings.vegetation, v => { settings.trees = v; settings.vegetation = v; }));
+            // only where the project has Nature Renderer: Geo World does not depend on it
+            if (GeoNatureRendererTrees.Installed)
+                worldCard.Add(Option("Trees with Nature Renderer", "Trees on the terrain, drawn by Nature Renderer; paint more with the terrain's tree brush",
+                    () => settings.natureRenderer, v => settings.natureRenderer = v));
             var advanced = new Foldout { text = "Advanced settings", value = false };
             advanced.AddToClassList("gw-advanced");
             advanced.Add(new IMGUIContainer(DrawAdvanced));
@@ -409,12 +413,14 @@ namespace GeoWorld.Editor
                 settings.ruinLibrary = (GeoRuinLibrary)EditorGUILayout.ObjectField("Ruin library", settings.ruinLibrary, typeof(GeoRuinLibrary), false);
                 settings.homeLibrary = (GeoHomeLibrary)EditorGUILayout.ObjectField("Home library", settings.homeLibrary, typeof(GeoHomeLibrary), false);
             }
+            Section("Trees");
+            DrawTreePrefabs();
+            settings.treeSpacing = EditorGUILayout.Slider("Tree spacing (m)", settings.treeSpacing, 3, 25);
+            settings.vegetationDensity = EditorGUILayout.Slider("Vegetation density", settings.vegetationDensity, 0, 1);
             Section("Props");
             settings.mappedProps = EditorGUILayout.Toggle("Mapped street props, fences", settings.mappedProps);
             settings.streetDecoration = EditorGUILayout.Toggle("Generated street decoration", settings.streetDecoration);
             settings.propCatalog = (GeoPropCatalog)EditorGUILayout.ObjectField("Prop prefab catalog", settings.propCatalog, typeof(GeoPropCatalog), false);
-            settings.treeSpacing = EditorGUILayout.Slider("Tree spacing (m)", settings.treeSpacing, 3, 25);
-            settings.vegetationDensity = EditorGUILayout.Slider("Vegetation density", settings.vegetationDensity, 0, 1);
             settings.decorationSeed = EditorGUILayout.IntField("Decoration seed", settings.decorationSeed);
             settings.maxProps = EditorGUILayout.IntSlider("Maximum props", settings.maxProps, 100, 200000);
             settings.mergeProps = EditorGUILayout.Toggle("Bake props in a merged city", settings.mergeProps);
@@ -424,6 +430,97 @@ namespace GeoWorld.Editor
                 settings = GeoDefaults.Settings();
                 EditorApplication.delayCall += () => { rootVisualElement.Clear(); CreateGUI(); };
             }
+        }
+
+        // Your tree prefabs as a list: a picture of each with its height, or what keeps it from being a tree; + and -,
+        // dragging to reorder, and prefabs dropped from the Project window are added. Empty: Geo World's own tree.
+        UnityEditorInternal.ReorderableList treeList;
+        List<GameObject> treeItems;
+        GameObject[] treeSource;
+        readonly Dictionary<GameObject, (string text, bool problem)> treeInfo = new Dictionary<GameObject, (string, bool)>();
+        bool treeInfoNature;
+        const float TreeRow = 46, TreePicture = 40;
+
+        void DrawTreePrefabs()
+        {
+            if (treeList == null || treeSource != settings.treePrefabs)
+            {
+                treeItems = new List<GameObject>(settings.treePrefabs ?? new GameObject[0]);
+                treeSource = settings.treePrefabs;
+                treeList = new UnityEditorInternal.ReorderableList(treeItems, typeof(GameObject), true, true, true, true) { elementHeight = TreeRow };
+                treeList.drawHeaderCallback = rect => EditorGUI.LabelField(rect, new GUIContent("Tree prefabs" + (treeItems.Count > 0 ? "  ·  " + treeItems.Count(p => p) : ""),
+                    "Your own trees: each tree takes one of them (always the same one) and is scaled to its mapped or generated height, from half to twice the prefab's own size."));
+                treeList.drawNoneElementCallback = rect => EditorGUI.LabelField(rect, "Geo World's low-poly tree. Drop tree prefabs here, or press +.", EditorStyles.wordWrappedMiniLabel);
+                treeList.drawElementCallback = DrawTreeItem;
+                treeList.onAddCallback = list => treeItems.Add(null);
+                treeList.onChangedCallback = list => ApplyTreeItems();
+            }
+            treeList.DoLayoutList();
+            // prefabs dragged from the Project window onto the list
+            var area = GUILayoutUtility.GetLastRect();
+            var e = Event.current;
+            if ((e.type == EventType.DragUpdated || e.type == EventType.DragPerform) && area.Contains(e.mousePosition))
+            {
+                var dropped = DragAndDrop.objectReferences.OfType<GameObject>().Where(EditorUtility.IsPersistent).ToList();
+                if (dropped.Count == 0) return;
+                DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
+                if (e.type == EventType.DragPerform)
+                {
+                    DragAndDrop.AcceptDrag();
+                    foreach (var prefab in dropped) if (!treeItems.Contains(prefab)) treeItems.Add(prefab);
+                    ApplyTreeItems();
+                }
+                e.Use();
+            }
+        }
+
+        void ApplyTreeItems()
+        {
+            // empty rows (just added) stay in the list until a prefab is picked
+            settings.treePrefabs = treeItems.Where(p => p).Distinct().ToArray();
+            treeSource = settings.treePrefabs;
+        }
+
+        void DrawTreeItem(Rect rect, int index, bool active, bool focused)
+        {
+            var prefab = treeItems[index];
+            var picture = new Rect(rect.x, rect.y + (TreeRow - TreePicture) / 2, TreePicture, TreePicture);
+            var image = prefab ? AssetPreview.GetAssetPreview(prefab) ?? AssetPreview.GetMiniThumbnail(prefab) : null;
+            if (prefab && AssetPreview.IsLoadingAssetPreview(prefab.GetInstanceID())) Repaint();
+            EditorGUI.DrawRect(picture, EditorGUIUtility.isProSkin ? new Color(1, 1, 1, 0.05f) : new Color(0, 0, 0, 0.06f));
+            if (image) GUI.DrawTexture(picture, image, ScaleMode.ScaleToFit);
+            float x = picture.xMax + 8, line = EditorGUIUtility.singleLineHeight;
+            var field = new Rect(x, rect.y + 4, rect.xMax - x, line);
+            var picked = (GameObject)EditorGUI.ObjectField(field, prefab, typeof(GameObject), false);
+            if (picked != prefab) { treeItems[index] = picked; ApplyTreeItems(); }
+            var (text, problem) = Describe(picked);
+            var style = new GUIStyle(EditorStyles.miniLabel);
+            if (problem) style.normal.textColor = EditorGUIUtility.isProSkin ? new Color(1f, 0.72f, 0.3f) : new Color(0.75f, 0.4f, 0f);
+            EditorGUI.LabelField(new Rect(x, field.yMax + 3, field.width, line), new GUIContent(text, text), style);
+        }
+
+        // A line on a prefab: its height and kind, or what keeps it from being a tree (here, or for Nature Renderer).
+        (string text, bool problem) Describe(GameObject prefab)
+        {
+            if (!prefab) return ("Pick a prefab, or drop one here", false);
+            bool nature = settings.natureRenderer && GeoNatureRendererTrees.Installed;
+            if (nature != treeInfoNature) { treeInfo.Clear(); treeInfoNature = nature; }
+            if (treeInfo.TryGetValue(prefab, out var known)) return known;
+            (string, bool) info;
+            if (GeoTerrainTrees.Usable(new[] { prefab }, null).Length == 0)
+                info = ("Needs a LOD Group or a Mesh Renderer on its root", true);
+            else
+            {
+                var lods = prefab.GetComponent<LODGroup>();
+                string kind = lods ? lods.lodCount + (lods.lodCount == 1 ? " level of detail" : " levels of detail") : "no LOD Group";
+                var notes = new List<string>();
+                if (nature) GeoNatureRendererTrees.CheckPrefabs(new[] { prefab }, notes);
+                info = notes.Count > 0
+                    ? ("Nature Renderer can't draw some of its materials: patch their shader (right-click › Nature Renderer › Patch Shader)", true)
+                    : (GeoTerrainTrees.Height(prefab).ToString("0.#", CultureInfo.InvariantCulture) + " m tall  ·  " + kind, false);
+            }
+            treeInfo[prefab] = info;
+            return info;
         }
 
         static void Section(string title)

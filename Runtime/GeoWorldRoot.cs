@@ -64,6 +64,10 @@ namespace GeoWorld
         [Header("Props and vegetation")]
         public bool mappedProps = true;
         public bool vegetation = true;
+        [Tooltip("Where the project has Nature Renderer (Visual Design Cafe): the trees are the terrain's own trees, drawn by Nature Renderer, instead of Geo World's instanced trees. Ignored without it.")]
+        [GeoNatureRendererOnly] public bool natureRenderer = false;
+        [Tooltip("Your own tree prefabs (a LOD Group or a Mesh Renderer on the root, pivot on the ground). Each tree takes one of them and is scaled to its mapped or generated height (from half to twice the prefab's own size). They are the terrain's trees, drawn by Unity's terrain or by Nature Renderer. Empty: Geo World's low-poly tree.")]
+        public GameObject[] treePrefabs = new GameObject[0];
         [Tooltip("Invent plausible lamps near built-up roads and benches on park paths. These positions are labeled generated.")]
         public bool streetDecoration = false;
         public GeoPropCatalog propCatalog;

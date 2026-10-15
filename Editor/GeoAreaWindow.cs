@@ -12,7 +12,8 @@ namespace GeoWorld.Editor
     // New area: a map of Ukraine (satellite imagery with place names) to find a place (search, or pan and zoom) and draw
     // the area to extract with the Building Extractor app (GeoExtractor). The export lands in the exports folder the
     // Geo World window lists, ready to generate.
-    // Drag: move the map. Shift + drag (or Draw area): the area. Wheel: zoom.
+    // Drag: move the map. Shift + drag (or Draw area): the area. Drag a corner of the area: resize it. Wheel: zoom.
+    // An area is at most MaxKm2 square kilometres, of any shape.
     public class GeoAreaWindow : EditorWindow
     {
         const string Imagery = "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
@@ -20,6 +21,9 @@ namespace GeoWorld.Editor
         const string Attribution = "Imagery © Esri, Maxar, Earthstar Geographics · Places © Esri · Search © OpenStreetMap";
         const int TileSize = 256, MinZoom = 5, MaxZoom = 18;
         const double LargeKm2 = 60, RadarKm2 = 250;
+        public const double MaxKm2 = 100;
+        const float Handle = 12, HandleReach = 9;
+        static readonly Color AreaLine = new Color(0.45f, 0.68f, 1f), AtLimit = new Color(1f, 0.66f, 0.25f);
 
         [SerializeField] double centerLat = 48.6, centerLon = 31.3;
         [SerializeField] int zoom = 6;
@@ -30,8 +34,11 @@ namespace GeoWorld.Editor
         [SerializeField] string search = "";
 
         bool drawMode, dragging, drawing;
-        Vector2 dragStart, drawStart;
+        Vector2 dragStart;
         double dragLat, dragLon;
+        // drawing or resizing: the corner that stays (the start of the drag, or the corner across from the one dragged)
+        double anchorLat, anchorLon;
+        int resizing = -1;
         List<(string name, double s, double w, double n, double e)> results;
         UnityWebRequest searching;
 
@@ -81,10 +88,59 @@ namespace GeoWorld.Editor
             return ((e - w) * 111.32 * Math.Cos(middle), (n - s) * 111.32);
         }
 
+        // The corner at (lat, lon), moved towards the anchor along the drag so that the area between them is at most
+        // maxKm2 (as SizeKm measures it): the area keeps the shape of the drag and stops growing.
+        public static (double lat, double lon) Limit(double anchorLat, double anchorLon, double lat, double lon, double maxKm2 = MaxKm2)
+        {
+            double dLat = lat - anchorLat, dLon = lon - anchorLon;
+            double Km2()
+            {
+                var (width, height) = SizeKm(Math.Min(anchorLat, anchorLat + dLat), Math.Min(anchorLon, anchorLon + dLon),
+                                             Math.Max(anchorLat, anchorLat + dLat), Math.Max(anchorLon, anchorLon + dLon));
+                return Math.Abs(width * height);
+            }
+            if (Km2() <= maxKm2) return (lat, lon);
+            // the width depends a little on the middle latitude, which moves with the corner: a few rounds settle it
+            for (int round = 0; round < 5; round++)
+            {
+                double scale = Math.Sqrt(maxKm2 / Km2());
+                dLat *= scale; dLon *= scale;
+            }
+            return (anchorLat + dLat, anchorLon + dLon);
+        }
+
+        // the area's corners on the map: north-west, north-east, south-east, south-west
+        Vector2[] Corners(Rect map)
+        {
+            double left = WorldX(centerLon, zoom) - map.width / 2, top = WorldY(centerLat, zoom) - map.height / 2;
+            float x0 = (float)(WorldX(west, zoom) - left) + map.x, x1 = (float)(WorldX(east, zoom) - left) + map.x;
+            float y0 = (float)(WorldY(north, zoom) - top) + map.y, y1 = (float)(WorldY(south, zoom) - top) + map.y;
+            return new[] { new Vector2(x0, y0), new Vector2(x1, y0), new Vector2(x1, y1), new Vector2(x0, y1) };
+        }
+
+        (double lat, double lon) Corner(int i) => (i < 2 ? north : south, i == 0 || i == 3 ? west : east);
+
+        // the area from the anchor to the point under the mouse, at most MaxKm2
+        void Stretch(Rect map, Vector2 mouse)
+        {
+            double left = WorldX(centerLon, zoom) - map.width / 2, top = WorldY(centerLat, zoom) - map.height / 2;
+            var (lat, lon) = Limit(anchorLat, anchorLon, Lat(top + mouse.y - map.y, zoom), Lon(left + mouse.x - map.x, zoom));
+            south = Math.Min(anchorLat, lat); north = Math.Max(anchorLat, lat);
+            west = Math.Min(anchorLon, lon); east = Math.Max(anchorLon, lon);
+        }
+
+        bool TooLarge()
+        {
+            var (w, h) = SizeKm(south, west, north, east);
+            return w * h > MaxKm2 + 0.05;
+        }
+
         // ---------------------------------------------------------------- drawing
 
         void OnGUI()
         {
+            wantsMouseMove = true; // the button and the corners change under the mouse
+            if (Event.current.type == EventType.MouseMove) Repaint();
             DrawToolbar();
             var panel = 116f;
             var map = new Rect(0, 24, position.width, Mathf.Max(100, position.height - 24 - panel));
@@ -101,11 +157,34 @@ namespace GeoWorld.Editor
             bool enter = Event.current.type == EventType.KeyDown && Event.current.keyCode == KeyCode.Return && GUI.GetNameOfFocusedControl() == "search";
             if (GUILayout.Button("Find", EditorStyles.toolbarButton, GUILayout.Width(44)) || enter) Search();
             GUILayout.FlexibleSpace();
-            drawMode = GUILayout.Toggle(drawMode, new GUIContent("Draw area", "Drag on the map to draw the area (or hold Shift while dragging)"), EditorStyles.toolbarButton, GUILayout.Width(80));
+            var drawButton = GUILayoutUtility.GetRect(92, 18, GUILayout.Width(92), GUILayout.Height(18));
+            drawButton.y += 1;
+            drawMode = AccentToggle(drawButton, drawMode, drawMode ? "Drawing…" : "Draw area",
+                drawMode ? "Drag on the map to draw the area; press again to stop" : "Drag on the map to draw the area (or hold Shift while dragging)");
+            GUILayout.Space(4);
             using (new EditorGUI.DisabledScope(!hasArea))
                 if (GUILayout.Button("Clear", EditorStyles.toolbarButton, GUILayout.Width(48))) hasArea = false;
             if (GUILayout.Button("Ukraine", EditorStyles.toolbarButton, GUILayout.Width(58))) { centerLat = 48.6; centerLon = 31.3; zoom = 6; }
             GUILayout.EndHorizontal();
+        }
+
+        // The Geo World window's blue button (gw-accent: #3d7eff, lighter under the mouse) as a toggle: darker while on.
+        static readonly Color Accent = new Color32(0x3d, 0x7e, 0xff, 0xff), AccentHover = new Color32(0x55, 0x90, 0xff, 0xff),
+                              AccentOn = new Color32(0x2c, 0x62, 0xd4, 0xff);
+        static GUIStyle accentText;
+
+        static bool AccentToggle(Rect rect, bool on, string text, string tooltip)
+        {
+            accentText ??= new GUIStyle(EditorStyles.boldLabel) { alignment = TextAnchor.MiddleCenter, fontSize = 11, normal = { textColor = Color.white } };
+            if (Event.current.type == EventType.Repaint)
+            {
+                var color = on ? AccentOn : rect.Contains(Event.current.mousePosition) ? AccentHover : Accent;
+                GUI.DrawTexture(rect, Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, color, 0, 6);
+                accentText.Draw(rect, text, false, false, false, false);
+            }
+            EditorGUIUtility.AddCursorRect(rect, MouseCursor.Link);
+            if (GUI.Button(rect, new GUIContent("", tooltip), GUIStyle.none)) on = !on;
+            return on;
         }
 
         void DrawMap(Rect map)
@@ -127,18 +206,18 @@ namespace GeoWorld.Editor
                             var texture = Tile(layer, zoom, ((tx % count) + count) % count, ty);
                             if (texture) GUI.DrawTexture(rect, texture);
                         }
-                if (hasArea)
-                {
-                    var area = Rect.MinMaxRect((float)(WorldX(west, zoom) - left), (float)(WorldY(north, zoom) - top),
-                                               (float)(WorldX(east, zoom) - left), (float)(WorldY(south, zoom) - top));
-                    EditorGUI.DrawRect(area, new Color(0.24f, 0.5f, 1f, 0.18f));
-                    Handles.BeginGUI();
-                    Handles.color = new Color(0.45f, 0.68f, 1f);
-                    Handles.DrawAAPolyLine(3, new Vector3(area.xMin, area.yMin), new Vector3(area.xMax, area.yMin), new Vector3(area.xMax, area.yMax),
-                                           new Vector3(area.xMin, area.yMax), new Vector3(area.xMin, area.yMin));
-                    Handles.EndGUI();
-                }
+                if (hasArea) DrawArea(map);
                 GUI.EndClip();
+            }
+            // the corners show that they can be dragged
+            if (hasArea && !drawMode)
+            {
+                var corners = Corners(map);
+                for (int i = 0; i < 4; i++)
+                {
+                    var handle = new Rect(corners[i].x - HandleReach, corners[i].y - HandleReach, HandleReach * 2, HandleReach * 2);
+                    if (map.Overlaps(handle)) EditorGUIUtility.AddCursorRect(handle, i % 2 == 0 ? MouseCursor.ResizeUpLeft : MouseCursor.ResizeUpRight);
+                }
             }
             var note = new GUIStyle(EditorStyles.miniLabel) { alignment = TextAnchor.LowerRight, normal = { textColor = new Color(1, 1, 1, 0.75f) } };
             GUI.Label(new Rect(map.x, map.yMax - 18, map.width - 6, 16), Attribution, note);
@@ -150,10 +229,56 @@ namespace GeoWorld.Editor
             }
         }
 
+        // The area (inside the map's clip): its outline, a handle on each corner and its size; orange at the size limit.
+        void DrawArea(Rect map)
+        {
+            var corners = Corners(map);
+            for (int i = 0; i < 4; i++) corners[i] -= map.position;
+            var area = Rect.MinMaxRect(corners[0].x, corners[0].y, corners[2].x, corners[2].y);
+            var (w, h) = SizeKm(south, west, north, east);
+            bool limit = w * h > MaxKm2 - 0.5;
+            var line = limit ? AtLimit : AreaLine;
+            EditorGUI.DrawRect(area, new Color(line.r, line.g, line.b, 0.16f));
+            Handles.BeginGUI();
+            Handles.color = line;
+            Handles.DrawAAPolyLine(3, corners[0], corners[1], corners[2], corners[3], corners[0]);
+            Handles.EndGUI();
+            foreach (var corner in corners)
+            {
+                var outer = new Rect(corner.x - Handle / 2, corner.y - Handle / 2, Handle, Handle);
+                EditorGUI.DrawRect(outer, line);
+                EditorGUI.DrawRect(new Rect(outer.x + 2, outer.y + 2, Handle - 4, Handle - 4), Color.white);
+            }
+            string size = w.ToString("0.0", CultureInfo.InvariantCulture) + " × " + h.ToString("0.0", CultureInfo.InvariantCulture) + " km  ·  " +
+                          (w * h).ToString("0", CultureInfo.InvariantCulture) + " km²" +
+                          (limit ? " (at most " + MaxKm2.ToString("0", CultureInfo.InvariantCulture) + ")" : "");
+            var style = new GUIStyle(EditorStyles.miniBoldLabel) { normal = { textColor = Color.white }, padding = new RectOffset(5, 5, 1, 1) };
+            var content = new GUIContent(size);
+            var box = style.CalcSize(content);
+            // above the area, or inside it at the top of the map
+            var label = new Rect(area.x, area.y - box.y - Handle / 2 - 2, box.x, box.y);
+            if (label.y < 2) label.y = area.y + Handle / 2 + 2;
+            EditorGUI.DrawRect(label, new Color(0, 0, 0, 0.6f));
+            GUI.Label(label, content, style);
+        }
+
+        // the corner of the area under the mouse (its handle), or -1
+        int HitCorner(Rect map, Vector2 mouse)
+        {
+            var corners = Corners(map);
+            int hit = -1; float nearest = HandleReach;
+            for (int i = 0; i < 4; i++)
+            {
+                float d = Mathf.Max(Mathf.Abs(corners[i].x - mouse.x), Mathf.Abs(corners[i].y - mouse.y));
+                if (d <= nearest) { hit = i; nearest = d; }
+            }
+            return hit;
+        }
+
         void HandleMap(Rect map)
         {
             var e = Event.current;
-            if (!map.Contains(e.mousePosition) && !dragging && !drawing) return;
+            if (!map.Contains(e.mousePosition) && !dragging && !drawing && resizing < 0) return;
             double left = WorldX(centerLon, zoom) - map.width / 2, top = WorldY(centerLat, zoom) - map.height / 2;
             switch (e.type)
             {
@@ -173,8 +298,23 @@ namespace GeoWorld.Editor
                     break;
                 }
                 case EventType.MouseDown when e.button == 0:
-                    if (drawMode || e.shift) { drawing = true; drawStart = e.mousePosition; }
+                {
+                    int corner = hasArea && !drawMode ? HitCorner(map, e.mousePosition) : -1;
+                    if (corner >= 0) { resizing = corner; (anchorLat, anchorLon) = Corner((corner + 2) % 4); }
+                    else if (drawMode || e.shift)
+                    {
+                        drawing = true; dragStart = e.mousePosition;
+                        anchorLat = Lat(top + e.mousePosition.y - map.y, zoom); anchorLon = Lon(left + e.mousePosition.x - map.x, zoom);
+                    }
                     else { dragging = true; dragStart = e.mousePosition; dragLat = centerLat; dragLon = centerLon; }
+                    e.Use();
+                    break;
+                }
+                case EventType.MouseDrag when resizing >= 0:
+                case EventType.MouseUp when resizing >= 0:
+                    // the corner across from the dragged one stays
+                    Stretch(map, e.mousePosition);
+                    if (e.type == EventType.MouseUp) resizing = -1;
                     e.Use();
                     break;
                 case EventType.MouseDrag when dragging:
@@ -187,19 +327,10 @@ namespace GeoWorld.Editor
                 }
                 case EventType.MouseDrag when drawing:
                 case EventType.MouseUp when drawing:
-                {
-                    var a = drawStart; var b = e.mousePosition;
-                    if (Vector2.Distance(a, b) > 4)
-                    {
-                        double ax = left + a.x - map.x, ay = top + a.y - map.y, bx = left + b.x - map.x, by = top + b.y - map.y;
-                        west = Lon(Math.Min(ax, bx), zoom); east = Lon(Math.Max(ax, bx), zoom);
-                        north = Lat(Math.Min(ay, by), zoom); south = Lat(Math.Max(ay, by), zoom);
-                        hasArea = true;
-                    }
+                    if (Vector2.Distance(dragStart, e.mousePosition) > 4) { Stretch(map, e.mousePosition); hasArea = true; }
                     if (e.type == EventType.MouseUp) { drawing = false; drawMode = false; }
                     e.Use();
                     break;
-                }
                 case EventType.MouseUp when dragging:
                     dragging = false;
                     e.Use();
@@ -243,14 +374,18 @@ namespace GeoWorld.Editor
                 {
                     var (w, h) = SizeKm(south, west, north, east);
                     double km2 = w * h;
+                    bool tooLarge = TooLarge();
+                    var sizeStyle = new GUIStyle(EditorStyles.miniLabel);
+                    if (tooLarge) sizeStyle.normal.textColor = AtLimit;
                     GUILayout.Label($"Area {w.ToString("0.0", CultureInfo.InvariantCulture)} × {h.ToString("0.0", CultureInfo.InvariantCulture)} km  ·  {km2.ToString("0.0", CultureInfo.InvariantCulture)} km²" +
-                                    (km2 > LargeKm2 ? "  ·  large: extracting takes a while" : ""), EditorStyles.miniLabel);
+                                    (tooLarge ? $"  ·  too large: at most {MaxKm2:0} km², drag a corner in"
+                                        : (km2 > LargeKm2 ? "  ·  large: extracting takes a while" : "") + "  ·  drag a corner to change it"), sizeStyle);
                     GUILayout.BeginHorizontal();
                     areaName = EditorGUILayout.TextField("Name", areaName);
                     using (new EditorGUI.DisabledScope(km2 > RadarKm2))
                         radar = GUILayout.Toggle(radar && km2 <= RadarKm2, new GUIContent(" Damage from radar", km2 > RadarKm2
                             ? "Radar estimates take at most " + RadarKm2 + " km²: draw a smaller area" : "Estimates which buildings are damaged (Sentinel-1); a few minutes the first time"), GUILayout.Width(150));
-                    using (new EditorGUI.DisabledScope(!GeoExtractor.Available || string.IsNullOrWhiteSpace(areaName)))
+                    using (new EditorGUI.DisabledScope(!GeoExtractor.Available || string.IsNullOrWhiteSpace(areaName) || tooLarge))
                         if (GUILayout.Button("Extract", GUILayout.Width(90), GUILayout.Height(20))) Extract();
                     GUILayout.EndHorizontal();
                 }

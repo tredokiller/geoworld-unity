@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.0
+
+- Tree prefabs (Advanced settings > Trees): your own trees, each scaled to its mapped or generated height; the terrain's own trees in a merged world (drawn by Unity's terrain, paintable with its tree brush), a copy per tree in an editable one; drop prefabs on the list
+- Trees with Nature Renderer: a switch shown only where the project has Nature Renderer (Visual Design Cafe, not included); it then draws the trees with its GPU culling and LOD, and the report names materials of your prefabs it cannot draw
+- New area: drag the corners of the area to resize it; an area is at most 100 km² of any shape; Draw area is a blue button
+- Generate a world again to rebuild its tiles with this version
+
 ## 1.4.2
 
 - The terrain casts no shadows by default: 3-6 ms less a frame in a city, no visible change (buildings and trees still cast theirs on the ground)
