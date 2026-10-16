@@ -241,6 +241,9 @@ once for the whole export; every tile is built with a 96 m margin on a height gr
 neighbours have the same ground at their common edge (Unity stitches the terrains: one grouping ID).
 Roads, junctions and markings are cut where tiles meet; a building, tree or prop belongs to the tile its
 centre is on. Memory stays flat however many tiles there are.
+The tile streamer reads up to Loads At Once tiles in the background and switches them on one at a time (a tile's
+objects are set up in the frame it is switched on), the nearest first, Frames Between Tiles apart (3): two tiles no
+longer land in the same frame.
 A tiled world is a town or a city: Building Mode Auto merges its buildings and props in every tile (counted per
 tile, Auto kept a 1 km tile of apartment blocks editable: 15 000 objects and 7 500 mesh colliders, seconds to
 load). Editable still keeps one object per building where it is chosen. Ground roads, their markings and the
@@ -417,6 +420,10 @@ only draws materials whose shader has its procedural instancing: Geo World write
 the tree prefabs that use it into Assets/GeoWorld/Nature Renderer; for your prefabs the report names the materials
 Nature Renderer cannot draw (right-click their shader, Nature Renderer > Patch Shader, and use the patched copy, or
 its Shader Graph node). Nature Renderer is licensed per seat and is not part of Geo World.
+Nature Renderer sets itself up on a terrain the first frame after the terrain loads (30-50 ms), which landed in the
+frame the tile was switched on. In Play mode a tile's terrain (Geo Nature Renderer Start) holds it back and starts it
+two frames later, one terrain at least 8 frames after another: in the Forest flight the worst tile frame went from
+150-260 ms to 100-140 ms, as without Nature Renderer. Worlds made with an earlier version: Rebuild all tiles.
 
 FILES
 Runtime/: saved scene components and the preview camera.

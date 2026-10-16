@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.6.1
+
+- Nature Renderer starts on a terrain two frames after its tile is switched on, one terrain at a time (worst tile frame with it 154-257 ms to 102-140 ms); worlds made with Nature Renderer before: Rebuild all tiles
+- The tile streamer switches loaded tiles on one at a time, the nearest first, Frames Between Tiles apart (3), so two tiles no longer land in the same frame
+
 ## 1.6.0
 
 - Tiles load without editor freezes: a tiled world draws its ground roads one mesh per chunk and material (a Kharkiv tile 1 687 objects to 502; worst stall in a flight 962 ms to 163 ms); bridges, raised roads and rivers keep their objects

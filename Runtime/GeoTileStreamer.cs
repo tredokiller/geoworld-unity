@@ -6,8 +6,10 @@ namespace GeoWorld
 {
     // Keeps the tiles of a tiled world loaded around a point (the camera) while playing: tiles within Load Radius are
     // loaded (nearest first, a few at a time, in the background) and tiles beyond Unload Radius are unloaded, so only
-    // a few square kilometres are in memory and drawn however large the world is. A player build needs the tile scenes
-    // in the Build Settings (the tiled world's Inspector adds them); in the editor they load without.
+    // a few square kilometres are in memory and drawn however large the world is. A loaded tile is switched on (its
+    // objects set up, which takes a frame) one at a time, Frames Between Tiles apart, so two tiles never land in the same
+    // frame. A player build needs the tile scenes in the Build Settings (the tiled world's Inspector adds them); in the
+    // editor they load without.
     [DisallowMultipleComponent]
     public class GeoTileStreamer : MonoBehaviour
     {
@@ -19,10 +21,15 @@ namespace GeoWorld
         [Tooltip("Tiles further than this are unloaded (more than Load Radius, so a tile at the edge does not load and unload over and over).")]
         [Min(100)] public float unloadRadius = 2600;
         [Range(1, 8)] public int loadsAtOnce = 2;
+        [Tooltip("Frames between switching on two loaded tiles: a tile's objects are set up in the frame it is switched on, so two in one frame would cost twice.")]
+        [Range(0, 30)] public int framesBetweenTiles = 3;
 
         readonly Dictionary<string, AsyncOperation> loading = new Dictionary<string, AsyncOperation>();
         readonly Dictionary<string, AsyncOperation> unloading = new Dictionary<string, AsyncOperation>();
+        readonly Dictionary<string, Rect> areas = new Dictionary<string, Rect>();
         float next;
+        int lastSwitchedOn = -1000;
+        Vector3 at;
 
         // Tiles still loading or unloading, or wanted and not loaded yet.
         public bool Busy { get; private set; } = true;
@@ -30,11 +37,13 @@ namespace GeoWorld
 
         void Update()
         {
-            if (!world || Time.unscaledTime < next) return;
+            if (!world) return;
+            SwitchOn();
+            if (Time.unscaledTime < next) return;
             next = Time.unscaledTime + 0.2f;
             var follow = target ? target : Camera.main ? Camera.main.transform : null;
             if (!follow) return;
-            Vector3 at = follow.position;
+            at = follow.position;
             Finish(loading, true); Finish(unloading, false);
             var wanted = new List<GeoTiledWorld.Tile>();
             int loaded = 0;
@@ -54,10 +63,30 @@ namespace GeoWorld
             {
                 if (loading.Count >= loadsAtOnce) break;
                 var operation = Load(tile.scenePath);
-                if (operation != null) loading[tile.scenePath] = operation;
+                if (operation == null) continue;
+                operation.allowSceneActivation = false; // SwitchOn lets it in
+                loading[tile.scenePath] = operation;
+                areas[tile.scenePath] = tile.area;
             }
             LoadedTiles = loaded;
             Busy = loading.Count > 0 || unloading.Count > 0 || wanted.Count > 0;
+        }
+
+        // The nearest tile that is read and waiting is switched on, at most one every Frames Between Tiles frames.
+        void SwitchOn()
+        {
+            if (Time.frameCount - lastSwitchedOn < framesBetweenTiles) return;
+            string nearest = null; float distance = float.MaxValue;
+            foreach (var pair in loading)
+            {
+                var operation = pair.Value;
+                if (operation == null || operation.allowSceneActivation || operation.progress < 0.9f) continue;
+                float d = areas.TryGetValue(pair.Key, out var area) ? Distance(area, at) : 0;
+                if (d < distance) { distance = d; nearest = pair.Key; }
+            }
+            if (nearest == null) return;
+            loading[nearest].allowSceneActivation = true;
+            lastSwitchedOn = Time.frameCount;
         }
 
         static void Finish(Dictionary<string, AsyncOperation> operations, bool loaded)

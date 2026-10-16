@@ -63,7 +63,11 @@ namespace GeoWorld.Editor
                 data.SetDetailResolution(patches * 16, 16);
                 EditorUtility.SetDirty(data);
             }
-            if (!terrain.GetComponent(component)) terrain.gameObject.AddComponent(component);
+            var natureRenderer = terrain.GetComponent(component);
+            if (!natureRenderer) natureRenderer = terrain.gameObject.AddComponent(component);
+            // switched off for a moment while a tile loads (GeoNatureRendererStart): Unity's own tree drawing stays off
+            component.GetProperty("EnableUnityRendererWhenDisabled")?.SetValue(natureRenderer, false);
+            if (!terrain.GetComponent<GeoNatureRendererStart>()) terrain.gameObject.AddComponent<GeoNatureRendererStart>();
         }
 
         // Your tree prefabs' materials whose shader Nature Renderer cannot draw (it needs its procedural instancing),
@@ -85,7 +89,9 @@ namespace GeoWorld.Editor
         public static void Remove(Terrain terrain)
         {
             var component = Component;
-            if (component != null && terrain.GetComponent(component) is Object found) Object.DestroyImmediate(found);
+            if (component != null && terrain.GetComponent(component) is Object found && found) Object.DestroyImmediate(found);
+            var start = terrain.GetComponent<GeoNatureRendererStart>();
+            if (start) Object.DestroyImmediate(start);
         }
 
         // Can Nature Renderer draw the material? Its shader has procedural instancing (Nature Renderer's code adds the

@@ -100,7 +100,15 @@ namespace GeoWorld.Editor.Tests
             var trees = new List<PropPlacement> { new PropPlacement { id = "a", kind = "tree", position = new Vector3(500, 10, 500) } };
 
             Assert.That(GeoNatureRendererTrees.Plant(terrain, trees, 1), Is.EqualTo(1));
-            Assert.That(terrain.GetComponent(GeoNatureRendererTrees.Component), Is.Not.Null);
+            var natureRenderer = terrain.GetComponent(GeoNatureRendererTrees.Component);
+            Assert.That(natureRenderer, Is.Not.Null);
+            // started a moment after its tile loads, with Unity's own tree drawing kept off meanwhile
+            Assert.That(terrain.GetComponent<GeoNatureRendererStart>(), Is.Not.Null);
+            Assert.That(GeoNatureRendererTrees.Component.GetProperty("EnableUnityRendererWhenDisabled").GetValue(natureRenderer), Is.False);
+            GeoNatureRendererTrees.Remove(terrain);
+            Assert.That(terrain.GetComponent<GeoNatureRendererStart>(), Is.Null);
+            Assert.That((bool)terrain.GetComponent(GeoNatureRendererTrees.Component), Is.False);
+            GeoNatureRendererTrees.Prepare(terrain);
             // without a detail map Nature Renderer does not start (its Optimize Patch Size then picks the patches itself)
             Assert.That(data.detailResolution, Is.EqualTo(128));
             Assert.That(data.treePrototypes.All(p => p.prefab.GetComponent<MeshRenderer>().sharedMaterials.All(m => m.shader.name == "GeoWorld/Tree (Nature Renderer)")));
