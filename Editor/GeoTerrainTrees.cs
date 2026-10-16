@@ -51,7 +51,7 @@ namespace GeoWorld.Editor
             return cached = prefabs;
         }
 
-        static string PrefabPath(int tone) => Folder + "/Geo tree " + tone + ".prefab";
+        public static string PrefabPath(int tone) => Folder + "/Geo tree " + tone + ".prefab";
 
         static Material MakeMaterial(string path, Color color)
         {

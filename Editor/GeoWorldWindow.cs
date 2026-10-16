@@ -22,9 +22,11 @@ namespace GeoWorld.Editor
         [SerializeField] bool tiled = true;
         [SerializeField] float tileSize = GeoDefaults.TileSize;
         [SerializeField] string message = "";
+        // the generation config the window edits (its settings are this asset's), remembered on this computer
+        [SerializeField] GeoGenerationConfig config;
 
         // the folder whose <area>_env exports are listed, chosen once per computer
-        const string ExportsKey = "GeoWorld.ExportsFolder";
+        const string ExportsKey = "GeoWorld.ExportsFolder", ConfigKey = "GeoWorld.Config";
         readonly List<string> exports = new List<string>();
         DropdownField exportField;
         Label hint, versionChip, bannerText, status, extracting;
@@ -53,6 +55,13 @@ namespace GeoWorld.Editor
 
         void OnEnable()
         {
+            if (!config)
+            {
+                string path = AssetDatabase.GUIDToAssetPath(EditorPrefs.GetString(ConfigKey, ""));
+                if (!string.IsNullOrEmpty(path)) config = AssetDatabase.LoadAssetAtPath<GeoGenerationConfig>(path);
+            }
+            // the config's own settings object: what the window changes, the asset keeps
+            if (config) { settings = config.settings ??= new GenerationSettings(); tiled = config.tiled; tileSize = config.tileSize; }
             if (settings != null) GeoDefaults.FillLibraries(settings, false);
             GeoUpdate.Changed += ShowUpdate;
             GeoExtractor.Changed += ShowExtraction;
@@ -65,6 +74,62 @@ namespace GeoWorld.Editor
             GeoExtractor.Changed -= ShowExtraction;
             Selection.selectionChanged -= ShowSelection;
             if (previewTexture) DestroyImmediate(previewTexture);
+            SaveConfig();
+        }
+
+        void OnLostFocus() => SaveConfig();
+
+        // ---------------------------------------------------------------- config
+
+        // A change in the window, kept in the open config (saved to disk when the window loses focus or closes, and
+        // before generating).
+        void MarkChanged()
+        {
+            if (!config) return;
+            config.tiled = tiled; config.tileSize = tileSize;
+            EditorUtility.SetDirty(config);
+        }
+
+        void SaveConfig()
+        {
+            if (config) AssetDatabase.SaveAssetIfDirty(config);
+        }
+
+        // Opens a config (none: the window keeps a copy of the settings until it closes) and draws the window again.
+        void UseConfig(GeoGenerationConfig next)
+        {
+            if (next == config) return;
+            SaveConfig();
+            config = next;
+            if (config)
+            {
+                settings = config.settings ??= new GenerationSettings();
+                tiled = config.tiled; tileSize = config.tileSize;
+                GeoDefaults.FillLibraries(settings, false);
+                EditorPrefs.SetString(ConfigKey, AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(config)));
+            }
+            else
+            {
+                settings = JsonUtility.FromJson<GenerationSettings>(JsonUtility.ToJson(settings));
+                EditorPrefs.DeleteKey(ConfigKey);
+            }
+            treeList = null;
+            rootVisualElement.schedule.Execute(() => { rootVisualElement.Clear(); CreateGUI(); });
+        }
+
+        // The settings as they are now, saved as a new config that the window then edits.
+        void NewConfig()
+        {
+            if (!AssetDatabase.IsValidFolder(GeoGenerationConfig.Folder)) { Directory.CreateDirectory(GeoGenerationConfig.Folder); AssetDatabase.Refresh(); }
+            string path = EditorUtility.SaveFilePanelInProject("New generation config", "Geo World config", "asset",
+                "Save these settings as a config: the window then keeps every change in it.", GeoGenerationConfig.Folder);
+            if (string.IsNullOrEmpty(path)) return;
+            var created = CreateInstance<GeoGenerationConfig>();
+            created.settings = JsonUtility.FromJson<GenerationSettings>(JsonUtility.ToJson(settings));
+            created.tiled = tiled; created.tileSize = tileSize;
+            AssetDatabase.CreateAsset(created, path);
+            AssetDatabase.SaveAssets();
+            UseConfig(created);
         }
 
         public void CreateGUI()
@@ -123,9 +188,27 @@ namespace GeoWorld.Editor
             exportCard.Add(hint);
 
             var worldCard = Card(page, "2", "World");
+            var configRow = Row("gw-config");
+            var configField = new UnityEditor.UIElements.ObjectField("Config")
+            {
+                objectType = typeof(GeoGenerationConfig), allowSceneObjects = false, value = config,
+                tooltip = "A saved set of these settings (tree prefabs included): the window keeps every change in it and opens it again next time."
+            };
+            configField.RegisterValueChangedCallback(e => UseConfig(e.newValue as GeoGenerationConfig));
+            configRow.Add(configField);
+            var newConfig = new Button(NewConfig) { text = "New…", tooltip = "Save the settings below as a new config" };
+            newConfig.AddToClassList("gw-subtle");
+            configRow.Add(newConfig);
+            worldCard.Add(configRow);
+            if (!config)
+            {
+                var configHint = Text("These settings last only while this window is open: New… keeps them in a config.", "gw-hint");
+                configHint.AddToClassList("gw-config-hint");
+                worldCard.Add(configHint);
+            }
             var segment = Row("gw-segment");
-            tiledButton = new Button(() => SetTiled(true)) { text = "Tiled  ·  towns, streams" };
-            singleButton = new Button(() => SetTiled(false)) { text = "One world  ·  small areas" };
+            tiledButton = new Button(() => { SetTiled(true); MarkChanged(); }) { text = "Tiled  ·  towns, streams" };
+            singleButton = new Button(() => { SetTiled(false); MarkChanged(); }) { text = "One world  ·  small areas" };
             segment.Add(tiledButton);
             segment.Add(singleButton);
             worldCard.Add(segment);
@@ -324,6 +407,7 @@ namespace GeoWorld.Editor
         {
             string environment = Path.Combine(exportFolder, "environment.json"), buildings = Path.Combine(exportFolder, "buildings.json");
             if (!File.Exists(buildings)) buildings = "";
+            SaveConfig();
             Run(() =>
             {
                 if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
@@ -346,6 +430,7 @@ namespace GeoWorld.Editor
             var go = Selection.activeGameObject;
             var tiledWorld = go ? go.GetComponentInParent<GeoTiledWorld>() : null;
             var world = go ? go.GetComponentInParent<GeoWorldRoot>() : null;
+            SaveConfig();
             Run(() =>
             {
                 if (tiledWorld) ShowStatus(GeoTiles.Generate(tiledWorld.environmentPath, tiledWorld.buildingsPath, settings, tiledWorld.tileSize, tiledWorld.folder).report);
@@ -368,6 +453,13 @@ namespace GeoWorld.Editor
         }
 
         void DrawAdvanced()
+        {
+            EditorGUI.BeginChangeCheck();
+            DrawSettings();
+            if (EditorGUI.EndChangeCheck()) MarkChanged();
+        }
+
+        void DrawSettings()
         {
             EditorGUIUtility.labelWidth = 200;
             Section("Terrain and roads");
@@ -428,6 +520,8 @@ namespace GeoWorld.Editor
             if (GUILayout.Button("Reset to the standard settings", GUILayout.Width(220)))
             {
                 settings = GeoDefaults.Settings();
+                if (config) config.settings = settings;
+                treeList = null;
                 EditorApplication.delayCall += () => { rootVisualElement.Clear(); CreateGUI(); };
             }
         }
@@ -479,6 +573,7 @@ namespace GeoWorld.Editor
             // empty rows (just added) stay in the list until a prefab is picked
             settings.treePrefabs = treeItems.Where(p => p).Distinct().ToArray();
             treeSource = settings.treePrefabs;
+            MarkChanged();
         }
 
         void DrawTreeItem(Rect rect, int index, bool active, bool focused)
@@ -602,12 +697,12 @@ namespace GeoWorld.Editor
         }
 
         // A switch with its name and a line on what it does; the text toggles it too.
-        static VisualElement Option(string name, string description, Func<bool> get, Action<bool> set)
+        VisualElement Option(string name, string description, Func<bool> get, Action<bool> set)
         {
             var row = Row("gw-option");
             var toggle = new Toggle { value = get() };
             toggle.AddToClassList("gw-option-toggle");
-            toggle.RegisterValueChangedCallback(e => set(e.newValue));
+            toggle.RegisterValueChangedCallback(e => { set(e.newValue); MarkChanged(); });
             var text = new VisualElement();
             text.AddToClassList("gw-option-text");
             text.Add(Text(name, "gw-option-name"));

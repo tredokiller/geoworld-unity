@@ -161,18 +161,28 @@ namespace GeoWorld.Editor
                 var rivers=Group("Rivers",root.transform);
                 root.junctionCount=tile!=null?roadNetwork.junctions.Count(j=>tile.core.Contains(j.center.x,j.center.y)):roadNetwork.junctions.Count;
                 int pathIndex=0;bool roadsBuilt=false;
+                // A tile's ground roads are drawn a few meshes per chunk and material, like the crossings: a 1 km tile of a
+                // city has over a thousand pieces of road, and an object for each was most of what the tile had to load
+                // (and editor windows wait while a tile is read). Their objects only served editing, which a tile rebuild
+                // does not keep (a road is cut into tiles). Bridges, raised roads and rivers keep their objects.
+                var groundRoads=tile!=null?new MeshBatches("Roads",settings.chunkSize):null;
                 foreach(var path in paths)
                 {
                     if(pathIndex++%20==0) Progress("Creating roads and rivers",0.40f+0.15f*pathIndex/Mathf.Max(1,paths.Count));
                     // a tile builds the roads around it too (they grade its edges) but keeps only what lies on it
                     if(tile!=null&&!GeoTiles.Touches(path,tile.core)) continue;
-                    string label=string.IsNullOrEmpty(path.feature.name)?path.feature.id:path.feature.name;
-                    var item=new GameObject((path.river?"River | ":path.feature.bridge?"Bridge | ":"Road | ")+label);
-                    item.transform.SetParent(path.river?rivers:roads);
-                    var editable=item.AddComponent<GeoPath>();editable.sourceId=path.feature.id;editable.river=path.river;
-                    editable.width=path.feature.width;editable.bridge=path.feature.bridge;editable.surface=GeoData.Surface(path.feature.material);
-                    editable.layer=path.feature.layer;
-                    editable.points=path.controls.Select(p=>new Vector3(p.x,field.Sample(p.x,p.z)+0.5f,p.z)).ToList();
+                    bool batched=groundRoads!=null&&!path.river&&!path.Elevated;
+                    GameObject item=null;
+                    if(!batched)
+                    {
+                        string label=string.IsNullOrEmpty(path.feature.name)?path.feature.id:path.feature.name;
+                        item=new GameObject((path.river?"River | ":path.feature.bridge?"Bridge | ":"Road | ")+label);
+                        item.transform.SetParent(path.river?rivers:roads);
+                        var editable=item.AddComponent<GeoPath>();editable.sourceId=path.feature.id;editable.river=path.river;
+                        editable.width=path.feature.width;editable.bridge=path.feature.bridge;editable.surface=GeoData.Surface(path.feature.material);
+                        editable.layer=path.feature.layer;
+                        editable.points=path.controls.Select(p=>new Vector3(p.x,field.Sample(p.x,p.z)+0.5f,p.z)).ToList();
+                    }
                     // Ground roads, intersections and markings are Terrain layers. Their
                     // editable path objects carry no renderer or second collision surface.
                     if(path.river||path.Elevated)
@@ -214,7 +224,9 @@ namespace GeoWorld.Editor
                             }
                             GeoMeshes.RoadEdges(path,draft); // soft edges (GeoWorld/Road)
                             var surfaceMesh=context.Clip(draft.Mesh("Road surface",roadNetwork.Normal));
-                            if(surfaceMesh.vertexCount>0) context.MeshObject(item,surfaceMesh,context.Blend(material?material:context.Surface(surface)),false);
+                            var surfaceMaterial=context.Blend(material?material:context.Surface(surface));
+                            if(batched) groundRoads.Add(surfaceMesh,new[]{surfaceMaterial});
+                            else if(surfaceMesh.vertexCount>0) context.MeshObject(item,surfaceMesh,surfaceMaterial,false);
                             else Object.DestroyImmediate(surfaceMesh);
                         }
                         // the photo of a main road has its lines in it
@@ -222,17 +234,19 @@ namespace GeoWorld.Editor
                         if(settings.laneMarkings&&!photoLines)
                         {
                             var lines=context.Clip(GeoMeshes.GroundMarkings(path,roadNetwork));
-                            if(lines.vertexCount>0) context.MeshChild("Road markings",item.transform,lines,context.Marking,false);
+                            if(batched) groundRoads.Add(lines,new[]{context.Marking});
+                            else if(lines.vertexCount>0) context.MeshChild("Road markings",item.transform,lines,context.Marking,false);
                             else Object.DestroyImmediate(lines);
                         }
                     }
                     if(path.feature.bridge&&!path.river) BridgeRails(path,context,item.transform);
                 }
+                groundRoads?.Build(roads,context);
                 if(settings.roadMeshes&&roadsBuilt)
                 {
                     // the crossings are drawn a few meshes per chunk: a 1 km tile of a city has 1 700 pieces of crossing, and
                     // an object for each made it slow to load. Nothing edits them (a road is edited through its own object).
-                    var crossings=new Crossings(settings.chunkSize);
+                    var crossings=new MeshBatches("Junctions",settings.chunkSize);
                     foreach(var junction in roadNetwork.junctions)
                     {
                         Material asphalt=null;
@@ -562,15 +576,16 @@ namespace GeoWorld.Editor
 
         static Transform Group(string name,Transform parent) {var go=new GameObject(name);go.transform.SetParent(parent);return go.transform;}
 
-        // The pieces of the crossings, gathered per chunk (by their middle) and material and drawn as one mesh each.
-        // Pieces with soft edges (TexCoord1) and without are kept apart.
-        class Crossings
+        // Pieces of road or crossing, gathered per chunk (by their middle) and material and drawn as one mesh each, an
+        // object named "<name> x_z | material". Pieces with soft edges (TexCoord1) and without are kept apart.
+        class MeshBatches
         {
             class Piece {public Vector3[] vertices,normals;public List<Vector2> uv=new List<Vector2>(),uv2=new List<Vector2>();public Mesh mesh;}
+            readonly string name;
             readonly float size;
             readonly Dictionary<(int x,int z,Material material,bool edges),List<(Piece piece,int submesh)>> groups=new Dictionary<(int,int,Material,bool),List<(Piece,int)>>();
             readonly List<Mesh> sources=new List<Mesh>();
-            public Crossings(float chunkSize){size=Mathf.Max(50,chunkSize);}
+            public MeshBatches(string name,float chunkSize){this.name=name;size=Mathf.Max(50,chunkSize);}
 
             public void Add(Mesh mesh,Material[] materials)
             {
@@ -611,7 +626,7 @@ namespace GeoWorld.Editor
                         }
                     }
                     var mesh=draft.Mesh("Junctions",p=>Vector3.up);mesh.SetNormals(normals);
-                    var go=new GameObject("Junctions "+pair.Key.x+"_"+pair.Key.z+" | "+pair.Key.material.name);go.transform.SetParent(parent,false);
+                    var go=new GameObject(name+" "+pair.Key.x+"_"+pair.Key.z+" | "+pair.Key.material.name);go.transform.SetParent(parent,false);
                     context.MeshObject(go,mesh,pair.Key.material,false);
                 }
                 foreach(var mesh in sources)Object.DestroyImmediate(mesh);

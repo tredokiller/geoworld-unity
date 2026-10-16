@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.6.0
+
+- Tiles load without editor freezes: a tiled world draws its ground roads one mesh per chunk and material (a Kharkiv tile 1 687 objects to 502; worst stall in a flight 962 ms to 163 ms); bridges, raised roads and rivers keep their objects
+- Generation configs: Config > New... in the Geo World window saves every setting, tree prefabs included, as an asset that the window keeps editing and opens again next time; configs can be shared through the project
+- Generate a tiled world again to rebuild its tiles with this version
+
 ## 1.5.1
 
 - New area: drag the area to move it (its size on the ground is kept); right or middle drag pans the map anywhere

@@ -38,7 +38,8 @@ keeps the commit it first downloaded, recorded in `Packages/packages-lock.json`,
    the package (with its own Python on Windows: nothing to install), fetches the buildings, roads, terrain and the
    radar damage estimate in the background; a small town takes a few minutes. The export is then selected in the
    window: choose a tiled world or one world and a few switches, and press Generate. Every other setting is under
-   Advanced settings. **Open full app** starts the app's web page (condition review, reports, news).
+   Advanced settings. **Config › New…** saves all of them (tree prefabs included) as a config asset; the window
+   keeps every change in it and opens it again next time, and configs can be shared through the project. **Open full app** starts the app's web page (condition review, reports, news).
 
 Exports go to `%LOCALAPPDATA%\GeoWorld\exports`; exports made elsewhere with the app can be picked with Browse….
 

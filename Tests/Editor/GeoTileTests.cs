@@ -137,6 +137,11 @@ namespace GeoWorld.Editor.Tests
                     Assert.That(box.min.z, Is.GreaterThan(tile.tileArea.yMin - 4)); Assert.That(box.max.z, Is.LessThan(tile.tileArea.yMax + 4));
                 }
             Assert.That(tiles.Sum(t => t.roadCount), Is.GreaterThanOrEqualTo(single.roadCount));
+            // a tile draws its ground roads a few meshes per chunk: objects of their own only for bridges and raised roads
+            foreach (var tile in tiles)
+                Assert.That(tile.transform.Find("Roads - select a road to edit").GetComponentsInChildren<GeoPath>().All(p => p.bridge || p.layer != 0));
+            Assert.That(tiles.SelectMany(t => t.transform.Find("Roads - select a road to edit").Cast<Transform>()).Count(t => t.name.StartsWith("Roads ")), Is.GreaterThan(0));
+            Assert.That(single.GetComponentsInChildren<GeoPath>().Count(p => !p.river && !p.bridge && p.layer == 0), Is.GreaterThan(0), "one world keeps its roads editable");
 
             // nothing changed: nothing is rebuilt
             var again = GeoTiles.Generate(Sample + "/environment.json", Sample + "/buildings.json", Settings(), 200, folder, separateScenes: false);

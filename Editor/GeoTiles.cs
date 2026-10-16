@@ -53,7 +53,7 @@ namespace GeoWorld.Editor
         // Far more than any road grading or junction reaches, and room for the buildings next to a tile.
         public const float MarginMetres = 96;
         // bump when the generator draws tiles differently, so that "Rebuild changed tiles" rebuilds them
-        internal const string Version = "geo-tiles-12"; // 12: crossings one mesh per chunk and material; 11: Auto building mode merges in tiles; 10: homes made from a list when the tile loads
+        internal const string Version = "geo-tiles-13"; // 13: ground roads one mesh per chunk and material; 12: crossings likewise; 11: Auto building mode merges in tiles; 10: homes made from a list when the tile loads
 
         public static string DefaultFolder(string environmentPath) => GeoPaths.Project + "/Tiled/" + PackageName(environmentPath);
         static string PackageName(string environmentPath) => new DirectoryInfo(Path.GetDirectoryName(Path.GetFullPath(environmentPath))).Name;

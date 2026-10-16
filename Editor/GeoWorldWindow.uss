@@ -155,6 +155,28 @@
 
 /* tiled / one world */
 
+/* the generation config: its field across the card, New… beside it */
+.gw-config {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.gw-config > .unity-object-field {
+    flex-grow: 1;
+    flex-shrink: 1;
+    margin-left: 0;
+}
+
+.gw-config .unity-base-field__label {
+    min-width: 56px;
+}
+
+.gw-config-hint {
+    margin-top: 0;
+    margin-bottom: 8px;
+}
+
 .gw-segment {
     flex-direction: row;
     margin-bottom: 10px;
