@@ -53,7 +53,7 @@ namespace GeoWorld.Editor
         {
             var world = Object.FindFirstObjectByType<GeoTiledWorld>();
             Vector2 focus = Vector2.zero;
-            if (world) focus = world.origin + new Vector2(world.columns, world.rows) * world.tileSize * 0.5f;
+            if (world) focus = world.origin + (new Vector2(world.firstIndex.x, world.firstIndex.y) + new Vector2(world.columns, world.rows) * 0.5f) * world.tileSize;
             else { var root = Object.FindFirstObjectByType<GeoWorldRoot>(); if (root && root.terrain) { var p = root.terrain.transform.position + root.terrain.terrainData.size * 0.5f; focus = new Vector2(p.x, p.z); } }
             Run(focus, world ? 2000 : 0, System.IO.Path.Combine(Application.dataPath, "../Logs/GeoBenchmark.txt"));
         }

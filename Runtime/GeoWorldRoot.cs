@@ -97,5 +97,6 @@ namespace GeoWorld
         [HideInInspector] public Vector2Int tileIndex;
         [HideInInspector] public Rect tileArea;
         [HideInInspector] public float tileSize, tileBaseY, tileHeightRange;
+        [HideInInspector] public int tileParts = 1; // exports this tile is built from (more than one where exports meet)
     }
 }

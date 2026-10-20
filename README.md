@@ -3,7 +3,8 @@
 Unity worlds of any area of Ukraine from the exports of the Building Extractor app: terrain with satellite
 imagery, roads with soft edges, rivers and lakes, and buildings drawn with ruin and home models according to the
 building condition the app gives (damaged or not is decided in the app only). Large areas become tiled worlds
-that stream 1 km tiles around the camera.
+that stream 1 km tiles around the camera. The exports of the parts of one large area (a city cut into parts) make one
+world on one shared grid.
 
 Unity 6000.3 with the Universal Render Pipeline 17.
 
@@ -37,20 +38,20 @@ show their external trees in Edit mode.
 Package Manager > **+** > **Add package from git URL...** and enter the version you want:
 
 ```
-https://github.com/tredokiller/geoworld-unity.git#v1.7.0
+https://github.com/tredokiller/geoworld-unity.git#v1.8.0
 ```
 
 or add it to `Packages/manifest.json`:
 
 ```json
-"com.tredokiller.geoworld": "https://github.com/tredokiller/geoworld-unity.git#v1.7.0"
+"com.tredokiller.geoworld": "https://github.com/tredokiller/geoworld-unity.git#v1.8.0"
 ```
 
 The repository is private: git on the computer must be signed in to GitHub (the same login that can clone it).
 
 ## Update
 
-Change the version after `#` in `Packages/manifest.json` (`#v1.7.0` to `#v1.1.0`) and go back to Unity: it
+Change the version after `#` in `Packages/manifest.json` (`#v1.8.0` to `#v1.1.0`) and go back to Unity: it
 downloads that version. Each version is listed in [CHANGELOG.md](CHANGELOG.md). (Without a version after `#` Unity
 keeps the commit it first downloaded, recorded in `Packages/packages-lock.json`, so a version is the dependable way.)
 

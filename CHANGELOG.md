@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.8.0
+
+- Fixed: the parts of one area (Kharkiv as six exports) were cut into tiles as separate worlds, each on a grid that began at its own export's lowest corner, with full 2 km tiles at its edges. Tiles of neighbouring parts did not line up and overlapped by hundreds of metres, up to 1.9 km between the north and south groups.
+- One grid for every export: tile (i, j) is the square [i x size, (i + 1) x size) x [j x size, (j + 1) x size) of the export's own coordinates, whatever its bounds are. A tile has the same index, place and name in every export. A world made before this version (its grid began at the export's corner) is rebuilt in full.
+- One world from several exports: Tools > Geo World > Generate one world from several exports... (also the Several exports... button of the Geo World window, `GeoTiles.Generate(parts, ...)`, `GeoDefaults.Generate(folder)` and `-geoExport <folder of parts>` in batch mode). Parts must be exported with the same fixed origin; different origins are refused with a message.
+- Who owns the border: the exports are listed in order and each owns the ground of its bounds that no earlier one owns (a rectangle: its region). Regions never overlap, so no ground is built twice. A tile is built once. In the middle of an export it is that export's alone; where exports meet it is built from all of them: each gives the ground (height), roads, rivers, buildings, trees and props inside its own region, and roads are cut at the seam between the regions. The tile records the exports it came from (Tile > Source) and its root has Tile Parts.
+- A tile built from several exports is rebuilt from the Geo Tiled World object (Rebuild changed tiles / Rebuild all tiles), which now lists the exports (Parts). The tile's own Rebuild refuses it with a message.
+- Tiles that no export reaches any more (an export removed or changed) are deleted with their scenes and assets; the grid no longer depends on the first export, so a part can be added later without moving any tile.
+- Ground classes (the material map) and the canopy of a tile built from several exports come from the export that holds most of it. Water, areas, fences and hedges that cross the seam are drawn by both exports (twice over their overlap).
+- Tests: six new (the shared grid, the owner of every point, slivers of tiles, two exports as one world, different origins) and the riverside tiled sample, which now has 4 x 2 tiles because its grid is shared (it was 3 x 2 on its own corner).
+
 ## 1.7.0
 
 - Tile generation exports terrain tree instances and instanced tree batches to Resources/TerrainChunker/TreeData, with stable world/tile keys and asset GUIDs.

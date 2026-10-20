@@ -237,6 +237,9 @@ namespace GeoWorld.Editor
             rebuildButton = new Button(RebuildSelected) { text = "Rebuild the selected world with these settings" };
             rebuildButton.AddToClassList("gw-grow");
             more.Add(rebuildButton);
+            var parts = new Button(GenerateParts) { text = "Several exports...", tooltip = "One tiled world from the exports of the parts of one area (a folder with one export folder for each part, all made with the same fixed origin)" };
+            parts.AddToClassList("gw-subtle");
+            more.Add(parts);
             var sample = new Button(() => Run(GeoSample.CreateScene)) { text = "Sample scene", tooltip = "A small made-up riverside village" };
             sample.AddToClassList("gw-subtle");
             more.Add(sample);
@@ -424,6 +427,25 @@ namespace GeoWorld.Editor
             });
         }
 
+        // One tiled world from the exports in a folder (the parts of one area): all on one grid, each tile built once.
+        void GenerateParts()
+        {
+            string start = exportFolder != "" ? Path.GetDirectoryName(exportFolder) : ExportsFolder;
+            string chosen = EditorUtility.OpenFolderPanel("The folder that holds the exports of the parts of one area (one folder each)", start, "");
+            if (string.IsNullOrEmpty(chosen)) return;
+            var found = GeoTiles.PartsIn(chosen);
+            if (found.Count == 0) { ShowStatus("No export (environment.json) in " + chosen + " or in the folders inside it."); return; }
+            SaveConfig();
+            Run(() =>
+            {
+                if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
+                GeoTerrainTextures.EnsureImported();
+                if (!GeoRoadPhotos.Available) GeoRoadTextures.EnsureGenerated();
+                GeoDefaults.FillLibraries(settings, true);
+                ShowStatus(GeoTiles.Generate(found, settings, tileSize).report);
+            });
+        }
+
         // The selected world (one world, or a whole tiled world) generated again from its export with these settings.
         void RebuildSelected()
         {
@@ -433,7 +455,9 @@ namespace GeoWorld.Editor
             SaveConfig();
             Run(() =>
             {
-                if (tiledWorld) ShowStatus(GeoTiles.Generate(tiledWorld.environmentPath, tiledWorld.buildingsPath, settings, tiledWorld.tileSize, tiledWorld.folder).report);
+                if (tiledWorld) ShowStatus(GeoTiles.Generate(tiledWorld.parts != null && tiledWorld.parts.Count > 0 ? tiledWorld.parts
+                    : new List<GeoTiledWorld.Part> { new GeoTiledWorld.Part { environmentPath = tiledWorld.environmentPath, buildingsPath = tiledWorld.buildingsPath } },
+                    settings, tiledWorld.tileSize, tiledWorld.folder).report);
                 else if (world && !world.tile)
                 {
                     world = GeoGenerator.Generate(world.environmentPath, world.buildingsPath, settings, world);

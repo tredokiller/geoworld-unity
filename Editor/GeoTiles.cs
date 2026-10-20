@@ -28,6 +28,40 @@ namespace GeoWorld.Editor
         public Vector2Int index;
         public float size, baseY, range;
         public string folder, name;
+        public int part;                // the export this comes from, in a tile that several exports build
+        public int parts = 1;           // exports the tile is built from
+
+        // One tile from what each export that reaches it gives (the first has most of the tile): their roads, rivers,
+        // lakes, buildings and props side by side, and the ground from the export that owns each point of it.
+        public static GeoTileJob Merge(IList<GeoTileJob> fragments, GeoTilePlan plan)
+        {
+            var main = fragments[0];
+            var env = new EnvironmentData { format = main.env.format, version = main.env.version, origin = main.env.origin, bounds = main.core,
+                terrain = main.env.terrain, materials = main.env.materials, surround = main.env.surround, outer = plan.Outer() };
+            var buildings = new BuildingsData { format = main.buildings.format, version = main.buildings.version, origin = main.buildings.origin, area = new BuildingArea { bounds = main.core } };
+            var levels = new List<float>();
+            var pieces = new List<PathBuild>();
+            foreach (var f in fragments)
+            {
+                env.roads.AddRange(f.env.roads); env.waterways.AddRange(f.env.waterways); env.railways.AddRange(f.env.railways); env.water.AddRange(f.env.water);
+                env.areas.AddRange(f.env.areas); env.barriers.AddRange(f.env.barriers); env.hedges.AddRange(f.env.hedges); env.treeRows.AddRange(f.env.treeRows);
+                env.trees.AddRange(f.env.trees); env.props.AddRange(f.env.props);
+                buildings.buildings.AddRange(f.buildings.buildings);
+                levels.AddRange(f.waterLevels); pieces.AddRange(f.paths);
+            }
+            var field = new HeightField(main.field.bounds, main.field.resolution);
+            var byPart = new Dictionary<int, GeoTileJob>();
+            foreach (var f in fragments) byPart[f.part] = f;
+            for (int z = 0; z < field.resolution; z++)
+                for (int x = 0; x < field.resolution; x++)
+                {
+                    var from = byPart.TryGetValue(plan.OwnerOf(field.X(x), field.Z(z)), out var owner) ? owner : main;
+                    field.heights[z, x] = from.field.heights[z, x];
+                }
+            float baseY = fragments.Min(f => f.baseY), top = fragments.Max(f => f.baseY + f.range);
+            return new GeoTileJob { env = env, buildings = buildings, field = field, margin = main.margin, paths = pieces, waterLevels = levels.ToArray(),
+                core = main.core, index = main.index, size = main.size, baseY = baseY, range = top - baseY, folder = main.folder, name = main.name, part = main.part, parts = fragments.Count };
+        }
 
         // the height field of the tile alone: the terrain
         public HeightField Core(HeightField field)
@@ -53,12 +87,38 @@ namespace GeoWorld.Editor
         // Far more than any road grading or junction reaches, and room for the buildings next to a tile.
         public const float MarginMetres = 96;
         // bump when the generator draws tiles differently, so that "Rebuild changed tiles" rebuilds them
-        internal const string Version = "geo-tiles-14"; // 13: ground roads one mesh per chunk and material; 12: crossings likewise; 11: Auto building mode merges in tiles; 10: homes made from a list when the tile loads
+        internal const string Version = "geo-tiles-15"; // 15: one grid for every export, tiles where exports meet built from all of them; 13: ground roads one mesh per chunk and material; 12: crossings likewise; 11: Auto building mode merges in tiles; 10: homes made from a list when the tile loads
 
         public static string DefaultFolder(string environmentPath) => GeoPaths.Project + "/Tiled/" + PackageName(environmentPath);
+        // Several exports: named after the folder that holds them (the parts of one area), else after the first.
+        public static string DefaultFolder(IList<GeoTiledWorld.Part> parts)
+        {
+            if (parts.Count == 1) return DefaultFolder(parts[0].environmentPath);
+            var parents = parts.Select(p => Path.GetDirectoryName(Path.GetDirectoryName(Path.GetFullPath(p.environmentPath)))).Distinct().ToList();
+            string name = parents.Count == 1 ? new DirectoryInfo(parents[0]).Name : PackageName(parts[0].environmentPath) + "_" + parts.Count + "_parts";
+            return GeoPaths.Project + "/Tiled/" + name;
+        }
         static string PackageName(string environmentPath) => new DirectoryInfo(Path.GetDirectoryName(Path.GetFullPath(environmentPath))).Name;
         public static string MasterScenePath(string folder) => folder + "/" + Path.GetFileName(folder) + ".unity";
         static string TileName(Vector2Int index) => "Tile " + index.x + "_" + index.y;
+
+        // The exports in a folder: the folder itself when it holds environment.json, else every folder in it that does
+        // (the parts of one area), in name order with numbers counted as numbers (part_2 before part_10).
+        public static List<GeoTiledWorld.Part> PartsIn(string folder)
+        {
+            var result = new List<GeoTiledWorld.Part>();
+            if (string.IsNullOrEmpty(folder) || !Directory.Exists(folder)) return result;
+            var folders = File.Exists(Path.Combine(folder, "environment.json")) ? new List<string> { folder }
+                : Directory.GetDirectories(folder).Where(d => File.Exists(Path.Combine(d, "environment.json"))).OrderBy(d => NaturalKey(Path.GetFileName(d)), StringComparer.Ordinal).ToList();
+            foreach (var f in folders)
+            {
+                string buildings = Path.Combine(f, "buildings.json");
+                result.Add(new GeoTiledWorld.Part { environmentPath = Path.Combine(f, "environment.json"), buildingsPath = File.Exists(buildings) ? buildings : "" });
+            }
+            return result;
+        }
+
+        static string NaturalKey(string name) => System.Text.RegularExpressions.Regex.Replace(name, @"\d+", m => m.Value.PadLeft(12, '0'));
 
         // Builds (or brings up to date) the tiled world of an export. folder: where the main scene, tile scenes and assets
         // go (default Assets/GeoWorld/Tiled/<export folder>). separateScenes off: the tiles are children of the
@@ -66,17 +126,29 @@ namespace GeoWorld.Editor
         public static GeoTiledWorld Generate(string environmentPath, string buildingsPath, GenerationSettings settings, float tileSize,
             string folder = null, bool separateScenes = true, bool skipUnchanged = true, ICollection<Vector2Int> only = null)
         {
-            if (Application.isPlaying) throw new InvalidOperationException("Stop Play mode before generating.");
             if (string.IsNullOrEmpty(environmentPath)) throw new ArgumentException("A tiled world needs environment.json from Terrain & ground export.");
+            return Generate(new List<GeoTiledWorld.Part> { new GeoTiledWorld.Part { environmentPath = environmentPath, buildingsPath = buildingsPath } },
+                settings, tileSize, folder, separateScenes, skipUnchanged, only);
+        }
+
+        // The tiled world of several exports of one area (the parts of a large city, made with one fixed origin). All the
+        // exports are cut on the same grid (see GeoTilePlan) and every tile is built once: where exports overlap, the earlier
+        // one in the list owns the ground; a tile where exports meet is built from all of them.
+        public static GeoTiledWorld Generate(IList<GeoTiledWorld.Part> exports, GenerationSettings settings, float tileSize,
+            string folder = null, bool separateScenes = true, bool skipUnchanged = true, ICollection<Vector2Int> only = null)
+        {
+            if (Application.isPlaying) throw new InvalidOperationException("Stop Play mode before generating.");
+            if (exports == null || exports.Count == 0 || exports.Any(e => e == null || string.IsNullOrEmpty(e.environmentPath)))
+                throw new ArgumentException("A tiled world needs environment.json from Terrain & ground export.");
+            var parts = exports.Select(e => new GeoTiledWorld.Part { environmentPath = e.environmentPath, buildingsPath = e.buildingsPath }).ToList();
             settings = Sanitized(settings);
             tileSize = Mathf.Clamp(tileSize, 100, 8000);
-            folder = string.IsNullOrEmpty(folder) ? DefaultFolder(environmentPath) : folder.Replace('\\', '/').TrimEnd('/');
+            folder = string.IsNullOrEmpty(folder) ? DefaultFolder(parts) : folder.Replace('\\', '/').TrimEnd('/');
             var watch = Stopwatch.StartNew();
             try
             {
                 GeoGenerator.progressPrefix = ""; GeoGenerator.progressFrom = 0; GeoGenerator.progressSpan = 0.02f;
-                Bar("Reading the export and working out roads and lakes", 0);
-                var source = GeoTileSource.Prepare(environmentPath, buildingsPath, settings, tileSize, null);
+                var plan = Plan(parts, tileSize, out var single);
                 Scene master = default;
                 GeoTiledWorld world;
                 if (separateScenes)
@@ -87,57 +159,102 @@ namespace GeoWorld.Editor
                 else world = Object.FindObjectsByType<GeoTiledWorld>(FindObjectsSortMode.None).FirstOrDefault(w => w.folder == folder && !w.separateScenes);
                 if (!world)
                 {
-                    world = new GameObject("Geo World - " + PackageName(environmentPath) + " (tiled)").AddComponent<GeoTiledWorld>();
+                    world = new GameObject("Geo World - " + (parts.Count == 1 ? PackageName(parts[0].environmentPath) : Path.GetFileName(folder)) + " (tiled)").AddComponent<GeoTiledWorld>();
                     world.addressableScenes = true;
                     if (separateScenes) SceneManager.MoveGameObjectToScene(world.gameObject, master);
                 }
-                if (world.tileSize != tileSize || world.origin != source.origin) world.tiles.Clear(); // another grid: every tile is new
-                world.environmentPath = environmentPath; world.buildingsPath = buildingsPath; world.settings = settings;
-                world.tileSize = tileSize; world.origin = source.origin; world.columns = source.columns; world.rows = source.rows;
-                world.baseY = source.baseY; world.heightRange = source.range; world.separateScenes = separateScenes; world.folder = folder;
-                if (separateScenes && !Object.FindObjectsByType<Camera>(FindObjectsSortMode.None).Any(c => c.gameObject.scene == master))
-                    SetupView(source);
+                // another grid (a size, or a world made before the grid was shared): every tile is new
+                if (world.tileSize != tileSize || world.origin != Vector2.zero) { foreach (var old in world.tiles) Discard(world, old); world.tiles.Clear(); }
+                world.environmentPath = parts[0].environmentPath; world.buildingsPath = parts[0].buildingsPath; world.parts = parts; world.settings = settings;
+                world.tileSize = tileSize; world.origin = Vector2.zero; world.firstIndex = plan.first; world.columns = plan.columns; world.rows = plan.rows;
+                world.separateScenes = separateScenes; world.folder = folder;
+                // tiles that no export reaches any more
+                foreach (var gone in world.tiles.Where(t => !plan.tiles.ContainsKey(t.index)).ToList()) { Discard(world, gone); world.tiles.Remove(gone); }
                 if (separateScenes) EnsureStreamer(world);
 
                 // the middle of the world first: an interrupted run leaves the part that is looked at
-                var order = new List<Vector2Int>();
-                for (int z = 0; z < source.rows; z++) for (int x = 0; x < source.columns; x++) order.Add(new Vector2Int(x, z));
-                var middle = new Vector2((source.columns - 1) * 0.5f, (source.rows - 1) * 0.5f);
-                order.Sort((a, b) => (a - middle).sqrMagnitude.CompareTo((b - middle).sqrMagnitude));
-                int built = 0, skipped = 0, number = 0;
+                var order = plan.tiles.Keys.ToList();
+                var middle = new Vector2(plan.first.x + (plan.columns - 1) * 0.5f, plan.first.y + (plan.rows - 1) * 0.5f);
+                order.Sort((a, b) => ((Vector2)a - middle).sqrMagnitude.CompareTo(((Vector2)b - middle).sqrMagnitude));
+                int built = 0, skipped = 0, number = 0, seams = 0;
+                float worldBase = float.MaxValue, worldTop = float.MinValue;
+                var notes = new List<string>();
+                var pending = new Dictionary<Vector2Int, List<Fragment>>(); // tiles where exports meet: what each export gives, built when all have
+                bool view = false;
+                for (int p = 0; p < parts.Count; p++)
+                {
+                    var mine = order.Where(index => plan.tiles[index].Contains(p) && (only == null || only.Contains(index))).ToList();
+                    if (mine.Count == 0) continue;
+                    GeoGenerator.progressPrefix = parts.Count > 1 ? $"Export {p + 1} / {parts.Count}: " : ""; GeoGenerator.progressFrom = 0; GeoGenerator.progressSpan = 0.02f;
+                    Bar("Reading the export and working out roads and lakes", 0);
+                    var source = GeoTileSource.Prepare(parts[p].environmentPath, parts[p].buildingsPath, settings, tileSize, Vector2.zero, single);
+                    worldBase = Mathf.Min(worldBase, source.baseY); worldTop = Mathf.Max(worldTop, source.baseY + source.range);
+                    notes.AddRange(source.notes);
+                    if (separateScenes && !view && !Object.FindObjectsByType<Camera>(FindObjectsSortMode.None).Any(c => c.gameObject.scene == master)) SetupView(source, plan.Outer());
+                    view = true;
+                    foreach (var index in mine)
+                    {
+                        var core = GeoTilePlan.Tile(index, tileSize);
+                        if (plan.tiles[index].Count > 1)
+                        {
+                            if (!pending.TryGetValue(index, out var fragments)) pending[index] = fragments = new List<Fragment>();
+                            fragments.Add(new Fragment { part = p, job = source.Job(index, core, folder + "/Tiles", TileName(index), plan, p), hash = source.Hash(core, settings) + "|" + Region(plan.region[p]) });
+                            continue;
+                        }
+                        number++;
+                        var entry = world.Find(index);
+                        if (entry == null) world.tiles.Add(entry = new GeoTiledWorld.Tile { index = index });
+                        entry.area = new Rect(core.minX, core.minZ, core.Width, core.Depth);
+                        entry.source = SourceName(parts, plan.tiles[index]);
+                        string hash = source.Hash(core, settings);
+                        if (Skip(world, entry, hash, separateScenes, skipUnchanged)) { skipped++; continue; }
+                        Tick(number, order.Count);
+                        BuildTile(source.Job(index, core, folder + "/Tiles", TileName(index)), parts[p], world, entry, folder, settings, master);
+                        entry.hash = hash; built++;
+                        if (separateScenes) EditorSceneManager.SaveScene(master);
+                        // the editor keeps what a closed scene used until it is told to let go
+                        if (built % 6 == 0) { EditorUtility.UnloadUnusedAssetsImmediate(); GC.Collect(); }
+                    }
+                    source = null;
+                }
+
+                // where exports meet: each tile from what every export reaching it gives
                 foreach (var index in order)
                 {
-                    number++;
-                    if (only != null && !only.Contains(index)) continue;
-                    var core = source.Core(index);
+                    if (!pending.TryGetValue(index, out var fragments)) continue;
+                    var contributors = plan.tiles[index];
+                    fragments = contributors.Select(c => fragments.FirstOrDefault(f => f.part == c)).Where(f => f != null && f.job != null).ToList();
+                    if (fragments.Count == 0) continue;
+                    number++; seams++;
+                    var core = GeoTilePlan.Tile(index, tileSize);
                     var entry = world.Find(index);
                     if (entry == null) world.tiles.Add(entry = new GeoTiledWorld.Tile { index = index });
                     entry.area = new Rect(core.minX, core.minZ, core.Width, core.Depth);
-                    string hash = source.Hash(core, settings);
-                    bool present = separateScenes ? !string.IsNullOrEmpty(entry.scenePath) && File.Exists(entry.scenePath) : Child(world, index);
-                    if (skipUnchanged && present && entry.hash == hash)
-                    {
-                        if (separateScenes && world.addressableScenes) GeoTileAddressables.Register(world, entry);
-                        else if (separateScenes) GeoTileAddressables.Unregister(entry);
-                        skipped++; continue;
-                    }
-                    GeoGenerator.progressPrefix = $"Tile {number} / {order.Count} ({index.x}, {index.y}): ";
-                    GeoGenerator.progressFrom = 0.02f + 0.98f * (number - 1) / order.Count; GeoGenerator.progressSpan = 0.98f / order.Count;
-                    BuildTile(source, world, entry, folder, settings, master);
+                    entry.source = SourceName(parts, contributors);
+                    string hash = Digest(string.Join("||", fragments.Select(f => f.hash)));
+                    if (Skip(world, entry, hash, separateScenes, skipUnchanged)) { skipped++; continue; }
+                    Tick(number, order.Count);
+                    var job = GeoTileJob.Merge(fragments.Select(f => f.job).ToList(), plan);
+                    var main = parts[fragments[0].part];
+                    BuildTile(job, main, world, entry, folder, settings, master);
                     entry.hash = hash; built++;
                     if (separateScenes) EditorSceneManager.SaveScene(master);
-                    // the editor keeps what a closed scene used until it is told to let go
                     if (built % 6 == 0) { EditorUtility.UnloadUnusedAssetsImmediate(); GC.Collect(); }
+                    pending.Remove(index);
                 }
+                if (worldBase < worldTop) { world.baseY = worldBase; world.heightRange = worldTop - worldBase; }
                 world.tiles.Sort((a, b) => a.index.y != b.index.y ? a.index.y.CompareTo(b.index.y) : a.index.x.CompareTo(b.index.x));
                 int buildings = world.tiles.Sum(t => t.buildings), roads = world.tiles.Sum(t => t.roads), props = world.tiles.Sum(t => t.props);
-                world.report = $"{source.columns} x {source.rows} tiles of {tileSize:F0} m ({source.env.bounds.Width:F0} x {source.env.bounds.Depth:F0} m) | " +
-                    $"{buildings} buildings | {roads} roads | {props} props and trees\n" +
+                var outer = plan.Outer();
+                world.report = $"{plan.columns} x {plan.rows} tiles of {tileSize:F0} m ({outer.Width:F0} x {outer.Depth:F0} m)" +
+                    (parts.Count > 1 ? $", {parts.Count} exports ({plan.tiles.Values.Count(c => c.Count > 1)} tiles where they meet)" : "") +
+                    $" | {buildings} buildings | {roads} roads | {props} props and trees\n" +
                     $"This run: {built} tiles built, {skipped} unchanged tiles skipped, {watch.Elapsed.TotalMinutes:F1} min" +
                     (built > 0 ? $" ({world.tiles.Where(t => t.seconds > 0).Select(t => t.seconds).DefaultIfEmpty(0).Average():F0} s per tile)" : "") + ".\n" +
                     "Terrain heights, roads and lakes are worked out for the whole export, so the tiles meet without steps. " +
+                    (parts.Count > 1 ? "The exports share one grid; each tile is built once, and where exports meet from every export that reaches it. " : "") +
                     (separateScenes ? "Every tile is a scene of its own in " + folder + "/Tiles: open the tiles you need from this object's Inspector." : "") +
-                    (source.notes.Count > 0 ? "\n" + string.Join("\n", source.notes.Distinct()) : "");
+                    (notes.Count > 0 ? "\n" + string.Join("\n", notes.Distinct()) : "");
                 EditorUtility.SetDirty(world);
                 if (separateScenes) EditorSceneManager.SaveScene(master);
                 else EditorSceneManager.MarkSceneDirty(world.gameObject.scene);
@@ -151,10 +268,72 @@ namespace GeoWorld.Editor
             }
         }
 
-        static void BuildTile(GeoTileSource source, GeoTiledWorld world, GeoTiledWorld.Tile entry, string folder, GenerationSettings settings, Scene master)
+        // What one export gives to a tile it shares with others.
+        sealed class Fragment { public int part; public GeoTileJob job; public string hash; }
+
+        static string Region(GeoBounds r) => r.minX.ToString("R") + "," + r.minZ.ToString("R") + "," + r.maxX.ToString("R") + "," + r.maxZ.ToString("R");
+
+        static string SourceName(IList<GeoTiledWorld.Part> parts, IEnumerable<int> which) =>
+            string.Join(" + ", which.Select(i => PackageName(parts[i].environmentPath)));
+
+        static string Digest(string text)
+        {
+            using (var md5 = MD5.Create()) return BitConverter.ToString(md5.ComputeHash(Encoding.UTF8.GetBytes(text))).Replace("-", "");
+        }
+
+        // Is the tile there and built from what it would be built from now?
+        static bool Skip(GeoTiledWorld world, GeoTiledWorld.Tile entry, string hash, bool separateScenes, bool skipUnchanged)
+        {
+            bool present = separateScenes ? !string.IsNullOrEmpty(entry.scenePath) && File.Exists(entry.scenePath) : Child(world, entry.index);
+            if (!skipUnchanged || !present || entry.hash != hash) return false;
+            if (separateScenes && world.addressableScenes) GeoTileAddressables.Register(world, entry);
+            else if (separateScenes) GeoTileAddressables.Unregister(entry);
+            return true;
+        }
+
+        static void Tick(int number, int count)
+        {
+            GeoGenerator.progressPrefix = $"Tile {number} / {count}: ";
+            GeoGenerator.progressFrom = 0.02f + 0.98f * (number - 1) / count; GeoGenerator.progressSpan = 0.98f / count;
+        }
+
+        // The grid of the exports and who builds what. For one export the environment is kept to build from.
+        static GeoTilePlan Plan(IList<GeoTiledWorld.Part> parts, float tileSize, out EnvironmentData single)
+        {
+            single = null;
+            var extents = new GeoBounds[parts.Count];
+            EnvironmentData first = null;
+            for (int i = 0; i < parts.Count; i++)
+            {
+                Bar(parts.Count > 1 ? $"Reading export {i + 1} / {parts.Count}" : "Reading the export and working out roads and lakes", 0);
+                var env = GeoData.ReadEnvironment(parts[i].environmentPath);
+                extents[i] = env.bounds;
+                if (first == null) first = env;
+                else if (!SameOrigin(first.origin, env.origin))
+                    throw new InvalidDataException(parts[0].environmentPath + " and " + parts[i].environmentPath + " have different origins, so their coordinates do not line up. " +
+                        "Export all the parts of one area with the same fixed origin.");
+                if (parts.Count == 1) single = env;
+            }
+            return GeoTilePlan.Make(extents, tileSize);
+        }
+
+        static bool SameOrigin(GeoOrigin a, GeoOrigin b) =>
+            a == null || b == null ? a == b : Math.Abs(a.lat - b.lat) <= 0.000001 && Math.Abs(a.lon - b.lon) <= 0.000001;
+
+        // Gives the files of a tile up (it is no longer in the world).
+        static void Discard(GeoTiledWorld world, GeoTiledWorld.Tile entry)
+        {
+            GeoTileAddressables.Unregister(entry);
+            var child = Child(world, entry.index);
+            if (child) Object.DestroyImmediate(child.gameObject);
+            if (!string.IsNullOrEmpty(entry.scenePath) && File.Exists(entry.scenePath) && !SceneManager.GetSceneByPath(entry.scenePath).isLoaded) AssetDatabase.DeleteAsset(entry.scenePath);
+            if (!string.IsNullOrEmpty(entry.assetPath) && File.Exists(entry.assetPath)) AssetDatabase.DeleteAsset(entry.assetPath);
+        }
+
+        // job: the tile's data; part: the export it is built from (for a tile of several, the one with most of it)
+        static void BuildTile(GeoTileJob job, GeoTiledWorld.Part part, GeoTiledWorld world, GeoTiledWorld.Tile entry, string folder, GenerationSettings settings, Scene master)
         {
             var watch = Stopwatch.StartNew();
-            var job = source.Job(entry.index, source.Core(entry.index), folder + "/Tiles", TileName(entry.index));
             string oldAsset = entry.assetPath, newAsset;
             GeoWorldRoot root;
             if (world.separateScenes)
@@ -171,7 +350,7 @@ namespace GeoWorld.Editor
                 try
                 {
                     SceneManager.SetActiveScene(scene);
-                    root = GeoGenerator.Generate(source.environmentPath, source.buildingsPath, settings, null, false, job);
+                    root = GeoGenerator.Generate(part.environmentPath, part.buildingsPath, settings, null, false, job);
                     Count(entry, root); newAsset = root.assetPath;
                     EditorSceneManager.SaveScene(scene, scenePath);
                 }
@@ -184,7 +363,7 @@ namespace GeoWorld.Editor
             else
             {
                 var old = Child(world, entry.index);
-                root = GeoGenerator.Generate(source.environmentPath, source.buildingsPath, settings, null, false, job);
+                root = GeoGenerator.Generate(part.environmentPath, part.buildingsPath, settings, null, false, job);
                 root.transform.SetParent(world.transform, true);
                 Count(entry, root); newAsset = root.assetPath;
                 if (old) Object.DestroyImmediate(old.gameObject);
@@ -215,6 +394,8 @@ namespace GeoWorld.Editor
         public static GeoWorldRoot Regenerate(GeoWorldRoot tile, GenerationSettings settings)
         {
             if (Application.isPlaying) throw new InvalidOperationException("Stop Play mode before generating.");
+            if (tile.tileParts > 1)
+                throw new InvalidOperationException("This tile is built from " + tile.tileParts + " exports. Rebuild it from the Geo Tiled World object (Rebuild all tiles), which has all of them.");
             settings = Sanitized(settings ?? tile.settings);
             var core = new GeoBounds { minX = tile.tileArea.xMin, minZ = tile.tileArea.yMin, maxX = tile.tileArea.xMax, maxZ = tile.tileArea.yMax };
             var origin = new Vector2(core.minX - tile.tileIndex.x * tile.tileSize, core.minZ - tile.tileIndex.y * tile.tileSize);
@@ -305,7 +486,7 @@ namespace GeoWorld.Editor
         }
 
         // Sun, sky and a preview camera over the middle of the world, in the main scene (the tiles have none of their own).
-        static void SetupView(GeoTileSource source)
+        static void SetupView(GeoTileSource source, GeoBounds area)
         {
             var light = new GameObject("Sun").AddComponent<Light>(); light.type = LightType.Directional; light.intensity = 1.8f;
             light.color = new Color(1, 0.94f, 0.83f); light.shadows = LightShadows.Soft; light.transform.rotation = Quaternion.Euler(48, -35, 0);
@@ -317,7 +498,7 @@ namespace GeoWorld.Editor
             camera.fieldOfView = 48; camera.nearClipPlane = 0.3f; camera.farClipPlane = 15000; camera.allowHDR = true;
             camera.gameObject.AddComponent<AudioListener>();
             var controller = camera.gameObject.AddComponent<GeoPreviewCamera>();
-            var b = source.env.bounds;
+            var b = area;
             float x = (b.minX + b.maxX) / 2, z = (b.minZ + b.maxZ) / 2;
             controller.focus = new Vector3(x, source.heights?.Sample(x, z) ?? 0, z);
             controller.moveSpeed = Mathf.Clamp(source.tileSize * 0.2f, 50, 400);
@@ -469,18 +650,19 @@ namespace GeoWorld.Editor
         public string environmentPath, buildingsPath;
         public float tileSize, baseY, range;
         public Vector2 origin;
-        public int columns, rows, resolution;
+        public int resolution;
         public readonly List<string> notes = new List<string>();
         GenerationSettings settings;
         string files;
         Rect[] pathBox, roadBox, waterwayBox, waterBox, areaBox, barrierBox, hedgeBox, rowBox, railBox;
         readonly Dictionary<Vector2Int, List<BuildingFeature>> cells = new Dictionary<Vector2Int, List<BuildingFeature>>();
 
-        // origin: the south-west corner of tile (0, 0); null: the export's
-        public static GeoTileSource Prepare(string environmentPath, string buildingsPath, GenerationSettings settings, float tileSize, Vector2? origin)
+        // origin: the south-west corner of tile (0, 0); null: the corner of the coordinates (0, 0), the same for every export
+        // (see GeoTilePlan). env: the export when it has been read already.
+        public static GeoTileSource Prepare(string environmentPath, string buildingsPath, GenerationSettings settings, float tileSize, Vector2? origin, EnvironmentData env = null)
         {
             var s = new GeoTileSource { environmentPath = environmentPath, buildingsPath = buildingsPath, settings = settings, tileSize = tileSize };
-            s.env = GeoData.ReadEnvironment(environmentPath);
+            s.env = env ?? GeoData.ReadEnvironment(environmentPath);
             s.buildings = string.IsNullOrEmpty(buildingsPath)
                 ? new BuildingsData { format = "geo-buildings", version = 1, origin = s.env.origin }
                 : GeoData.ReadBuildings(buildingsPath, s.env.origin);
@@ -493,10 +675,7 @@ namespace GeoWorld.Editor
             // room below for river beds and lakes, as a single world has
             s.baseY = (heights?.min ?? 0) - 8 - (settings.carveRivers ? settings.riverDepth + 1 : 0);
             s.range = Mathf.Max(32, (heights?.max ?? 0) - s.baseY + 8);
-            var b = s.env.bounds;
-            s.origin = origin ?? new Vector2(b.minX, b.minZ);
-            s.columns = Mathf.Max(1, Mathf.CeilToInt((b.maxX - s.origin.x) / tileSize - 0.001f));
-            s.rows = Mathf.Max(1, Mathf.CeilToInt((b.maxZ - s.origin.y) / tileSize - 0.001f));
+            s.origin = origin ?? Vector2.zero;
             s.resolution = settings.heightResolution;
             s.pathBox = s.paths.Select(p => Box(p.samples, p.feature.width)).ToArray();
             s.roadBox = s.env.roads.Select(f => Box(f?.points, f?.width ?? 0)).ToArray();
@@ -531,7 +710,9 @@ namespace GeoWorld.Editor
             return new GeoBounds { minX = x, minZ = z, maxX = (float)(origin.x + (double)(index.x + 1) * tileSize), maxZ = (float)(origin.y + (double)(index.y + 1) * tileSize) };
         }
 
-        public GeoTileJob Job(Vector2Int index, GeoBounds core, string folder, string name)
+        // plan, part: a tile that several exports build is cut for this export (part): it gives what lies on its own
+        // region. Null: the export builds the whole tile.
+        public GeoTileJob Job(Vector2Int index, GeoBounds core, string folder, string name, GeoTilePlan plan = null, int part = -1)
         {
             double cell = (double)tileSize / (resolution - 1);
             int margin = Mathf.CeilToInt(GeoTiles.MarginMetres / (float)cell);
@@ -543,7 +724,12 @@ namespace GeoWorld.Editor
             if (heights != null)
                 for (int z = 0; z < n; z++) for (int x = 0; x < n; x++)
                     field.heights[z, x] = heights.Sample((float)(core.minX + (x - margin) * cell), (float)(core.minZ + (z - margin) * cell));
-            var area = new Rect(around.minX, around.minZ, around.Width, around.Depth);
+            // the ground this export gives to the tile: all of it, or its region where exports meet
+            bool shared = plan != null && plan.tiles.TryGetValue(index, out var builders) && builders.Count > 1;
+            var reach = shared ? GeoTilePlan.Intersection(around, plan.region[part]) : around;
+            if (reach == null) return null;
+            Func<float, float, bool> owns = shared ? (Func<float, float, bool>)((x, z) => plan.OwnerOf(x, z) == part) : (x, z) => true;
+            var area = new Rect(reach.minX, reach.minZ, reach.Width, reach.Depth);
             var e = new EnvironmentData { format = env.format, version = env.version, origin = env.origin, bounds = core, terrain = env.terrain,
                 materials = env.materials, surround = around, outer = env.bounds };
             e.roads = Pick(env.roads, roadBox, area); e.waterways = Pick(env.waterways, waterwayBox, area); e.railways = Pick(env.railways, railBox, area);
@@ -551,16 +737,16 @@ namespace GeoWorld.Editor
             e.hedges = Pick(env.hedges, hedgeBox, area); e.treeRows = Pick(env.treeRows, rowBox, area);
             var levels = new List<float>();
             for (int i = 0; i < env.water.Count; i++) if (waterBox[i].Overlaps(area)) { e.water.Add(env.water[i]); levels.Add(waterLevels[i]); }
-            e.trees = env.trees.Where(t => t != null && around.Contains(t.x, t.z)).ToList();
-            e.props = env.props.Where(p => p != null && around.Contains(p.x, p.z)).ToList();
+            e.trees = env.trees.Where(t => t != null && around.Contains(t.x, t.z) && owns(t.x, t.z)).ToList();
+            e.props = env.props.Where(p => p != null && around.Contains(p.x, p.z) && owns(p.x, p.z)).ToList();
             var pieces = new List<PathBuild>();
-            for (int i = 0; i < paths.Count; i++) if (pathBox[i].Overlaps(area)) pieces.AddRange(GeoTiles.ClipPath(paths[i], around, settings.pathStep));
+            for (int i = 0; i < paths.Count; i++) if (pathBox[i].Overlaps(area)) pieces.AddRange(GeoTiles.ClipPath(paths[i], reach, settings.pathStep));
             var nearby = new BuildingsData { format = buildings.format, version = buildings.version, origin = buildings.origin, area = new BuildingArea { bounds = core } };
             for (int dz = -1; dz <= 1; dz++) for (int dx = -1; dx <= 1; dx++)
                 if (cells.TryGetValue(new Vector2Int(index.x + dx, index.y + dz), out var list))
-                    nearby.buildings.AddRange(list.Where(b => around.Contains(b.x, b.z)));
+                    nearby.buildings.AddRange(list.Where(b => around.Contains(b.x, b.z) && owns(b.x, b.z)));
             return new GeoTileJob { env = e, buildings = nearby, field = field, margin = margin, paths = pieces, waterLevels = levels.ToArray(),
-                core = core, index = index, size = tileSize, baseY = baseY, range = range, folder = folder, name = name };
+                core = core, index = index, size = tileSize, baseY = baseY, range = range, folder = folder, name = name, part = part };
         }
 
         // Fingerprint of what a tile is built from: the export files, the settings (libraries by asset), the tile and the grid.
@@ -651,7 +837,8 @@ namespace GeoWorld.Editor
             try
             {
                 if (world.separateScenes && !EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
-                GeoTiles.Generate(world.environmentPath, world.buildingsPath, world.settings, world.tileSize, world.folder, world.separateScenes, skipUnchanged);
+                GeoTiles.Generate(world.parts != null && world.parts.Count > 0 ? world.parts : new List<GeoTiledWorld.Part> { new GeoTiledWorld.Part { environmentPath = world.environmentPath, buildingsPath = world.buildingsPath } },
+                    world.settings, world.tileSize, world.folder, world.separateScenes, skipUnchanged);
             }
             catch (OperationCanceledException e) { Debug.Log(e.Message); }
             catch (Exception e) { Debug.LogException(e); }

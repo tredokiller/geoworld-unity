@@ -23,13 +23,26 @@ namespace GeoWorld
             public int buildings, roads, props;
             public float seconds;
             public bool empty;
+            [Tooltip("The exports the tile is built from: one, or several where exports meet.")]
+            public string source;
+        }
+
+        // One export (Terrain & ground package) of the world. A world made of several exports lists them all.
+        [Serializable]
+        public class Part
+        {
+            public string environmentPath, buildingsPath;
         }
 
         [HideInInspector] public string environmentPath, buildingsPath;
+        [Tooltip("The exports the world is made of. They share one grid; where they meet, each tile is built from all that reach it.")]
+        public List<Part> parts = new List<Part>();
         public GenerationSettings settings = new GenerationSettings();
         [Tooltip("Side of a tile in metres.")]
         public float tileSize = 1000;
+        [Tooltip("The south-west corner of tile (0, 0): the grid is the same for every export (0, 0 of the export's coordinates), so exports of one area line up.")]
         [HideInInspector] public Vector2 origin;
+        [HideInInspector] public Vector2Int firstIndex;
         [HideInInspector] public int columns, rows;
         [HideInInspector] public float baseY, heightRange;
         [Tooltip("Tiles in scenes of their own (Tiles folder next to this scene). Off: all tiles are children of this object.")]

@@ -84,7 +84,7 @@ namespace GeoWorld.Editor
                 root.environmentPath=environmentPath;root.buildingsPath=buildingsPath;root.settings=settings;root.assetPath=assetPath;
                 if(tile!=null)
                 {
-                    root.tile=true;root.tileIndex=tile.index;root.tileSize=tile.size;root.tileBaseY=tile.baseY;root.tileHeightRange=tile.range;
+                    root.tile=true;root.tileIndex=tile.index;root.tileParts=tile.parts;root.tileSize=tile.size;root.tileBaseY=tile.baseY;root.tileHeightRange=tile.range;
                     root.tileArea=new Rect(tile.core.minX,tile.core.minZ,tile.core.Width,tile.core.Depth);
                 }
                 if(replace!=null) UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(go,replace.gameObject.scene);

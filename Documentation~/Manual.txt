@@ -254,6 +254,23 @@ The terrain casts no shadows unless Terrain Casts Shadows is on (Advanced settin
 valleys at a low sun). A terrain that casts them is drawn again for every shadow cascade: in Kharkiv that was 3-6 ms
 of a frame and changed no pixel. Buildings and trees still cast their shadows on the ground. The terrain keeps pixel
 error 1: at 4 the coarser far terrain already covers parts of rivers and road edges.
+SEVERAL EXPORTS (THE PARTS OF ONE AREA)
+A city too large for one export (Kharkiv in six parts, 20 km per side at most each) is exported as parts, all with the
+same fixed origin (the app's Origin setting), and generated as one world: Tools > Geo World > Generate one world from
+several exports..., or "Several exports..." in the Geo World window, and choose the folder that holds the part folders
+(each with its environment.json). The parts are taken in name order (part_2 before part_10); the order matters only where
+they overlap.
+One grid: tile (i, j) is the square [i x size, (i + 1) x size) x [j x size, (j + 1) x size) of the export coordinates,
+the same for every export. A tile therefore has one index, one place and one name however the exports are cut.
+The border: neighbouring parts overlap a little (tens of metres). Each part owns the ground of its bounds that no earlier
+part owns (its region, a rectangle), so regions do not overlap and nothing is built twice. A tile that lies on one part is
+built from that part alone; a tile where parts meet is built once from all of them: each gives the terrain height, roads,
+rivers, buildings, trees and props inside its own region (roads are cut at the seam).
+Limits: ground classes and canopy of such a tile come from the part that holds most of it; water, areas and fences that
+cross the seam are drawn by both parts (twice over the width of their overlap); a road is cut at the seam, where the
+pieces of the two parts meet. Parts with different origins are refused (their coordinates would not line up): export them again with one fixed origin.
+A tile built from several parts is rebuilt from the GeoTiledWorld Inspector (it lists the parts).
+
 Rebuilding: the GeoTiledWorld Inspector rebuilds changed tiles (export files or settings changed) or all
 of them, and opens/closes tile scenes around the Scene view; a tile's own Inspector rebuilds that tile
 from the whole export. Edited buildings and kept props survive a tile rebuild; a tile's roads are not edited

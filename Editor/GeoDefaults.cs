@@ -74,18 +74,27 @@ namespace GeoWorld.Editor
             if (!string.IsNullOrEmpty(folder)) Generate(folder);
         }
 
+        [MenuItem("Tools/Geo World/Generate one world from several exports...", false, 1)]
+        public static void GenerateSeveralMenu()
+        {
+            string start = Directory.Exists(ExportsFolder) ? ExportsFolder : Application.dataPath;
+            string folder = EditorUtility.OpenFolderPanel("Select the folder that holds the exports of the parts of one area (one folder each)", start, "");
+            if (!string.IsNullOrEmpty(folder)) Generate(folder);
+        }
+
         // Builds (or brings up to date: unchanged tiles are skipped) the tiled world of a package folder, in
-        // Assets/GeoWorld/Tiled/<package>, and opens its main scene.
+        // Assets/GeoWorld/Tiled/<package>, and opens its main scene. A folder that holds several packages (the parts of one
+        // area, exported with one fixed origin) makes one world of all of them.
         public static GeoTiledWorld Generate(string package, float tileSize = TileSize)
         {
             if (Application.isPlaying) throw new InvalidOperationException("Stop Play mode before generating.");
-            string environment = Path.Combine(package, "environment.json"), buildings = Path.Combine(package, "buildings.json");
-            if (!File.Exists(environment))
-                throw new FileNotFoundException("No environment.json in " + package + ". Choose the unzipped Terrain & ground package of the app (exports/<area>_env).");
+            var parts = GeoTiles.PartsIn(package);
+            if (parts.Count == 0)
+                throw new FileNotFoundException("No environment.json in " + package + ". Choose the unzipped Terrain & ground package of the app (exports/<area>_env), or the folder that holds the packages of the parts of one area.");
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return null;
             GeoTerrainTextures.EnsureImported();
             if (!GeoRoadPhotos.Available) GeoRoadTextures.EnsureGenerated();
-            var world = GeoTiles.Generate(environment, File.Exists(buildings) ? buildings : "", TileSettings(), tileSize);
+            var world = GeoTiles.Generate(parts, TileSettings(), tileSize);
             Debug.Log(world.report, world);
             return world;
         }
