@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.7.0
+
+- Tile generation exports terrain tree instances and instanced tree batches to Resources/TerrainChunker/TreeData, with stable world/tile keys and asset GUIDs.
+- Geo World restores external trees asynchronously in batches, releases runtime tree data on unload, and starts Nature Renderer after trees are ready.
+- UniTask scene streaming supports Addressables and built-in scenes, staggered activation, retries, and cleanup when the streamer stops.
+- New tiled worlds register each tile as a separate Addressables bundle. Existing worlds retain built-in streaming; enable Addressable Scenes and rebuild changed tiles to migrate.
+- Requires Addressables 2.9.1 and UniTask 2.5.10. Install UniTask via its Git package URL before updating Geo World, then rebuild tiles and Addressables content. External trees are restored in Play mode and are not shown in Edit mode.
+- Validated with three passing Unity tests covering tree serialization, stable asset regeneration, and repeated scene load/unload with tree restoration.
+
 ## 1.6.1
 
 - Nature Renderer starts on a terrain two frames after its tile is switched on, one terrain at a time (worst tile frame with it 154-257 ms to 102-140 ms); worlds made with Nature Renderer before: Rebuild all tiles

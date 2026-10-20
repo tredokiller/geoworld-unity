@@ -143,6 +143,7 @@ namespace GeoWorld.Editor
                 replacement.SetParent(world.transform,true);Undo.RegisterCreatedObjectUndo(replacement.gameObject,"Rebuild props and vegetation");
                 if(old)Undo.DestroyObjectImmediate(old.gameObject);if(legacy)Undo.DestroyObjectImmediate(legacy.gameObject);
                 world.treeCount=temp.treeCount;world.propCount=temp.propCount;
+                if(world.tile) GeoTreeDataExporter.Export(world);
                 world.report=world.roadCount+" roads | "+world.buildingCount+" buildings | "+world.treeCount+" trees | "+world.propCount+" props\n"+string.Join("\n",notes);
                 Undo.CollapseUndoOperations(undo);EditorUtility.SetDirty(world);EditorSceneManager.MarkSceneDirty(world.gameObject.scene);
             }

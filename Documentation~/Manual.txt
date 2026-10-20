@@ -278,8 +278,13 @@ when the tile loads, 2 ms worth per frame for all tiles together while playing (
 saved with the scene). Saved as objects, a town tile's 2,000 homes were 8,000 objects and 20 MB of scene, read and
 switched on in one frame: flying over Lyman froze the editor for 100 to 620 ms at every dense tile. Now the worst
 frame of the same flight is about 80 ms, and only in the editor, whose Game view waits for the asset reader while a
-tile loads (GeoBenchmarks.RunFlight flies a straight line and lists every slow frame with what took the time). A player build needs the tile scenes
-in the Build Settings (GeoTiledWorld Inspector > Add tile scenes to Build Settings).
+tile loads (GeoBenchmarks.RunFlight flies a straight line and lists every slow frame with what took the time). New tiled worlds register their tile scenes in Addressables, one scene per bundle. Build Addressables content
+before building a player; only the master scene belongs in Build Settings. Existing worlds keep their previous mode:
+enable Addressable Scenes and rebuild changed tiles to migrate, or add tile scenes to Build Settings for built-in streaming.
+Tile generation also exports trees to Assets/Resources/TerrainChunker/TreeData. GeoTerrainTreeLoader restores trees
+asynchronously in Play mode, converts terrain instances in batches, and releases runtime data when a tile unloads.
+Nature Renderer starts after restoration. Regenerate older tiles to create external tree assets; external trees are
+not displayed in Edit mode. UniTask 2.5.10 must be installed via its Git package URL before installing Geo World.
 Drawing: Tools > Geo World > Set up rendering for large worlds turns on the GPU Resident Drawer and GPU occlusion
 culling in the render pipeline asset (Forward+ renderer) and keeps their shader variants in builds. Homes are left
 out once they are tiny on screen (an LOD group each), fences and street props beyond about a kilometre, and a merged

@@ -1,4 +1,9 @@
 {
   "name": "GeoWorld.Runtime",
-  "references": ["Unity.InputSystem"]
+  "references": [
+    "Unity.InputSystem",
+    "UniTask",
+    "Unity.Addressables",
+    "Unity.ResourceManager"
+  ]
 }

@@ -1,7 +1,16 @@
 {
   "name": "GeoWorld.Editor",
-  "references": ["GeoWorld.Runtime"],
+  "references": [
+    "GeoWorld.Runtime",
+    "Unity.Addressables.Editor",
+    "Unity.Addressables",
+    "Unity.ResourceManager"
+  ],
   "overrideReferences": true,
-  "precompiledReferences": ["Newtonsoft.Json.dll"],
-  "includePlatforms": ["Editor"]
+  "precompiledReferences": [
+    "Newtonsoft.Json.dll"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ]
 }

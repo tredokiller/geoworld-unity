@@ -53,7 +53,7 @@ namespace GeoWorld.Editor
         // Far more than any road grading or junction reaches, and room for the buildings next to a tile.
         public const float MarginMetres = 96;
         // bump when the generator draws tiles differently, so that "Rebuild changed tiles" rebuilds them
-        internal const string Version = "geo-tiles-13"; // 13: ground roads one mesh per chunk and material; 12: crossings likewise; 11: Auto building mode merges in tiles; 10: homes made from a list when the tile loads
+        internal const string Version = "geo-tiles-14"; // 13: ground roads one mesh per chunk and material; 12: crossings likewise; 11: Auto building mode merges in tiles; 10: homes made from a list when the tile loads
 
         public static string DefaultFolder(string environmentPath) => GeoPaths.Project + "/Tiled/" + PackageName(environmentPath);
         static string PackageName(string environmentPath) => new DirectoryInfo(Path.GetDirectoryName(Path.GetFullPath(environmentPath))).Name;
@@ -88,6 +88,7 @@ namespace GeoWorld.Editor
                 if (!world)
                 {
                     world = new GameObject("Geo World - " + PackageName(environmentPath) + " (tiled)").AddComponent<GeoTiledWorld>();
+                    world.addressableScenes = true;
                     if (separateScenes) SceneManager.MoveGameObjectToScene(world.gameObject, master);
                 }
                 if (world.tileSize != tileSize || world.origin != source.origin) world.tiles.Clear(); // another grid: every tile is new
@@ -114,7 +115,12 @@ namespace GeoWorld.Editor
                     entry.area = new Rect(core.minX, core.minZ, core.Width, core.Depth);
                     string hash = source.Hash(core, settings);
                     bool present = separateScenes ? !string.IsNullOrEmpty(entry.scenePath) && File.Exists(entry.scenePath) : Child(world, index);
-                    if (skipUnchanged && present && entry.hash == hash) { skipped++; continue; }
+                    if (skipUnchanged && present && entry.hash == hash)
+                    {
+                        if (separateScenes && world.addressableScenes) GeoTileAddressables.Register(world, entry);
+                        else if (separateScenes) GeoTileAddressables.Unregister(entry);
+                        skipped++; continue;
+                    }
                     GeoGenerator.progressPrefix = $"Tile {number} / {order.Count} ({index.x}, {index.y}): ";
                     GeoGenerator.progressFrom = 0.02f + 0.98f * (number - 1) / order.Count; GeoGenerator.progressSpan = 0.98f / order.Count;
                     BuildTile(source, world, entry, folder, settings, master);
@@ -172,6 +178,8 @@ namespace GeoWorld.Editor
                 finally { SceneManager.SetActiveScene(master); EditorSceneManager.CloseScene(scene, true); }
                 if (reopen) EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Additive);
                 entry.scenePath = scenePath;
+                if (world.addressableScenes) GeoTileAddressables.Register(world, entry);
+                else GeoTileAddressables.Unregister(entry);
             }
             else
             {
@@ -290,7 +298,8 @@ namespace GeoWorld.Editor
                 scenes.Add(new EditorBuildSettingsScene(path, true)); added++;
             }
             Add(world.gameObject.scene.path);
-            foreach (var tile in world.tiles) Add(tile.scenePath);
+            if (!world.addressableScenes)
+                foreach (var tile in world.tiles) { GeoTileAddressables.Unregister(tile); Add(tile.scenePath); }
             EditorBuildSettings.scenes = scenes.ToArray();
             return added;
         }
@@ -625,7 +634,7 @@ namespace GeoWorld.Editor
                 using (new EditorGUILayout.HorizontalScope())
                 {
                     if (GUILayout.Button("Stream tiles while playing")) Selection.activeObject = GeoTiles.EnsureStreamer(world);
-                    if (GUILayout.Button("Add tile scenes to Build Settings")) Debug.Log(GeoTiles.AddToBuildSettings(world) + " scenes added to the Build Settings.");
+                    if (GUILayout.Button("Add scenes to Build Settings")) Debug.Log(GeoTiles.AddToBuildSettings(world) + " scenes added to the Build Settings.");
                 }
             }
             GUILayout.Label("Rebuild", EditorStyles.boldLabel);

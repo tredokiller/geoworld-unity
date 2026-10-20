@@ -1,6 +1,6 @@
 {
   "name": "com.tredokiller.geoworld",
-  "version": "1.6.1",
+  "version": "1.7.0",
   "displayName": "Geo World Generator",
   "description": "Builds Unity worlds of any area of Ukraine from the Building Extractor app's Terrain & ground exports: tiled worlds with satellite imagery, roads with soft edges, rivers, and buildings drawn with ruin and home models from the app's condition data. Tools > Geo World > Generate world from export...",
   "unity": "6000.3",
@@ -18,6 +18,10 @@
   "dependencies": {
     "com.unity.render-pipelines.universal": "17.3.0",
     "com.unity.inputsystem": "1.18.0",
-    "com.unity.nuget.newtonsoft-json": "3.2.2"
+    "com.unity.nuget.newtonsoft-json": "3.2.2",
+    "com.unity.addressables": "2.9.1",
+    "com.cysharp.unitask": "2.5.10",
+    "com.unity.modules.terrain": "1.0.0",
+    "com.unity.modules.terrainphysics": "1.0.0"
   }
 }

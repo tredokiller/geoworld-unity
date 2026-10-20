@@ -15,6 +15,7 @@ namespace GeoWorld
 
         Behaviour natureRenderer;
         int loadedFrame;
+        GeoTerrainTreeLoader treeLoader;
 
         void Awake()
         {
@@ -24,11 +25,13 @@ namespace GeoWorld
             if (!natureRenderer || !natureRenderer.enabled) { enabled = false; return; }
             natureRenderer.enabled = false;
             loadedFrame = Time.frameCount;
+            treeLoader = GetComponent<GeoTerrainTreeLoader>();
             enabled = true; // Update starts it again
         }
 
         void Update()
         {
+            if (treeLoader && !treeLoader.Ready) return;
             int frame = Time.frameCount;
             if (frame - loadedFrame < 2 || frame - lastStart < FramesApart) return;
             lastStart = frame;

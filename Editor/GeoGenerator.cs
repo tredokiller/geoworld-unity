@@ -339,6 +339,7 @@ namespace GeoWorld.Editor
                 if(!satellite) notes.Add("Ground roads and centre lines are painted into Terrain; terrain supplies their collision. Road detail: "+terrainData.alphamapResolution+" ("+(Mathf.Max(env.bounds.Width,env.bounds.Depth)/terrainData.alphamapResolution).ToString("F2")+" m per texel).");
                 root.report=$"{root.roadCount} roads | {root.junctionCount} junctions | {root.riverCount} waterways | {root.waterCount} water bodies | {root.buildingCount} buildings | {root.treeCount} trees | {root.propCount} props\n"+
                     $"{env.bounds.Width:F0} x {env.bounds.Depth:F0} metres | {settings.heightResolution} height samples | {(satellite?"satellite imagery":layers.Length+" blended terrain layers")}\n"+string.Join("\n",notes);
+                if(tile!=null) GeoTreeDataExporter.Export(root);
                 asset.summary=root.report;
                 Progress("Saving generated assets",0.96f);
                 EditorUtility.SetDirty(asset);EditorUtility.SetDirty(root);EditorUtility.SetDirty(terrainData);

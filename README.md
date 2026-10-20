@@ -7,25 +7,50 @@ that stream 1 km tiles around the camera.
 
 Unity 6000.3 with the Universal Render Pipeline 17.
 
+## Tile scenes and external trees
+
+Geo World requires Addressables 2.9.1 and UniTask 2.5.10. Install UniTask before importing this package:
+
+```
+https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask#2.5.10
+```
+
+New tiled worlds use **Addressable Scenes**. Generation registers each tile scene in its world's Addressables group,
+with one scene per bundle. The master scene goes in Build Settings; build Addressables content using
+**Window > Asset Management > Addressables > Groups > Build > New Build > Default Build Script** before a player build.
+For an existing world, enable **Addressable Scenes** on its Geo Tiled World and choose **Rebuild changed tiles**.
+With Addressable Scenes disabled, add the tile scenes to Build Settings using the world's Inspector.
+
+Tile generation automatically exports terrain tree instances and Geo World's instanced tree batches to
+`Assets/Resources/TerrainChunker/TreeData`. Keys include the world's output folder and tile coordinates, so worlds with
+identical terrain names do not collide. Rebuilding updates the same asset and preserves its GUID, including when a
+new generation has no trees. Tree prototypes stay in TerrainData; the saved tile contains no tree instances.
+
+`GeoTerrainTreeLoader` loads the tile's tree asset asynchronously, converts terrain trees in batches, and restores them
+on a runtime copy of TerrainData. Unloading releases that copy and its tree batches. Nature Renderer starts after the
+trees are ready and retains its frame spacing. The external assets use Geo World's own types; TerrainChunker is not
+required. Regenerate old tiles to produce these assets. Trees are restored in Play mode; stripped tile scenes do not
+show their external trees in Edit mode.
+
 ## Install in a project
 
 Package Manager > **+** > **Add package from git URL...** and enter the version you want:
 
 ```
-https://github.com/tredokiller/geoworld-unity.git#v1.0.0
+https://github.com/tredokiller/geoworld-unity.git#v1.7.0
 ```
 
 or add it to `Packages/manifest.json`:
 
 ```json
-"com.tredokiller.geoworld": "https://github.com/tredokiller/geoworld-unity.git#v1.0.0"
+"com.tredokiller.geoworld": "https://github.com/tredokiller/geoworld-unity.git#v1.7.0"
 ```
 
 The repository is private: git on the computer must be signed in to GitHub (the same login that can clone it).
 
 ## Update
 
-Change the version after `#` in `Packages/manifest.json` (`#v1.0.0` to `#v1.1.0`) and go back to Unity: it
+Change the version after `#` in `Packages/manifest.json` (`#v1.7.0` to `#v1.1.0`) and go back to Unity: it
 downloads that version. Each version is listed in [CHANGELOG.md](CHANGELOG.md). (Without a version after `#` Unity
 keeps the commit it first downloaded, recorded in `Packages/packages-lock.json`, so a version is the dependable way.)
 
