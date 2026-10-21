@@ -67,7 +67,7 @@ namespace GeoWorld.Editor
                 roadNetwork.Connect(settings.junctionSnap,settings.pathStep);
                 Progress("Carving water and grading roads",0.12f);
                 var waterLevels=tile?.waterLevels??WaterLevels(env.water,field.Sample);
-                if(settings.carveRivers) CarveLakes(env.water,waterLevels,field,settings.riverDepth);
+                if(settings.carveRivers) GeoLakes.Carve(env.water,waterLevels,field,settings.riverDepth);
                 GeoTerrain.Carve(field,paths,settings);
                 GeoTerrain.Grade(field,paths,settings);
                 if(settings.gradeRoads) roadNetwork.GradeJunctions(settings.roadShoulder);
@@ -302,11 +302,12 @@ namespace GeoWorld.Editor
                     crossings.Build(roads,context);
                 }
                 var waters=Group("Water bodies",root.transform);
-                for(int i=0;i<env.water.Count;i++)
+                // one surface for each lake: its outlines from every export that has it are one lake (the same level), on the terrain's grid
+                foreach(var lake in env.water.Select((f,i)=>(f,i)).GroupBy(p=>string.IsNullOrEmpty(p.f.id)?"#"+p.i:p.f.id))
                 {
-                    var mesh=LakeMesh(env.water[i],waterLevels[i],env.bounds);
+                    var mesh=GeoLakes.Surface(lake.Select(p=>p.f).ToList(),waterLevels[lake.First().i],field,env.bounds);
                     if(mesh.vertexCount==0) { Object.DestroyImmediate(mesh);continue; }
-                    context.MeshChild("Water | "+env.water[i].id,waters,mesh,context.Water,false);root.waterCount++;
+                    context.MeshChild("Water | "+lake.Key,waters,mesh,context.Water,false);root.waterCount++;
                 }
                 Progress("Placing buildings",0.63f);
                 if(settings.buildings)
@@ -531,32 +532,6 @@ namespace GeoWorld.Editor
                 values.Sort();result[i]=values.Count>0?values[Mathf.Clamp(values.Count/4,0,values.Count-1)]-0.3f:0;
             }
             return result;
-        }
-
-        static void CarveLakes(List<AreaFeature> water,float[] levels,HeightField field,float depth)
-        {
-            for(int i=0;i<water.Count;i++) for(int z=0;z<field.resolution;z++) for(int x=0;x<field.resolution;x++)
-                if(GeoData.InPolygon(field.X(x),field.Z(z),water[i].rings)) field.heights[z,x]=Mathf.Min(field.heights[z,x],levels[i]-depth);
-        }
-
-        static Mesh LakeMesh(AreaFeature water,float level,GeoBounds bounds)
-        {
-            var mesh=new MeshDraft();var ring=GeoData.Points(water.rings?.FirstOrDefault());
-            if(ring.Count<3)return mesh.Mesh("Empty water");
-            float minX=Mathf.Max(bounds.minX,ring.Min(p=>p.x)),maxX=Mathf.Min(bounds.maxX,ring.Max(p=>p.x));
-            float minZ=Mathf.Max(bounds.minZ,ring.Min(p=>p.z)),maxZ=Mathf.Min(bounds.maxZ,ring.Max(p=>p.z));
-            float step=Mathf.Max(1.5f,Mathf.Max(maxX-minX,maxZ-minZ)/384);
-            for(float z=minZ;z<maxZ;z+=step) for(float x=minX;x<maxX;x+=step)
-            {
-                float x1=Mathf.Min(x+step,maxX),z1=Mathf.Min(z+step,maxZ);
-                // Test corners and centre so islands (inner rings) remain dry.
-                if(!GeoData.InPolygon(x,z,water.rings)||!GeoData.InPolygon(x1,z,water.rings)||
-                    !GeoData.InPolygon(x,z1,water.rings)||!GeoData.InPolygon(x1,z1,water.rings)||
-                    !GeoData.InPolygon((x+x1)/2,(z+z1)/2,water.rings))continue;
-                mesh.Quad(new Vector3(x,level,z),new Vector3(x,level,z1),new Vector3(x1,level,z1),new Vector3(x1,level,z),
-                    new Vector2(x,z)/10,new Vector2(x,z1)/10,new Vector2(x1,z1)/10,new Vector2(x1,z)/10);
-            }
-            return mesh.Mesh("Water body surface");
         }
 
         static void BridgeRails(PathBuild path,BuildContext context,Transform parent)

@@ -313,15 +313,136 @@ namespace GeoWorld.Editor.Tests
             Assert.That(ex.Message, Does.Contain("different origins"));
         }
 
+
+        // ---- lakes, and the ground where exports meet -------------------------------------------------------------------
+
+        static AreaFeature Lake(string id, params float[] ring) => new AreaFeature { id = id, rings = new[] { ring } };
+
+        static float SurfaceArea(Mesh mesh)
+        {
+            double area = 0;
+            var v = mesh.vertices; var t = mesh.triangles;
+            for (int i = 0; i < t.Length; i += 3)
+                area += Mathf.Abs((v[t[i + 1]].x - v[t[i]].x) * (v[t[i + 2]].z - v[t[i]].z) - (v[t[i + 2]].x - v[t[i]].x) * (v[t[i + 1]].z - v[t[i]].z)) / 2;
+            return (float)area;
+        }
+
+        // A round lake of 60 m: the bed slopes from the shore down to the depth, the ground outside comes down to the water.
+        [Test] public void Lake_BedHasABank_AndTheSurfaceFollowsTheOutline()
+        {
+            var field = new HeightField(Bounds(-100, -100, 100, 100), 101); // 2 m grid
+            for (int z = 0; z < 101; z++) for (int x = 0; x < 101; x++) field.heights[z, x] = 10;
+            var ring = Enumerable.Range(0, 48).SelectMany(i => new[] { 60 * Mathf.Cos(i * Mathf.PI / 24), 60 * Mathf.Sin(i * Mathf.PI / 24) }).ToArray();
+            var lake = Lake("lake/round", ring);
+            GeoLakes.Carve(new[] { lake }, new[] { 8f }, field, 2f);
+            // the middle: the full depth below the level; far outside: untouched
+            Assert.That(field.heights[50, 50], Is.EqualTo(6).Within(0.001f));
+            Assert.That(field.heights[0, 0], Is.EqualTo(10));
+            // along a row through the middle: the shore (x = 60) is about the water level and nothing steps by more than a bank allows
+            float shore = field.heights[50, 80]; // x = 60
+            Assert.That(shore, Is.EqualTo(8).Within(0.6f));
+            float biggest = 0;
+            for (int x = 1; x < 101; x++) biggest = Mathf.Max(biggest, Mathf.Abs(field.heights[50, x] - field.heights[50, x - 1]));
+            Assert.That(biggest, Is.LessThan(1.1f), "no wall at the shore (the old hard edge was the whole depth)");
+            // the ground outside the shore never rises faster than the bank slope
+            for (int x = 81; x < 100; x++) Assert.That(field.heights[50, x] - field.heights[50, x - 1], Is.LessThanOrEqualTo(1.01f));
+
+            // the surface: flat at the level, covering the lake and hardly more
+            var mesh = GeoLakes.Surface(new[] { lake }, 8, field, Bounds(-100, -100, 100, 100));
+            owned.Add(mesh);
+            float disc = Mathf.PI * 60 * 60; // 11 310
+            Assert.That(SurfaceArea(mesh), Is.GreaterThanOrEqualTo(disc * 0.99f)); Assert.That(SurfaceArea(mesh), Is.LessThan(disc * 1.12f));
+            Assert.That(mesh.vertices.All(p => p.y == 8));
+            // few quads: a run of cells in a row is one
+            Assert.That(mesh.vertexCount, Is.LessThan(101 * 4 + 4));
+            // an island stays dry
+            var island = new AreaFeature { id = "lake/island", rings = new[] { ring, ring.Select(v => v * 0.5f).ToArray() } };
+            var ringed = GeoLakes.Surface(new[] { island }, 8, field, Bounds(-100, -100, 100, 100)); owned.Add(ringed);
+            Assert.That(SurfaceArea(ringed), Is.LessThan(SurfaceArea(mesh) * 0.85f));
+        }
+
+        // The same lake cut by two clips that meet on the grid has the same surface as the whole: nothing between them.
+        [Test] public void Lake_Surface_MeetsAtTheEdgeOfTwoTiles()
+        {
+            var field = new HeightField(Bounds(-100, -100, 100, 100), 101);
+            var lake = Lake("lake/square", -50, -30, 70, -30, 70, 45, -50, 45);
+            var whole = GeoLakes.Surface(new[] { lake }, 5, field, Bounds(-100, -100, 100, 100));
+            var west = GeoLakes.Surface(new[] { lake }, 5, field, Bounds(-100, -100, 0, 100));
+            var east = GeoLakes.Surface(new[] { lake }, 5, field, Bounds(0, -100, 100, 100));
+            owned.Add(whole); owned.Add(west); owned.Add(east);
+            Assert.That(SurfaceArea(west) + SurfaceArea(east), Is.EqualTo(SurfaceArea(whole)).Within(0.5f));
+            Assert.That(west.bounds.max.x, Is.EqualTo(0).Within(0.001f)); Assert.That(east.bounds.min.x, Is.EqualTo(0).Within(0.001f));
+            // the lake's own 120 x 75 m, and the cells its outline touches
+            Assert.That(SurfaceArea(whole), Is.GreaterThanOrEqualTo(120 * 75).And.LessThan(124 * 79));
+        }
+
+        // The riverside sample as two exports whose ground is 3 m apart (a different ground level at the origin) and a lake across
+        // the seam: the ground has no step, and the lake is one surface at one level on both sides.
+        [Test] public void TwoExports_ADifferentDatum_HasNoWallAtTheSeam_AndALakeCrossingItIsOne()
+        {
+            string root = "Assets/GeoWorld/Generated/PartsTest" + Guid.NewGuid().ToString("N").Substring(0, 8);
+            assets.Add(root);
+            var lake = new[] { -50f, -100f, 150f, -100f, 150f, -20f, -50f, -20f };
+            var west = Part(root + "/west", -240, 40, 0, 0, lake); var east = Part(root + "/east", 20, 240, 0, 3, lake);
+            var single = GeoGenerator.Generate(Sample + "/environment.json", Sample + "/buildings.json", Settings(), null, false);
+            owned.Add(single.gameObject); assets.Add(single.assetPath);
+            var world = GeoTiles.Generate(new List<GeoTiledWorld.Part> { west, east }, Settings(), 200, root + "/world", separateScenes: false);
+            owned.Add(world.gameObject);
+            var tiles = world.GetComponentsInChildren<GeoWorldRoot>();
+            Assert.That(tiles.Length, Is.EqualTo(8));
+            var byIndex = tiles.ToDictionary(t => t.tileIndex);
+            // no step along any edge, the seam included, although the east export's ground is 3 m lower by its own numbers
+            foreach (var tile in tiles)
+                foreach (var step in new[] { Vector2Int.right, Vector2Int.up })
+                {
+                    if (!byIndex.TryGetValue(tile.tileIndex + step, out var next)) continue;
+                    for (int i = 1; i < 10; i++)
+                    {
+                        float along = i / 10f;
+                        Vector3 a = step.x > 0 ? new Vector3(tile.tileArea.xMax - 0.005f, 0, tile.tileArea.yMin + along * 200) : new Vector3(tile.tileArea.xMin + along * 200, 0, tile.tileArea.yMax - 0.005f);
+                        Vector3 b = a + new Vector3(step.x, 0, step.y) * 0.01f;
+                        float ha = tile.terrain.SampleHeight(a) + tile.terrain.transform.position.y, hb = next.terrain.SampleHeight(b) + next.terrain.transform.position.y;
+                        Assert.That(ha, Is.EqualTo(hb).Within(0.05f), $"edge between {tile.tileIndex} and {next.tileIndex} at {along}");
+                    }
+                }
+            // and the ground is the single world's: the east export was brought to the west one's datum
+            var spot = new Vector3(150, 0, 100);
+            float seen = byIndex[new Vector2Int(0, 0)].terrain.SampleHeight(spot) + byIndex[new Vector2Int(0, 0)].terrain.transform.position.y;
+            float expected = single.terrain.SampleHeight(spot) + single.terrain.transform.position.y;
+            Assert.That(seen, Is.EqualTo(expected).Within(0.4f));
+
+            // the lake: tiles x -1 and 0 (the seam is in tile 0), one surface each at one level, 200 x 80 m all together
+            var surfaces = tiles.SelectMany(t => t.GetComponentsInChildren<MeshFilter>()).Where(f => f.name.StartsWith("Water | lake/across")).ToList();
+            Assert.That(surfaces.Count, Is.EqualTo(2), "one surface in each of the two tiles, not one per export: " +
+                string.Join("; ", tiles.Select(t => t.tileIndex + " waters " + t.waterCount + " [" + string.Join(",", t.GetComponentsInChildren<Transform>().Where(x => x.name.StartsWith("Water")).Select(x => x.name)) + "]")));
+            Assert.That(surfaces.Select(f => f.sharedMesh.bounds.center.y).Distinct().Count(), Is.EqualTo(1), "one level");
+            Assert.That(surfaces.Sum(f => SurfaceArea(f.sharedMesh)), Is.GreaterThanOrEqualTo(200 * 80).And.LessThan(200 * 80 * 1.12f));
+            // the bed is under the water
+            float level = surfaces[0].sharedMesh.bounds.center.y;
+            var middle = new Vector3(50, 0, -60);
+            var tile0 = byIndex[new Vector2Int(0, -1)];
+            Assert.That(tile0.terrain.SampleHeight(middle) + tile0.terrain.transform.position.y, Is.LessThan(level - 1));
+        }
+
         // A copy of the riverside sample whose environment.json covers x from minX to maxX only (the heightmap and the
         // buildings are the whole sample's: an export holds more than its bounds, as exports of neighbouring parts do).
-        GeoTiledWorld.Part Part(string folder, float minX, float maxX, double moveOrigin = 0)
+        GeoTiledWorld.Part Part(string folder, float minX, float maxX, double moveOrigin = 0, float moveGround = 0, float[] lake = null)
         {
             System.IO.Directory.CreateDirectory(folder);
             foreach (var file in new[] { "heightmap.r16", "materials.png", "buildings.json" })
                 System.IO.File.Copy(Sample + "/" + file, folder + "/" + file, true);
             var env = Newtonsoft.Json.Linq.JObject.Parse(System.IO.File.ReadAllText(Sample + "/environment.json"));
             env["bounds"]["minX"] = minX; env["bounds"]["maxX"] = maxX;
+            // the ground of this export is moveGround metres lower by its own numbers (its ground level at the origin is higher)
+            if (moveGround != 0) env["terrain"]["heightmap"]["originGround"] = (float)env["terrain"]["heightmap"]["originGround"] + moveGround;
+            if (lake != null)
+            {
+                var ring = new Newtonsoft.Json.Linq.JArray();
+                foreach (var v in lake) ring.Add(v);
+                if (env["water"] == null) env["water"] = new Newtonsoft.Json.Linq.JArray();
+                var rings = new Newtonsoft.Json.Linq.JArray(); rings.Add(ring);
+                ((Newtonsoft.Json.Linq.JArray)env["water"]).Add(new Newtonsoft.Json.Linq.JObject { ["id"] = "lake/across", ["rings"] = rings });
+            }
             if (moveOrigin != 0)
             {
                 env["origin"]["lat"] = (double)env["origin"]["lat"] + moveOrigin;

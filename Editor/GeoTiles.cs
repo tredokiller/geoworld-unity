@@ -87,7 +87,7 @@ namespace GeoWorld.Editor
         // Far more than any road grading or junction reaches, and room for the buildings next to a tile.
         public const float MarginMetres = 96;
         // bump when the generator draws tiles differently, so that "Rebuild changed tiles" rebuilds them
-        internal const string Version = "geo-tiles-15"; // 15: one grid for every export, tiles where exports meet built from all of them; 13: ground roads one mesh per chunk and material; 12: crossings likewise; 11: Auto building mode merges in tiles; 10: homes made from a list when the tile loads
+        internal const string Version = "geo-tiles-16"; // 16: lakes carved with a bank and drawn on the terrain grid, one ground for exports that meet; 15: one grid for every export, tiles where exports meet built from all of them; 13: ground roads one mesh per chunk and material; 12: crossings likewise; 11: Auto building mode merges in tiles; 10: homes made from a list when the tile loads
 
         public static string DefaultFolder(string environmentPath) => GeoPaths.Project + "/Tiled/" + PackageName(environmentPath);
         // Several exports: named after the folder that holds them (the parts of one area), else after the first.
@@ -148,7 +148,11 @@ namespace GeoWorld.Editor
             try
             {
                 GeoGenerator.progressPrefix = ""; GeoGenerator.progressFrom = 0; GeoGenerator.progressSpan = 0.02f;
-                var plan = Plan(parts, tileSize, out var single);
+                var plan = Plan(parts, tileSize, out var single, out var terrains);
+                // exports that meet share one ground (a datum and a blend over the overlap) and the levels of their lakes
+                GeoHeightBlend blend = null;
+                if (parts.Count > 1) { blend = new GeoHeightBlend(plan, parts, terrains); blend.Align(); }
+                var lakeLevels = new Dictionary<string, float>();
                 Scene master = default;
                 GeoTiledWorld world;
                 if (separateScenes)
@@ -187,7 +191,7 @@ namespace GeoWorld.Editor
                     if (mine.Count == 0) continue;
                     GeoGenerator.progressPrefix = parts.Count > 1 ? $"Export {p + 1} / {parts.Count}: " : ""; GeoGenerator.progressFrom = 0; GeoGenerator.progressSpan = 0.02f;
                     Bar("Reading the export and working out roads and lakes", 0);
-                    var source = GeoTileSource.Prepare(parts[p].environmentPath, parts[p].buildingsPath, settings, tileSize, Vector2.zero, single);
+                    var source = GeoTileSource.Prepare(parts[p].environmentPath, parts[p].buildingsPath, settings, tileSize, Vector2.zero, single, blend, p, lakeLevels);
                     worldBase = Mathf.Min(worldBase, source.baseY); worldTop = Mathf.Max(worldTop, source.baseY + source.range);
                     notes.AddRange(source.notes);
                     if (separateScenes && !view && !Object.FindObjectsByType<Camera>(FindObjectsSortMode.None).Any(c => c.gameObject.scene == master)) SetupView(source, plan.Outer());
@@ -298,16 +302,17 @@ namespace GeoWorld.Editor
         }
 
         // The grid of the exports and who builds what. For one export the environment is kept to build from.
-        static GeoTilePlan Plan(IList<GeoTiledWorld.Part> parts, float tileSize, out EnvironmentData single)
+        static GeoTilePlan Plan(IList<GeoTiledWorld.Part> parts, float tileSize, out EnvironmentData single, out List<TerrainInfo> terrains)
         {
             single = null;
+            terrains = new List<TerrainInfo>();
             var extents = new GeoBounds[parts.Count];
             EnvironmentData first = null;
             for (int i = 0; i < parts.Count; i++)
             {
                 Bar(parts.Count > 1 ? $"Reading export {i + 1} / {parts.Count}" : "Reading the export and working out roads and lakes", 0);
                 var env = GeoData.ReadEnvironment(parts[i].environmentPath);
-                extents[i] = env.bounds;
+                extents[i] = env.bounds; terrains.Add(env.terrain);
                 if (first == null) first = env;
                 else if (!SameOrigin(first.origin, env.origin))
                     throw new InvalidDataException(parts[0].environmentPath + " and " + parts[i].environmentPath + " have different origins, so their coordinates do not line up. " +
@@ -645,6 +650,7 @@ namespace GeoWorld.Editor
         public EnvironmentData env;
         public BuildingsData buildings;
         public GeoHeightSource heights;
+        public Func<float, float, float> heightAt; // the ground: the export's own heights, or where exports meet the world's
         public List<PathBuild> paths;
         public float[] waterLevels;
         public string environmentPath, buildingsPath;
@@ -659,22 +665,34 @@ namespace GeoWorld.Editor
 
         // origin: the south-west corner of tile (0, 0); null: the corner of the coordinates (0, 0), the same for every export
         // (see GeoTilePlan). env: the export when it has been read already.
-        public static GeoTileSource Prepare(string environmentPath, string buildingsPath, GenerationSettings settings, float tileSize, Vector2? origin, EnvironmentData env = null)
+        // blend, part: the ground of an export that meets others (GeoHeightBlend); lakeLevels: the level of each lake by its id,
+        // so that a lake in two exports has one level.
+        public static GeoTileSource Prepare(string environmentPath, string buildingsPath, GenerationSettings settings, float tileSize, Vector2? origin, EnvironmentData env = null,
+            GeoHeightBlend blend = null, int part = 0, Dictionary<string, float> lakeLevels = null)
         {
             var s = new GeoTileSource { environmentPath = environmentPath, buildingsPath = buildingsPath, settings = settings, tileSize = tileSize };
             s.env = env ?? GeoData.ReadEnvironment(environmentPath);
             s.buildings = string.IsNullOrEmpty(buildingsPath)
                 ? new BuildingsData { format = "geo-buildings", version = 1, origin = s.env.origin }
                 : GeoData.ReadBuildings(buildingsPath, s.env.origin);
-            s.heights = GeoHeightSource.Load(s.env, environmentPath);
-            if (s.heights == null) s.notes.Add("No heightmap: generated flat terrain at Y = 0.");
+            s.heights = blend != null ? blend.Source(part) : GeoHeightSource.Load(s.env, environmentPath);
+            if (s.heights == null && (blend == null || !blend.HasHeights)) s.notes.Add("No heightmap: generated flat terrain at Y = 0.");
             var heights = s.heights;
-            Func<float, float, float> height = heights != null ? (Func<float, float, float>)heights.Sample : (x, z) => 0;
+            // exports that meet: the ground is the world's one, not this export's own
+            Func<float, float, float> height = blend != null ? (Func<float, float, float>)blend.Sample : heights != null ? (Func<float, float, float>)heights.Sample : (x, z) => 0;
+            s.heightAt = blend != null || heights != null ? height : null;
             s.paths = GeoGenerator.PreparePaths(s.env, height, settings, s.notes);
             s.waterLevels = GeoGenerator.WaterLevels(s.env.water, height);
-            // room below for river beds and lakes, as a single world has
-            s.baseY = (heights?.min ?? 0) - 8 - (settings.carveRivers ? settings.riverDepth + 1 : 0);
-            s.range = Mathf.Max(32, (heights?.max ?? 0) - s.baseY + 8);
+            if (lakeLevels != null)
+                for (int i = 0; i < s.env.water.Count; i++)
+                {
+                    string id = s.env.water[i].id;
+                    if (string.IsNullOrEmpty(id)) continue;
+                    if (lakeLevels.TryGetValue(id, out var level)) s.waterLevels[i] = level; else lakeLevels[id] = s.waterLevels[i];
+                }
+            // room below for river beds and lakes, as a single world has (for exports that meet: below the lowest of them)
+            s.baseY = (blend != null ? blend.Low : heights?.min ?? 0) - 8 - (settings.carveRivers ? settings.riverDepth + 1 : 0);
+            s.range = Mathf.Max(32, (blend != null ? blend.High : heights?.max ?? 0) - s.baseY + 8);
             s.origin = origin ?? Vector2.zero;
             s.resolution = settings.heightResolution;
             s.pathBox = s.paths.Select(p => Box(p.samples, p.feature.width)).ToArray();
@@ -696,6 +714,7 @@ namespace GeoWorld.Editor
             var text = new StringBuilder();
             foreach (var file in new[] { environmentPath, buildingsPath, Package(s.env.terrain?.heightmap?.file), Package(s.env.materials?.file), Package(s.env.materials?.canopyFile) })
                 if (!string.IsNullOrEmpty(file) && File.Exists(file)) { var info = new FileInfo(file); text.Append(info.Name).Append(info.Length).Append(info.LastWriteTimeUtc.Ticks).Append('|'); }
+            if (blend != null) text.Append(blend.Fingerprint(part));
             s.files = text.ToString();
             return s;
 
@@ -721,9 +740,9 @@ namespace GeoWorld.Editor
             // every grid point from the tile's corner and the shared cell size, so neighbours sample the same places
             int n = resolution + 2 * margin;
             var field = new HeightField(around, n);
-            if (heights != null)
+            if (heightAt != null)
                 for (int z = 0; z < n; z++) for (int x = 0; x < n; x++)
-                    field.heights[z, x] = heights.Sample((float)(core.minX + (x - margin) * cell), (float)(core.minZ + (z - margin) * cell));
+                    field.heights[z, x] = heightAt((float)(core.minX + (x - margin) * cell), (float)(core.minZ + (z - margin) * cell));
             // the ground this export gives to the tile: all of it, or its region where exports meet
             bool shared = plan != null && plan.tiles.TryGetValue(index, out var builders) && builders.Count > 1;
             var reach = shared ? GeoTilePlan.Intersection(around, plan.region[part]) : around;

@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.8.1
+
+- Fixed: a wall along the seam between exports. Each export's heightmap was cut from the elevation data for its own area, so where two exports meet their heights differ (by a little, or by a whole datum when the ground level at the origin differs) and every tile took its own export's numbers. Now the ground is one function of the point for the whole world: the exports are first brought to one datum (each is moved by the median difference to the earlier export it overlaps, over the overlap), and across the overlap the heights of the exports that reach a point are averaged, weighted by how far inside its bounds the point is plus a 24 m feather, so the ground goes over from one export to the next instead of stepping. Away from a seam a point has one export's own height. Every tile gets the same height at a point whichever export builds it. The height scale (Terrain Base Y and Range) is the world's, not each export's.
+- Fixed: lakes drawn as squares with gaps against the terrain. The surface was a grid of squares laid from each tile's own corner, and a square was kept only when its four corners and its middle were inside the outline: the shore was stepped, the water stopped short of it, a pit of the full depth showed between the water and the terrain, and the squares of two tiles did not line up. Now the bed slopes from the shore (at the water level) down to the depth over a bank of 4 to 14 m, the ground just outside the shore comes down to the water level on a gentle slope, and the surface is flat quads on the terrain's own height grid (which every tile shares), one for each run of wet cells in a row: the outline is followed to the grid's resolution, the cells the outline touches are wet, and the edge of the first of them is under the bank. Surfaces of two tiles meet exactly.
+- One lake from several exports: the outlines that two exports have of one lake (the same id) are one surface at one level, taken from the first export that has it, and a lake across a seam has one level on both sides.
+- Tiles are rebuilt (tile version 16): Rebuild changed tiles.
+- Tests: three new (the bank and the surface of a lake, two tiles' surfaces meeting, two exports with a 3 m different datum and a lake across the seam).
+
 ## 1.8.0
 
 - Fixed: the parts of one area (Kharkiv as six exports) were cut into tiles as separate worlds, each on a grid that began at its own export's lowest corner, with full 2 km tiles at its edges. Tiles of neighbouring parts did not line up and overlapped by hundreds of metres, up to 1.9 km between the north and south groups.
