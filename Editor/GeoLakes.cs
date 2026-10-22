@@ -17,18 +17,15 @@ namespace GeoWorld.Editor
     // to the grid's resolution and has no gaps against the terrain.
     public static class GeoLakes
     {
-        // Slope of the ground outside the shore (metres up for each metre away from it).
-        const float OutsideSlope = 0.5f;
-
         // Metres the bed takes to reach its full depth: a bank of about one to three, 4 m at least.
-        public static float Bank(float depth) => Mathf.Clamp(depth * 3, 4, 14);
+        public static float Bank(float depth) => GeoShore.Bank(depth);
 
         // Lowers the field to the lakes' beds. levels: the water level of each lake.
         public static void Carve(IList<AreaFeature> water, IList<float> levels, HeightField field, float depth)
         {
             int n = field.resolution;
             double cell = (double)field.bounds.Width / (n - 1);
-            float bank = Bank(depth), reach = bank * OutsideSlope * 2 + (float)cell;
+            float reach = GeoShore.Reach(depth, (float)cell);
             for (int i = 0; i < water.Count; i++)
             {
                 var rings = Rings(water[i]);
@@ -66,19 +63,9 @@ namespace GeoWorld.Editor
                         float px = Node(field, x, true), d = distance[z - z0, x - x0];
                         bool inside = Inside(crossings, px);
                         float level = levels[i];
-                        if (inside)
-                        {
-                            // at the shore the water level, the full depth a bank in
-                            float t = d >= bank ? 1 : Smooth(d / bank);
-                            float bed = Mathf.Lerp(level, level - depth, t);
-                            if (bed < field.heights[z, x]) field.heights[z, x] = bed;
-                        }
-                        else if (d < float.MaxValue)
-                        {
-                            // outside: no higher than a gentle bank rising from the water level
-                            float allowed = level + d * OutsideSlope;
-                            if (field.heights[z, x] > allowed) field.heights[z, x] = allowed;
-                        }
+                        // inside: the water level at the shore, the full depth a bank in; outside: the shore's slope and shoulder (GeoShore)
+                        if (inside) field.heights[z, x] = GeoShore.Shape(field.heights[z, x], level, -d, depth, (float)cell);
+                        else if (d < float.MaxValue) field.heights[z, x] = GeoShore.Shape(field.heights[z, x], level, d, depth, (float)cell);
                     }
                 }
             }

@@ -9,7 +9,10 @@ namespace GeoWorld.Editor
         public LineFeature feature;
         public bool river;
         public List<Vector3> controls, samples;
+        // the width of the path at each sample (a river fitted to the water of the ground map); null: the feature's own width
+        public List<float> widths;
         public bool Elevated => feature.bridge || feature.layer != 0;
+        public float HalfWidth(int sample) => (widths != null && sample < widths.Count ? widths[sample] : feature.width) * 0.5f;
     }
 
     public class MeshDraft
@@ -51,21 +54,24 @@ namespace GeoWorld.Editor
             return side / Mathf.Max(0.5f,denominator); // Bounded miter: sharp bends cannot create spikes.
         }
 
-        public static Mesh Ribbon(PathBuild path, HeightField field, float offset)
+        // extra: metres added to each side of the ribbon. A river's surface goes a little under its banks, so that its edge is
+        // under ground and not in the air over the bed.
+        public static Mesh Ribbon(PathBuild path, HeightField field, float offset, float extra = 0)
         {
             var mesh = new MeshDraft();
-            float length = 0, half=path.feature.width*0.5f;
+            float length = 0;
             const int lanes=4;
             for(int i=0;i<path.samples.Count;i++)
             {
                 if(i>0) length+=Vector3.Distance(path.samples[i-1],path.samples[i]);
                 Vector3 side=Side(path.samples,i);
+                float half=path.HalfWidth(i)+extra;
                 for(int j=0;j<=lanes;j++)
                 {
                     Vector3 v=path.samples[i]+side*Mathf.Lerp(-half,half,j/(float)lanes);
                     if(!path.river&&!path.Elevated) v.y=field.Sample(v.x,v.z);
                     v.y+=offset;
-                    mesh.vertices.Add(v); mesh.uv.Add(new Vector2(j*path.feature.width/lanes/4,length/4));
+                    mesh.vertices.Add(v); mesh.uv.Add(new Vector2(j*half*2/lanes/4,length/4));
                     if(i==0||j==0) continue;
                     int d=i*(lanes+1)+j,a=d-(lanes+1)-1,b=a+1,c=d-1;
                     // side points left; cross-width then forward gives upward-facing triangles.

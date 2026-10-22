@@ -19,6 +19,9 @@ namespace GeoWorld
         TerrainCollider terrainCollider;
         GeoInstancedMeshes drawer;
         CancellationTokenSource lifetime;
+        // The trees are in the terrain. They stay while the tile is only switched off (a Nature Renderer that drew them keeps
+        // references to the terrain data, and draws nothing if the data is destroyed under it) and go when the tile is destroyed.
+        bool restored;
         sealed class Request
         {
             public ResourceRequest operation;
@@ -34,6 +37,8 @@ namespace GeoWorld
         void OnEnable()
         {
             if (!Application.isPlaying) return;
+            // switched on again: its trees are still in
+            if (restored) { Ready = true; return; }
             lifetime = new CancellationTokenSource();
             RestoreAsync(lifetime.Token).Forget();
         }
@@ -43,7 +48,7 @@ namespace GeoWorld
             try
             {
                 terrain = GetComponent<Terrain>();
-                if (string.IsNullOrEmpty(resourceKey)) { Ready = true; return; }
+                if (string.IsNullOrEmpty(resourceKey)) { restored = Ready = true; return; }
                 string key = resourceKey;
                 if (!requests.TryGetValue(key, out var request))
                     requests[key] = request = new Request { operation = Resources.LoadAsync<GeoTreeData>(key) };
@@ -84,7 +89,9 @@ namespace GeoWorld
                         drawer.batches.AddRange(data.batches);
                         drawer.count = data.instanceCount;
                     }
-                    Ready = true;
+                    restored = Ready = true;
+                    // a Nature Renderer that is already running keeps the terrain data it started with
+                    GetComponent<GeoNatureRendererStart>()?.TreesChanged();
                 }
                 finally
                 {
@@ -103,6 +110,11 @@ namespace GeoWorld
         {
             lifetime?.Cancel(); lifetime?.Dispose(); lifetime = null;
             Ready = false;
+        }
+
+        void OnDestroy()
+        {
+            restored = false;
             if (drawer) Destroy(drawer.gameObject);
             if (runtime)
             {

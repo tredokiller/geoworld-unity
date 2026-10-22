@@ -192,7 +192,11 @@ def _add_elevation(buildings, origin, cache_dir, warnings, log, is_cancelled, de
     attribution = None
     try:
         if dem_sampler is not None:
-            values, sources, attribution = [dem_sampler(la, lo) for la, lo in points], [terrain.NAME], [terrain.ATTRIBUTION]
+            # the origin's ground is read at the origin itself, also when it is outside the area (a sampler clamps a point
+            # outside its grid to the nearest edge, which would give every export of one world a zero of its own)
+            at_origin = getattr(dem_sampler, "ground_at", dem_sampler)
+            values = [at_origin(origin[0], origin[1])] + [dem_sampler(la, lo) for la, lo in points[1:]]
+            sources, attribution = [terrain.NAME], [terrain.ATTRIBUTION]
         else:
             values, sources = elevation_api.fetch(points, cache_dir, log, progress, is_cancelled)
     except Cancelled:

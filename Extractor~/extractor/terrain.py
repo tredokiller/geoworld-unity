@@ -73,6 +73,8 @@ class Dem:
     MAX_NODES = 12_000_000
 
     def __init__(self, south, west, north, east, cache_dir, log, progress, is_cancelled):
+        self._cache_dir, self._log, self._is_cancelled = cache_dir, log, is_cancelled
+        self._elsewhere = {}  # the ground at points outside this grid, by point
         margin = 3
         self.i0 = math.floor(west * 3600) - margin   # grid column of longitude i / 3600
         i1 = math.ceil(east * 3600) + margin
@@ -139,8 +141,36 @@ class Dem:
                 self.data[base:base + len(lons)] = array("f", [fn(lat, lon) for lon in lons])
         log(f"Terrain: {NAME}, {len(cogs)} file(s), {self.w} x {self.h} grid")
 
+    def covers(self, lat, lon):
+        """Whether the point lies on this grid (sampler() clamps a point outside it to the nearest edge)."""
+        fx, fy = lon * 3600.0 - self.i0, self.j1 - lat * 3600.0
+        return 0.0 <= fx <= self.w - 1 and 0.0 <= fy <= self.h - 1
+
+    def ground_at(self, lat, lon):
+        """Metres above sea level at one point, also where the point lies outside this grid.
+
+        The origin of an export is such a point: it is the same for every export of one world, but a grid cut for the export's
+        own area does not reach it, and sampler() would give the height of the nearest edge instead: another "ground at the
+        origin" (another zero for all heights) for every export. A point outside is read from a small grid of its own.
+        """
+        if self.covers(lat, lon):
+            return self.sampler()(lat, lon)
+        key = (round(lat, 7), round(lon, 7))
+        if key not in self._elsewhere:
+            try:
+                near = Dem(lat - 0.002, lon - 0.002, lat + 0.002, lon + 0.002, self._cache_dir, self._log,
+                           lambda fraction=None, message=None: None, self._is_cancelled)
+                self._elsewhere[key] = near.sampler()(lat, lon)
+            except Cancelled:
+                raise
+            except Exception as e:
+                self._log(f"WARNING: the ground level at {lat:.5f}, {lon:.5f} could not be read ({e}); the height of the nearest "
+                          "edge of the area is used, so exports of neighbouring areas may differ in height")
+                self._elsewhere[key] = self.sampler()(lat, lon)
+        return self._elsewhere[key]
+
     def sampler(self):
-        """Returns f(lat, lon) -> metres above sea level (0 over open sea)."""
+        """Returns f(lat, lon) -> metres above sea level (0 over open sea). Its ground_at(lat, lon) also reaches points outside the grid."""
         data, w = self.data, self.w
         i0, j1 = self.i0, self.j1
         wm1, hm1 = w - 1, self.h - 1
@@ -165,6 +195,7 @@ class Dem:
             i = iy * w + ix
             a, b, c, d = data[i], data[i + 1], data[i + w], data[i + w + 1]
             return (a + (b - a) * tx) * (1.0 - ty) + (c + (d - c) * tx) * ty
+        sample.ground_at = self.ground_at
         return sample
 
 

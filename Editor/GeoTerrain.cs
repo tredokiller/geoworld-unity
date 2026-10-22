@@ -166,27 +166,39 @@ namespace GeoWorld.Editor
                 if (weights[z, x] > 0) field.heights[z, x] = Mathf.Lerp(field.heights[z, x], sums[z, x] / weights[z, x], influence[z, x]);
         }
 
+        // The beds of the rivers, shaped like the shore of a lake (GeoShore) from the distance to the edge of the water: the water's edge
+        // is where the ground is at the water level, the bed falls from there to the full depth, and the ground outside never
+        // lies lower than the water. A river's water surface goes a little under the banks (GeoGenerator.RiverCover), so its edge is
+        // never in the air. The shape is worked out from the nearest piece of river at every node, so overlapping rivers and
+        // neighbouring tiles agree.
         public static void Carve(HeightField field, List<PathBuild> paths, GenerationSettings settings)
         {
             if (!settings.carveRivers) return;
-            // A minimum envelope makes overlapping river segments independent of traversal order.
-            var result = (float[,])field.heights.Clone();
+            int n = field.resolution;
+            float cell = Mathf.Max(field.bounds.Width, field.bounds.Depth) / (n - 1), depth = settings.riverDepth, reach = GeoShore.Reach(depth, cell);
+            float[,] edge = null, level = null; // signed distance to the nearest water's edge (negative inside), the level of the water there
             foreach (var path in paths)
             {
                 if (!path.river) continue;
-                float half = path.feature.width * 0.5f;
-                float feather = Mathf.Max(3, Mathf.Max(field.bounds.Width, field.bounds.Depth) / (field.resolution - 1) * 1.5f);
+                if (edge == null)
+                {
+                    edge = new float[n, n]; level = new float[n, n];
+                    for (int z = 0; z < n; z++) for (int x = 0; x < n; x++) edge[z, x] = float.MaxValue;
+                }
                 for (int i = 1; i < path.samples.Count; i++)
                 {
                     Vector3 a = path.samples[i - 1], b = path.samples[i];
-                    field.RasterSegment(a, b, half + feather, (x, z, d, t) => {
-                        float w = 1 - Mathf.SmoothStep(0, 1, Mathf.InverseLerp(half * 0.9f, half + feather, d));
-                        float bed = Mathf.Lerp(a.y, b.y, t) - settings.riverDepth;
-                        result[z, x] = Mathf.Min(result[z, x], Mathf.Lerp(field.heights[z, x], bed, w));
+                    float ha = path.HalfWidth(i - 1), hb = path.HalfWidth(i);
+                    field.RasterSegment(a, b, Mathf.Max(ha, hb) + reach, (x, z, d, t) =>
+                    {
+                        float s = d - Mathf.Lerp(ha, hb, t);
+                        if (s < edge[z, x]) { edge[z, x] = s; level[z, x] = Mathf.Lerp(a.y, b.y, t); }
                     });
                 }
             }
-            Array.Copy(result, field.heights, result.Length);
+            if (edge == null) return;
+            for (int z = 0; z < n; z++) for (int x = 0; x < n; x++)
+                if (edge[z, x] < float.MaxValue) field.heights[z, x] = GeoShore.Shape(field.heights[z, x], level[z, x], edge[z, x], depth, cell);
         }
 
         // fixedRange > 0: the height scale of a tiled world (base and range shared by all tiles, so their edges agree).
@@ -256,9 +268,10 @@ namespace GeoWorld.Editor
             {
                 if (path.Elevated) continue;
                 int layer = path.river ? 3 : path.feature.material == "asphalt" ? 4 : LayerIndex(path.feature.material);
-                float radius = path.feature.width * 0.5f + (path.river ? 2 : settings.roadShoulder);
                 for (int i = 1; i < path.samples.Count; i++)
                 {
+                    // a river's width is its own at every sample (fitted to the water of the ground map)
+                    float radius = (path.river ? Mathf.Max(path.HalfWidth(i - 1), path.HalfWidth(i)) : path.feature.width * 0.5f) + (path.river ? 2 : settings.roadShoulder);
                     var a = path.samples[i - 1]; var c = path.samples[i];
                     int x0 = Mathf.Clamp(Mathf.FloorToInt((Mathf.Min(a.x,c.x)-radius-b.minX)/b.Width*n),0,n-1);
                     int x1 = Mathf.Clamp(Mathf.CeilToInt((Mathf.Max(a.x,c.x)+radius-b.minX)/b.Width*n),0,n-1);

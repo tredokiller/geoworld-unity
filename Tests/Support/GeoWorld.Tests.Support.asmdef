@@ -1,0 +1,5 @@
+{
+  "name": "GeoWorld.Tests.Support",
+  "references": ["GeoWorld.Runtime"],
+  "defineConstraints": ["UNITY_INCLUDE_TESTS"]
+}

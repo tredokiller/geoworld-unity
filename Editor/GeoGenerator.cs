@@ -62,7 +62,7 @@ namespace GeoWorld.Editor
                 }
                 if (replace != null && tile == null) ApplyOverrides(env,replace);
                 var field=tile?.field??HeightField.Load(env,environmentPath,settings.heightResolution,notes);
-                var paths=tile?.paths??PreparePaths(env,field.Sample,settings,notes);
+                var paths=tile?.paths??PreparePaths(env,field.Sample,settings,notes,GeoWaterMask.Load(env,environmentPath));
                 var roadNetwork=new GeoRoadNetwork(paths,field);
                 roadNetwork.Connect(settings.junctionSnap,settings.pathStep);
                 Progress("Carving water and grading roads",0.12f);
@@ -188,7 +188,7 @@ namespace GeoWorld.Editor
                     if(path.river||path.Elevated)
                     {
                         var material=path.river?context.Water:context.Surface(GeoData.Surface(path.feature.material));
-                        var roadMesh=context.Clip(GeoMeshes.Ribbon(path,field,path.river?0:GeoRoadNetwork.SurfaceOffset));
+                        var roadMesh=context.Clip(GeoMeshes.Ribbon(path,field,path.river?0:GeoRoadNetwork.SurfaceOffset,path.river?RiverCover(field):0));
                         if(roadMesh.vertexCount>0)context.MeshObject(item,roadMesh,material,!path.river);
                         else Object.DestroyImmediate(roadMesh);
                     }
@@ -483,7 +483,7 @@ namespace GeoWorld.Editor
         }
 
         // height: the ground under a point (the world's height field, or the export's heightmap for a tiled world)
-        internal static List<PathBuild> PreparePaths(EnvironmentData env,Func<float,float,float> height,GenerationSettings settings,List<string> notes)
+        internal static List<PathBuild> PreparePaths(EnvironmentData env,Func<float,float,float> height,GenerationSettings settings,List<string> notes,GeoWaterMask mask=null)
         {
             var result=new List<PathBuild>();int skipped=0,tunnels=0;
             for(int kind=0;kind<2;kind++) foreach(var feature in kind==0?env.roads:env.waterways)
@@ -515,7 +515,14 @@ namespace GeoWorld.Editor
                     for(int i=0;i<samples.Count;i++) {var p=samples[i];p.y+=feature.layer*5f;samples[i]=p;}
                     notes.Add("Road "+feature.id+": estimated height offset of "+(feature.layer*5)+" m for source layer "+feature.layer+".");
                 }
-                result.Add(new PathBuild {feature=feature,river=kind==1,controls=controls,samples=samples});
+                var built=new PathBuild {feature=feature,river=kind==1,controls=controls,samples=samples};
+                if(kind==1)
+                {
+                    // the river as the ground map shows it (its width and its middle), and a water level without the noise of the elevation data
+                    GeoRivers.Fit(built,mask,height,settings.pathStep);
+                    GeoRivers.SmoothLevels(built.samples,settings.pathStep,40);
+                }
+                result.Add(built);
             }
             if(skipped>0) notes.Add(skipped+" invalid or empty paths were skipped.");
             if(tunnels>0) notes.Add(tunnels+" tunnels/culverts skipped (no surface road or water).");
@@ -533,6 +540,10 @@ namespace GeoWorld.Editor
             }
             return result;
         }
+
+        // Metres that a river's surface goes beyond the edge of its water on each side: under the bank, where the ground is above the
+        // water, so that no edge of the water hangs in the air.
+        static float RiverCover(HeightField field)=>Mathf.Max(1.2f*field.bounds.Width/(field.resolution-1),1.5f);
 
         static void BridgeRails(PathBuild path,BuildContext context,Transform parent)
         {

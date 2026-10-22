@@ -1,6 +1,6 @@
 {
   "name": "GeoWorld.Tests",
-  "references": ["GeoWorld.Runtime", "GeoWorld.Editor"],
+  "references": ["GeoWorld.Runtime", "GeoWorld.Editor", "GeoWorld.Tests.Support"],
   "overrideReferences": true,
   "precompiledReferences": ["Newtonsoft.Json.dll", "nunit.framework.dll"],
   "includePlatforms": ["Editor"],

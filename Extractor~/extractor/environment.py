@@ -76,7 +76,7 @@ def run(buildings, ring, proj, origin, dem, options, cache_dir, log, progress, i
     # ---- terrain -----------------------------------------------------------
     origin_ground = None
     if dem is not None:
-        origin_ground = dem.sampler()(origin[0], origin[1])
+        origin_ground = dem.ground_at(origin[0], origin[1])  # also when the origin is outside this export's area
     hm = None
     if want_height:
         progress(0.0, "Terrain: heightmap")

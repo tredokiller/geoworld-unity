@@ -87,7 +87,7 @@ namespace GeoWorld.Editor
         // Far more than any road grading or junction reaches, and room for the buildings next to a tile.
         public const float MarginMetres = 96;
         // bump when the generator draws tiles differently, so that "Rebuild changed tiles" rebuilds them
-        internal const string Version = "geo-tiles-16"; // 16: lakes carved with a bank and drawn on the terrain grid, one ground for exports that meet; 15: one grid for every export, tiles where exports meet built from all of them; 13: ground roads one mesh per chunk and material; 12: crossings likewise; 11: Auto building mode merges in tiles; 10: homes made from a list when the tile loads
+        internal const string Version = "geo-tiles-17"; // 17: lake shores go back to the ground without a wall and never leave the water in the air; 16: lakes carved with a bank and drawn on the terrain grid, one ground for exports that meet; 15: one grid for every export, tiles where exports meet built from all of them; 13: ground roads one mesh per chunk and material; 12: crossings likewise; 11: Auto building mode merges in tiles; 10: homes made from a list when the tile loads
 
         public static string DefaultFolder(string environmentPath) => GeoPaths.Project + "/Tiled/" + PackageName(environmentPath);
         // Several exports: named after the folder that holds them (the parts of one area), else after the first.
@@ -579,7 +579,8 @@ namespace GeoWorld.Editor
                 if (controlAt != null) { for (int c = 0; c < controlAt.Length; c++) if (controlAt[c] > first && controlAt[c] < last) controls.Add(path.controls[c]); }
                 else for (int i = first + 1; i < last; i++) controls.Add(s[i]);
                 controls.Add(s[last]);
-                result.Add(new PathBuild { feature = path.feature, river = path.river, controls = controls, samples = s.GetRange(first, last - first + 1) });
+                result.Add(new PathBuild { feature = path.feature, river = path.river, controls = controls, samples = s.GetRange(first, last - first + 1),
+                    widths = path.widths != null && path.widths.Count == s.Count ? path.widths.GetRange(first, last - first + 1) : null });
             }
             return result;
         }
@@ -681,7 +682,7 @@ namespace GeoWorld.Editor
             // exports that meet: the ground is the world's one, not this export's own
             Func<float, float, float> height = blend != null ? (Func<float, float, float>)blend.Sample : heights != null ? (Func<float, float, float>)heights.Sample : (x, z) => 0;
             s.heightAt = blend != null || heights != null ? height : null;
-            s.paths = GeoGenerator.PreparePaths(s.env, height, settings, s.notes);
+            s.paths = GeoGenerator.PreparePaths(s.env, height, settings, s.notes, GeoWaterMask.Load(s.env, environmentPath));
             s.waterLevels = GeoGenerator.WaterLevels(s.env.water, height);
             if (lakeLevels != null)
                 for (int i = 0; i < s.env.water.Count; i++)
