@@ -10,9 +10,12 @@ namespace GeoWorld.Editor
     // imports them anyway), at most 2048 px, the size they are imported at. Normal maps stay lossless (JPEG turns them
     // by several degrees), as PNG of at most 1024 px with the blue channel flat: Unity rebuilds blue from red and green.
     // The 2,000 px source textures of a library were 950 MB; written like this they are about a quarter of that.
+    // Imported, colour is DXT1 with Crunch on top (CrunchQuality): a 2048 texture is about 0.7 MB in a build instead of 5.3 MB
+    // as BC7, and half of BC7's memory; the 63 colour textures of the libraries were 340 MB of every build that shows them.
+    // Normal maps stay BC5 (Crunch turns their directions).
     public static class GeoTextureFiles
     {
-        public const int MaxSize = 2048, NormalMaxSize = 1024, JpegQuality = 92;
+        public const int MaxSize = 2048, NormalMaxSize = 1024, JpegQuality = 92, CrunchQuality = 80;
 
         public static string AlbedoName(string id) => id + "_albedo.jpg";
         public static string NormalName(string id) => id + "_normal.png";
@@ -56,8 +59,10 @@ namespace GeoWorld.Editor
             bool normal = path.EndsWith("_normal.png", StringComparison.Ordinal);
             var type = normal ? TextureImporterType.NormalMap : TextureImporterType.Default;
             var wrap = clamp ? TextureWrapMode.Clamp : importer.wrapMode;
+            var compression = normal ? TextureImporterCompression.CompressedHQ : TextureImporterCompression.Compressed;
             if (importer.textureType == type && importer.sRGBTexture == !normal && importer.maxTextureSize == MaxSize && importer.anisoLevel == 4 &&
-                importer.mipmapEnabled && importer.wrapMode == wrap) return;
+                importer.mipmapEnabled && importer.wrapMode == wrap && importer.textureCompression == compression && importer.crunchedCompression == !normal &&
+                (normal || importer.compressionQuality == CrunchQuality)) return;
             importer.textureType = type;
             importer.sRGBTexture = !normal;
             importer.alphaSource = TextureImporterAlphaSource.None;
@@ -65,7 +70,9 @@ namespace GeoWorld.Editor
             importer.wrapMode = wrap;
             importer.anisoLevel = 4;
             importer.maxTextureSize = MaxSize;
-            importer.textureCompression = TextureImporterCompression.CompressedHQ;
+            importer.textureCompression = compression;
+            importer.crunchedCompression = !normal;
+            if (!normal) importer.compressionQuality = CrunchQuality;
             importer.SaveAndReimport();
         }
 
