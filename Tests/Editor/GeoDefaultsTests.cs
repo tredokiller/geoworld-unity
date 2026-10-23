@@ -13,6 +13,7 @@ namespace GeoWorld.Editor.Tests
             var settings = new GenerationSettings();
             Assert.IsTrue(settings.satelliteImagery);
             Assert.AreEqual(0, settings.satelliteResolution, "Auto");
+            Assert.AreEqual(GeoSatelliteCompression.Crunched, settings.satelliteCompression, "the satellite texture is most of a world's size");
             Assert.IsTrue(settings.roadMeshes);
             Assert.AreEqual(GeoRuinUse.AllDamage, settings.ruinModels);
             Assert.AreEqual(GeoHomeUse.IntactAndUnknown, settings.homeModels);

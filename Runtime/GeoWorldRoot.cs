@@ -4,6 +4,8 @@ using UnityEngine;
 namespace GeoWorld
 {
     public enum GeoBuildingMode { Auto, Editable, Merged }
+    // How the satellite texture is stored: DXT1, or DXT1 with Crunch compression on top (smaller on disk and in a build)
+    public enum GeoSatelliteCompression { DXT1, Crunched }
 
     [Serializable]
     public class GenerationSettings
@@ -61,6 +63,10 @@ namespace GeoWorld
         public string satelliteTiles = "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}?blankTile=false";
         [Tooltip("Deepest tile zoom to ask the server for (19 is about 20-30 cm per pixel).")]
         [Range(1, 22)] public int satelliteMaxZoom = 19;
+        [Tooltip("How the satellite texture is kept in the world's assets and in a build. Crunched: DXT1 with Crunch compression on top, about a quarter of the size (a 1 km tile's 2048 texture 2.7 MB to about 0.6-0.9 MB); Unity turns it back into DXT1 on the loading thread, so it takes the same memory and looks the same on the GPU. DXT1: as before, at DXT1's best encoding.")]
+        public GeoSatelliteCompression satelliteCompression = GeoSatelliteCompression.Crunched;
+        [Tooltip("Crunch quality, 1-100: higher keeps more of the picture's detail and is bigger. At 75 the blocks of Crunch hardly show from a street's height; 50 is Unity's default for imported textures.")]
+        [Range(1, 100)] public int satelliteQuality = 75;
         [Header("Props and vegetation")]
         public bool mappedProps = true;
         public bool vegetation = true;

@@ -506,6 +506,10 @@ namespace GeoWorld.Editor
                 Section("Satellite imagery");
                 settings.satelliteResolution = EditorGUILayout.IntPopup("Texture size", settings.satelliteResolution, new[] { "Auto (0.4 m a texel)", "1024", "2048", "4096", "8192" }, new[] { 0, 1024, 2048, 4096, 8192 });
                 settings.satelliteMaxZoom = EditorGUILayout.IntSlider("Deepest tile zoom", settings.satelliteMaxZoom, 1, 22);
+                settings.satelliteCompression = (GeoSatelliteCompression)EditorGUILayout.EnumPopup(new GUIContent("Compression",
+                    "Crunched: DXT1 with Crunch compression, about a quarter of the size in the assets and in a build, the same DXT1 once loaded. DXT1: as before."), settings.satelliteCompression);
+                using (new EditorGUI.DisabledScope(settings.satelliteCompression != GeoSatelliteCompression.Crunched))
+                    settings.satelliteQuality = EditorGUILayout.IntSlider(new GUIContent("Crunch quality", "Higher keeps more detail and is bigger; 75 hardly shows Crunch's blocks from a street's height."), settings.satelliteQuality, 1, 100);
                 settings.satelliteTiles = EditorGUILayout.TextField("Tile URL {z}/{x}/{y}", settings.satelliteTiles);
                 EditorGUILayout.HelpBox(GeoSatellite.Attribution(settings.satelliteTiles) + ". Tiles are cached in Library/GeoWorld/SatelliteTiles; check the server's terms before shipping the imagery.", MessageType.None);
             }

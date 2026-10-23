@@ -122,7 +122,7 @@ namespace GeoWorld.Editor
             return zoom;
         }
 
-        // A square texture (resolution x resolution, mipmapped, DXT1) whose UV (0,0)-(1,1) spans the bounds
+        // A square texture (resolution x resolution, mipmapped, DXT1 or crunched DXT1: Compress) whose UV (0,0)-(1,1) spans the bounds
         // (row 0 = south edge). Throws when no tile could be read.
         public static Texture2D Build(GeoOrigin origin, GeoBounds b, GenerationSettings settings, List<string> notes, Action<string, float> progress)
         {
@@ -208,12 +208,35 @@ namespace GeoWorld.Editor
             var result = new Texture2D(resolution, resolution, TextureFormat.RGBA32, true, false)
                 { name = "Satellite imagery", wrapMode = TextureWrapMode.Clamp, filterMode = FilterMode.Trilinear, anisoLevel = 8 };
             result.SetPixels32(pixels); result.Apply(true);
-            EditorUtility.CompressTexture(result, TextureFormat.DXT1, TextureCompressionQuality.Normal);
+            Compress(result, pixels, settings, notes);
             double metres = MetresPerPixel(origin.lat, zoom, tileSize);
             notes?.Add($"Terrain draped with satellite imagery: {range.width * range.height} tiles at zoom {zoom} ({metres:F2} m per pixel) into {resolution} x {resolution} " +
                 $"({Math.Max(b.Width, b.Depth) / resolution:F2} m per texel). {Attribution(template)}." +
                 (failed > 0 ? $" {failed} tiles were missing and are grey." : "") + " Tiles are cached in Library/GeoWorld/SatelliteTiles.");
             return result;
+        }
+
+        // The texture (mipmapped RGBA32 made from pixels) in the form the settings ask for: DXT1 at its best encoding (the same size
+        // as at the normal one, with fewer wrong colours in each block), or Crunched: DXT1 with Crunch compression on top, which
+        // takes a quarter of the bytes or less in the world's assets and in a build and becomes the same DXT1 when Unity loads it
+        // (on the loading thread). The satellite textures are most of a tiled world's size: a 1 km tile's 2048 texture is
+        // 2.7 MB as DXT1. Where this editor cannot crunch, the texture is DXT1 and the report says so.
+        public static void Compress(Texture2D texture, Color32[] pixels, GenerationSettings settings, List<string> notes)
+        {
+            if (settings.satelliteCompression == GeoSatelliteCompression.Crunched)
+            {
+                string reason = null;
+                try { EditorUtility.CompressTexture(texture, TextureFormat.DXT1Crunched, Mathf.Clamp(settings.satelliteQuality, 1, 100)); }
+                catch (Exception e) { reason = e.Message; }
+                if (texture.format == TextureFormat.DXT1Crunched) return;
+                notes?.Add("Satellite imagery: the texture could not be crunched" + (reason != null ? " (" + reason + ")" : "") + "; it is DXT1.");
+                if (texture.format != TextureFormat.RGBA32)
+                {
+                    texture.Reinitialize(texture.width, texture.height, TextureFormat.RGBA32, true);
+                    texture.SetPixels32(pixels); texture.Apply(true);
+                }
+            }
+            EditorUtility.CompressTexture(texture, TextureFormat.DXT1, TextureCompressionQuality.Best);
         }
 
         // Tiles whose bytes repeat across the area are the server's placeholder ("map data not yet available"),

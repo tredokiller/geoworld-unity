@@ -64,7 +64,8 @@ namespace GeoWorld.Editor.Tests
             string cache = GeoSatellite.CacheFolder(template);
             var origin = new GeoOrigin { lat = Lat0, lon = Lon0 };
             var bounds = new GeoBounds { minX = -200, minZ = -150, maxX = 200, maxZ = 250 };
-            var settings = new GenerationSettings { satelliteTiles = template, satelliteResolution = 1024, satelliteMaxZoom = 18 };
+            // DXT1: the texels are read back below (a crunched texture cannot be read pixel by pixel)
+            var settings = new GenerationSettings { satelliteTiles = template, satelliteResolution = 1024, satelliteMaxZoom = 18, satelliteCompression = GeoSatelliteCompression.DXT1 };
             var enu = new GeoEnu(Lat0, Lon0);
             var range = GeoSatellite.Tiles(enu, bounds, 17);
             Assert.That(range.width * range.height, Is.GreaterThan(1));
@@ -116,6 +117,30 @@ namespace GeoWorld.Editor.Tests
             {
                 if (result) Object.DestroyImmediate(result);
                 if (Directory.Exists(cache)) Directory.Delete(cache, true);
+            }
+        }
+
+        // The satellite texture is crunched by default (about a quarter of DXT1's size in the assets and in a build), mipmapped;
+        // DXT1 stays DXT1.
+        [Test] public void Compress_CrunchesByDefault_AndKeepsDxt1WhenAsked()
+        {
+            Assert.That(new GenerationSettings().satelliteCompression, Is.EqualTo(GeoSatelliteCompression.Crunched));
+            var pixels = new Color32[512 * 512];
+            for (int i = 0; i < pixels.Length; i++) { int x = i % 512, y = i / 512; pixels[i] = new Color32((byte)(x * 7 ^ y * 3), (byte)(y * 5), (byte)((x + y) * 2), 255); }
+            foreach (var compression in new[] { GeoSatelliteCompression.Crunched, GeoSatelliteCompression.DXT1 })
+            {
+                var texture = new Texture2D(512, 512, TextureFormat.RGBA32, true, false);
+                try
+                {
+                    texture.SetPixels32(pixels); texture.Apply(true);
+                    var notes = new List<string>();
+                    GeoSatellite.Compress(texture, pixels, new GenerationSettings { satelliteCompression = compression, satelliteQuality = 75 }, notes);
+                    var expected = compression == GeoSatelliteCompression.Crunched ? TextureFormat.DXT1Crunched : TextureFormat.DXT1;
+                    Assert.That(texture.format, Is.EqualTo(expected), string.Join(" ", notes));
+                    Assert.That(texture.mipmapCount, Is.GreaterThan(1));
+                    Assert.That(notes, Is.Empty);
+                }
+                finally { Object.DestroyImmediate(texture); }
             }
         }
 
