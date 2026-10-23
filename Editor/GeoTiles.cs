@@ -23,6 +23,7 @@ namespace GeoWorld.Editor
         public HeightField field;       // the tile and its margin, on the grid all tiles share
         public int margin;              // cells of margin on each side of the field
         public List<PathBuild> paths;   // roads and rivers cut to the margin, with heights from the whole export
+        public List<PathBuild> rivers;  // rivers cut to RiverReach beyond the margin, for the water (GeoWater): the line of a wide river's area may lie beyond the margin
         public float[] waterLevels;     // for env.water, from the whole lake
         public GeoBounds core;
         public Vector2Int index;
@@ -40,14 +41,14 @@ namespace GeoWorld.Editor
                 terrain = main.env.terrain, materials = main.env.materials, surround = main.env.surround, outer = plan.Outer() };
             var buildings = new BuildingsData { format = main.buildings.format, version = main.buildings.version, origin = main.buildings.origin, area = new BuildingArea { bounds = main.core } };
             var levels = new List<float>();
-            var pieces = new List<PathBuild>();
+            var pieces = new List<PathBuild>(); var rivers = new List<PathBuild>();
             foreach (var f in fragments)
             {
                 env.roads.AddRange(f.env.roads); env.waterways.AddRange(f.env.waterways); env.railways.AddRange(f.env.railways); env.water.AddRange(f.env.water);
                 env.areas.AddRange(f.env.areas); env.barriers.AddRange(f.env.barriers); env.hedges.AddRange(f.env.hedges); env.treeRows.AddRange(f.env.treeRows);
                 env.trees.AddRange(f.env.trees); env.props.AddRange(f.env.props);
                 buildings.buildings.AddRange(f.buildings.buildings);
-                levels.AddRange(f.waterLevels); pieces.AddRange(f.paths);
+                levels.AddRange(f.waterLevels); pieces.AddRange(f.paths); if (f.rivers != null) rivers.AddRange(f.rivers);
             }
             var field = new HeightField(main.field.bounds, main.field.resolution);
             var byPart = new Dictionary<int, GeoTileJob>();
@@ -59,7 +60,7 @@ namespace GeoWorld.Editor
                     field.heights[z, x] = from.field.heights[z, x];
                 }
             float baseY = fragments.Min(f => f.baseY), top = fragments.Max(f => f.baseY + f.range);
-            return new GeoTileJob { env = env, buildings = buildings, field = field, margin = main.margin, paths = pieces, waterLevels = levels.ToArray(),
+            return new GeoTileJob { env = env, buildings = buildings, field = field, margin = main.margin, paths = pieces, rivers = rivers, waterLevels = levels.ToArray(),
                 core = main.core, index = main.index, size = main.size, baseY = baseY, range = top - baseY, folder = main.folder, name = main.name, part = main.part, parts = fragments.Count };
         }
 
@@ -86,8 +87,11 @@ namespace GeoWorld.Editor
         public const int TerrainGroup = 4127;
         // Far more than any road grading or junction reaches, and room for the buildings next to a tile.
         public const float MarginMetres = 96;
+        // Metres beyond the margin that a tile's water reads rivers from (GeoTileJob.rivers): a river area up to a kilometre wide
+        // takes its level from its line, wherever the line is.
+        public const float RiverReach = 600;
         // bump when the generator draws tiles differently, so that "Rebuild changed tiles" rebuilds them
-        internal const string Version = "geo-tiles-17"; // 17: lake shores go back to the ground without a wall and never leave the water in the air; 16: lakes carved with a bank and drawn on the terrain grid, one ground for exports that meet; 15: one grid for every export, tiles where exports meet built from all of them; 13: ground roads one mesh per chunk and material; 12: crossings likewise; 11: Auto building mode merges in tiles; 10: homes made from a list when the tile loads
+        internal const string Version = "geo-tiles-18"; // 18: rivers and their water areas one surface on the terrain grid (GeoWater), no ribbons; 17: lake shores go back to the ground without a wall and never leave the water in the air; 16: lakes carved with a bank and drawn on the terrain grid, one ground for exports that meet; 15: one grid for every export, tiles where exports meet built from all of them; 13: ground roads one mesh per chunk and material; 12: crossings likewise; 11: Auto building mode merges in tiles; 10: homes made from a list when the tile loads
 
         public static string DefaultFolder(string environmentPath) => GeoPaths.Project + "/Tiled/" + PackageName(environmentPath);
         // Several exports: named after the folder that holds them (the parts of one area), else after the first.
@@ -691,6 +695,8 @@ namespace GeoWorld.Editor
                     if (string.IsNullOrEmpty(id)) continue;
                     if (lakeLevels.TryGetValue(id, out var level)) s.waterLevels[i] = level; else lakeLevels[id] = s.waterLevels[i];
                 }
+            // a river through a lake is at the lake's level (on the whole river, so every tile has the same)
+            GeoWater.SettleRivers(s.paths, s.env.water, s.waterLevels);
             // room below for river beds and lakes, as a single world has (for exports that meet: below the lowest of them)
             s.baseY = (blend != null ? blend.Low : heights?.min ?? 0) - 8 - (settings.carveRivers ? settings.riverDepth + 1 : 0);
             s.range = Mathf.Max(32, (blend != null ? blend.High : heights?.max ?? 0) - s.baseY + 8);
@@ -761,11 +767,20 @@ namespace GeoWorld.Editor
             e.props = env.props.Where(p => p != null && around.Contains(p.x, p.z) && owns(p.x, p.z)).ToList();
             var pieces = new List<PathBuild>();
             for (int i = 0; i < paths.Count; i++) if (pathBox[i].Overlaps(area)) pieces.AddRange(GeoTiles.ClipPath(paths[i], reach, settings.pathStep));
+            // the rivers for the water: further out, but where exports meet still only on this export's region
+            var wide = new GeoBounds { minX = around.minX - GeoTiles.RiverReach, minZ = around.minZ - GeoTiles.RiverReach, maxX = around.maxX + GeoTiles.RiverReach, maxZ = around.maxZ + GeoTiles.RiverReach };
+            var riverReach = shared ? GeoTilePlan.Intersection(wide, plan.region[part]) : wide;
+            var rivers = new List<PathBuild>();
+            if (riverReach != null)
+            {
+                var riverArea = new Rect(riverReach.minX, riverReach.minZ, riverReach.Width, riverReach.Depth);
+                for (int i = 0; i < paths.Count; i++) if (paths[i].river && pathBox[i].Overlaps(riverArea)) rivers.AddRange(GeoTiles.ClipPath(paths[i], riverReach, settings.pathStep));
+            }
             var nearby = new BuildingsData { format = buildings.format, version = buildings.version, origin = buildings.origin, area = new BuildingArea { bounds = core } };
             for (int dz = -1; dz <= 1; dz++) for (int dx = -1; dx <= 1; dx++)
                 if (cells.TryGetValue(new Vector2Int(index.x + dx, index.y + dz), out var list))
                     nearby.buildings.AddRange(list.Where(b => around.Contains(b.x, b.z) && owns(b.x, b.z)));
-            return new GeoTileJob { env = e, buildings = nearby, field = field, margin = margin, paths = pieces, waterLevels = levels.ToArray(),
+            return new GeoTileJob { env = e, buildings = nearby, field = field, margin = margin, paths = pieces, rivers = rivers, waterLevels = levels.ToArray(),
                 core = core, index = index, size = tileSize, baseY = baseY, range = range, folder = folder, name = name, part = part };
         }
 

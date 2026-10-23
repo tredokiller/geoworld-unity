@@ -24,7 +24,9 @@ namespace GeoWorld.Editor
         public static void Carve(IList<AreaFeature> water, IList<float> levels, HeightField field, float depth)
         {
             int n = field.resolution;
-            double cell = (double)field.bounds.Width / (n - 1);
+            // a single world's field need not be square: its cells are as wide as the world over its columns and as deep as it is
+            // over its rows
+            double cellX = (double)field.bounds.Width / (n - 1), cellZ = (double)field.bounds.Depth / (n - 1), cell = Math.Max(cellX, cellZ);
             float reach = GeoShore.Reach(depth, (float)cell);
             for (int i = 0; i < water.Count; i++)
             {
@@ -33,8 +35,8 @@ namespace GeoWorld.Editor
                 float minX = float.MaxValue, minZ = float.MaxValue, maxX = float.MinValue, maxZ = float.MinValue;
                 foreach (var ring in rings) foreach (var p in ring) { minX = Mathf.Min(minX, p.x); maxX = Mathf.Max(maxX, p.x); minZ = Mathf.Min(minZ, p.z); maxZ = Mathf.Max(maxZ, p.z); }
                 // the nodes that the bank or the slope outside can reach
-                int x0 = Mathf.Max(0, Mathf.FloorToInt((float)((minX - reach - field.bounds.minX) / cell))), x1 = Mathf.Min(n - 1, Mathf.CeilToInt((float)((maxX + reach - field.bounds.minX) / cell)));
-                int z0 = Mathf.Max(0, Mathf.FloorToInt((float)((minZ - reach - field.bounds.minZ) / cell))), z1 = Mathf.Min(n - 1, Mathf.CeilToInt((float)((maxZ + reach - field.bounds.minZ) / cell)));
+                int x0 = Mathf.Max(0, Mathf.FloorToInt((float)((minX - reach - field.bounds.minX) / cellX))), x1 = Mathf.Min(n - 1, Mathf.CeilToInt((float)((maxX + reach - field.bounds.minX) / cellX)));
+                int z0 = Mathf.Max(0, Mathf.FloorToInt((float)((minZ - reach - field.bounds.minZ) / cellZ))), z1 = Mathf.Min(n - 1, Mathf.CeilToInt((float)((maxZ + reach - field.bounds.minZ) / cellZ)));
                 if (x1 < x0 || z1 < z0) continue;
                 int w = x1 - x0 + 1, h = z1 - z0 + 1;
                 var distance = new float[h, w];
@@ -44,8 +46,8 @@ namespace GeoWorld.Editor
                     for (int k = 0; k < ring.Count; k++)
                     {
                         Vector3 a = ring[k], b = ring[(k + 1) % ring.Count];
-                        int ex0 = Mathf.Max(x0, Mathf.FloorToInt((float)((Mathf.Min(a.x, b.x) - reach - field.bounds.minX) / cell))), ex1 = Mathf.Min(x1, Mathf.CeilToInt((float)((Mathf.Max(a.x, b.x) + reach - field.bounds.minX) / cell)));
-                        int ez0 = Mathf.Max(z0, Mathf.FloorToInt((float)((Mathf.Min(a.z, b.z) - reach - field.bounds.minZ) / cell))), ez1 = Mathf.Min(z1, Mathf.CeilToInt((float)((Mathf.Max(a.z, b.z) + reach - field.bounds.minZ) / cell)));
+                        int ex0 = Mathf.Max(x0, Mathf.FloorToInt((float)((Mathf.Min(a.x, b.x) - reach - field.bounds.minX) / cellX))), ex1 = Mathf.Min(x1, Mathf.CeilToInt((float)((Mathf.Max(a.x, b.x) + reach - field.bounds.minX) / cellX)));
+                        int ez0 = Mathf.Max(z0, Mathf.FloorToInt((float)((Mathf.Min(a.z, b.z) - reach - field.bounds.minZ) / cellZ))), ez1 = Mathf.Min(z1, Mathf.CeilToInt((float)((Mathf.Max(a.z, b.z) + reach - field.bounds.minZ) / cellZ)));
                         for (int z = ez0; z <= ez1; z++)
                             for (int x = ex0; x <= ex1; x++)
                             {
@@ -81,19 +83,19 @@ namespace GeoWorld.Editor
             if (outlines.Count == 0) return mesh.Mesh("Empty water");
             var rings = outlines.SelectMany(r => r).ToList();
             int n = field.resolution;
-            double cell = (double)field.bounds.Width / (n - 1);
+            double cell = (double)field.bounds.Width / (n - 1), cellZ = (double)field.bounds.Depth / (n - 1);
             float minZ = rings.Min(r => r.Min(p => p.z)), maxZ = rings.Max(r => r.Max(p => p.z));
             // the cells of the grid inside clip, and of those the rows the lake reaches
             int c0 = Mathf.Max(0, Mathf.RoundToInt((float)((clip.minX - field.bounds.minX) / cell))), c1 = Mathf.Min(n - 1, Mathf.RoundToInt((float)((clip.maxX - field.bounds.minX) / cell)));
-            int r0 = Mathf.Max(Mathf.Max(0, Mathf.RoundToInt((float)((clip.minZ - field.bounds.minZ) / cell))), Mathf.FloorToInt((float)((minZ - field.bounds.minZ) / cell)));
-            int r1 = Mathf.Min(Mathf.Min(n - 1, Mathf.RoundToInt((float)((clip.maxZ - field.bounds.minZ) / cell))), Mathf.CeilToInt((float)((maxZ - field.bounds.minZ) / cell)));
+            int r0 = Mathf.Max(Mathf.Max(0, Mathf.RoundToInt((float)((clip.minZ - field.bounds.minZ) / cellZ))), Mathf.FloorToInt((float)((minZ - field.bounds.minZ) / cellZ)));
+            int r1 = Mathf.Min(Mathf.Min(n - 1, Mathf.RoundToInt((float)((clip.maxZ - field.bounds.minZ) / cellZ))), Mathf.CeilToInt((float)((maxZ - field.bounds.minZ) / cellZ)));
             var crossings = new List<float>();
             var spans = new List<Vector2Int>();
             for (int row = r0; row < r1; row++)
             {
                 // the cell's two edges and its middle: a cell the outline only touches is wet, so no cell next to the shore is dry
                 spans.Clear();
-                foreach (float z in new[] { Node(field, row, false), Node(field, row, false) + (float)(cell * 0.5), Node(field, row + 1, false) })
+                foreach (float z in new[] { Node(field, row, false), Node(field, row, false) + (float)(cellZ * 0.5), Node(field, row + 1, false) })
                 {
                     foreach (var outline in outlines)
                     {
@@ -135,11 +137,11 @@ namespace GeoWorld.Editor
         }
 
         static float Node(HeightField field, int index, bool x) =>
-            (float)((x ? field.bounds.minX : field.bounds.minZ) + index * ((double)field.bounds.Width / (field.resolution - 1)));
+            (float)(x ? field.bounds.minX + index * ((double)field.bounds.Width / (field.resolution - 1)) : field.bounds.minZ + index * ((double)field.bounds.Depth / (field.resolution - 1)));
 
         // The x of every crossing of the outlines with the line at z, in order: the inside lies between the first and the
         // second, the third and the fourth, and so on (islands and holes come out right).
-        static void Crossings(List<List<Vector3>> rings, float z, List<float> result)
+        internal static void Crossings(List<List<Vector3>> rings, float z, List<float> result)
         {
             result.Clear();
             foreach (var ring in rings)

@@ -42,7 +42,8 @@ namespace GeoWorld.Editor
     }
     [Serializable] public class AreaFeature
     {
-        public string id, name, material, tag;
+        // type: the kind of a water area (OSM water=*, or riverbank): a river's own water follows the river (GeoWater)
+        public string id, name, material, tag, type;
         public float[][] rings;
     }
     [Serializable] public class TreeFeature { public string id; public float x, z, height, crown; }

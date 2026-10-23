@@ -67,8 +67,11 @@ namespace GeoWorld.Editor
                 roadNetwork.Connect(settings.junctionSnap,settings.pathStep);
                 Progress("Carving water and grading roads",0.12f);
                 var waterLevels=tile?.waterLevels??WaterLevels(env.water,field.Sample);
-                if(settings.carveRivers) GeoLakes.Carve(env.water,waterLevels,field,settings.riverDepth);
-                GeoTerrain.Carve(field,paths,settings);
+                // a river through a lake is at the lake's level (a tiled world settles its rivers once, for the whole export)
+                if(tile==null) GeoWater.SettleRivers(paths,env.water,waterLevels);
+                // lakes, rivers and their areas: one water that is never drawn twice (GeoWater)
+                var water=new GeoWater(field,env.water,waterLevels,tile?.rivers??paths,settings.riverDepth);
+                if(settings.carveRivers) water.Carve();
                 GeoTerrain.Grade(field,paths,settings);
                 if(settings.gradeRoads) roadNetwork.GradeJunctions(settings.roadShoulder);
                 if(roadNetwork.snappedEndpoints>0) notes.Add(roadNetwork.snappedEndpoints+" nearby road endpoints snapped into connections.");
@@ -185,11 +188,11 @@ namespace GeoWorld.Editor
                     }
                     // Ground roads, intersections and markings are Terrain layers. Their
                     // editable path objects carry no renderer or second collision surface.
-                    if(path.river||path.Elevated)
+                    // A river's water is the water surface of the world (GeoWater, under Water bodies): its object is for editing.
+                    if(!path.river&&path.Elevated)
                     {
-                        var material=path.river?context.Water:context.Surface(GeoData.Surface(path.feature.material));
-                        var roadMesh=context.Clip(GeoMeshes.Ribbon(path,field,path.river?0:GeoRoadNetwork.SurfaceOffset,path.river?RiverCover(field):0));
-                        if(roadMesh.vertexCount>0)context.MeshObject(item,roadMesh,material,!path.river);
+                        var roadMesh=context.Clip(GeoMeshes.Ribbon(path,field,GeoRoadNetwork.SurfaceOffset));
+                        if(roadMesh.vertexCount>0)context.MeshObject(item,roadMesh,context.Surface(GeoData.Surface(path.feature.material)),true);
                         else Object.DestroyImmediate(roadMesh);
                     }
                     if(path.river) root.riverCount++; else root.roadCount++;
@@ -303,12 +306,16 @@ namespace GeoWorld.Editor
                 }
                 var waters=Group("Water bodies",root.transform);
                 // one surface for each lake: its outlines from every export that has it are one lake (the same level), on the terrain's grid
-                foreach(var lake in env.water.Select((f,i)=>(f,i)).GroupBy(p=>string.IsNullOrEmpty(p.f.id)?"#"+p.i:p.f.id))
+                foreach(var lake in env.water.Select((f,i)=>(f,i)).Where(p=>!GeoWater.Flowing(p.f)).GroupBy(p=>string.IsNullOrEmpty(p.f.id)?"#"+p.i:p.f.id))
                 {
                     var mesh=GeoLakes.Surface(lake.Select(p=>p.f).ToList(),waterLevels[lake.First().i],field,env.bounds);
                     if(mesh.vertexCount==0) { Object.DestroyImmediate(mesh);continue; }
                     context.MeshChild("Water | "+lake.Key,waters,mesh,context.Water,false);root.waterCount++;
                 }
+                // and one for the rivers and their areas, which follow the rivers' levels and meet the lakes' surfaces
+                var flowing=water.Surface(env.bounds);
+                if(flowing.vertexCount>0) context.MeshChild("Water | rivers",waters,flowing,context.Water,false);
+                else Object.DestroyImmediate(flowing);
                 Progress("Placing buildings",0.63f);
                 if(settings.buildings)
                 {
@@ -540,10 +547,6 @@ namespace GeoWorld.Editor
             }
             return result;
         }
-
-        // Metres that a river's surface goes beyond the edge of its water on each side: under the bank, where the ground is above the
-        // water, so that no edge of the water hangs in the air.
-        static float RiverCover(HeightField field)=>Mathf.Max(1.2f*field.bounds.Width/(field.resolution-1),1.5f);
 
         static void BridgeRails(PathBuild path,BuildContext context,Transform parent)
         {

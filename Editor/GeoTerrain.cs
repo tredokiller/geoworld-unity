@@ -168,37 +168,13 @@ namespace GeoWorld.Editor
 
         // The beds of the rivers, shaped like the shore of a lake (GeoShore) from the distance to the edge of the water: the water's edge
         // is where the ground is at the water level, the bed falls from there to the full depth, and the ground outside never
-        // lies lower than the water. A river's water surface goes a little under the banks (GeoGenerator.RiverCover), so its edge is
-        // never in the air. The shape is worked out from the nearest piece of river at every node, so overlapping rivers and
-        // neighbouring tiles agree.
+        // lies lower than the water. The river's water surface (GeoWater.Surface) reaches the cells its edge touches, so its edge is
+        // under the bank, never in the air. The shape is worked out from the nearest piece of river at every node, so overlapping
+        // rivers and neighbouring tiles agree. A world shapes its lakes and rivers together with GeoWater.Carve.
         public static void Carve(HeightField field, List<PathBuild> paths, GenerationSettings settings)
         {
             if (!settings.carveRivers) return;
-            int n = field.resolution;
-            float cell = Mathf.Max(field.bounds.Width, field.bounds.Depth) / (n - 1), depth = settings.riverDepth, reach = GeoShore.Reach(depth, cell);
-            float[,] edge = null, level = null; // signed distance to the nearest water's edge (negative inside), the level of the water there
-            foreach (var path in paths)
-            {
-                if (!path.river) continue;
-                if (edge == null)
-                {
-                    edge = new float[n, n]; level = new float[n, n];
-                    for (int z = 0; z < n; z++) for (int x = 0; x < n; x++) edge[z, x] = float.MaxValue;
-                }
-                for (int i = 1; i < path.samples.Count; i++)
-                {
-                    Vector3 a = path.samples[i - 1], b = path.samples[i];
-                    float ha = path.HalfWidth(i - 1), hb = path.HalfWidth(i);
-                    field.RasterSegment(a, b, Mathf.Max(ha, hb) + reach, (x, z, d, t) =>
-                    {
-                        float s = d - Mathf.Lerp(ha, hb, t);
-                        if (s < edge[z, x]) { edge[z, x] = s; level[z, x] = Mathf.Lerp(a.y, b.y, t); }
-                    });
-                }
-            }
-            if (edge == null) return;
-            for (int z = 0; z < n; z++) for (int x = 0; x < n; x++)
-                if (edge[z, x] < float.MaxValue) field.heights[z, x] = GeoShore.Shape(field.heights[z, x], level[z, x], edge[z, x], depth, cell);
+            new GeoWater(field, null, null, paths, settings.riverDepth).Carve();
         }
 
         // fixedRange > 0: the height scale of a tiled world (base and range shared by all tiles, so their edges agree).
