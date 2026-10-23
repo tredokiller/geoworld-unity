@@ -432,7 +432,18 @@ namespace GeoWorld.Editor
         {
             string start = exportFolder != "" ? Path.GetDirectoryName(exportFolder) : ExportsFolder;
             string chosen = EditorUtility.OpenFolderPanel("The folder that holds the exports of the parts of one area (one folder each)", start, "");
-            if (string.IsNullOrEmpty(chosen)) return;
+            if (!string.IsNullOrEmpty(chosen)) GenerateParts(chosen);
+        }
+
+        // The parts of an area that New area extracted (GeoExtractor.ExtractParts), as one tiled world with this window's settings.
+        public static void GenerateFromParts(string folder)
+        {
+            Open();
+            GetWindow<GeoWorldWindow>().GenerateParts(folder);
+        }
+
+        void GenerateParts(string chosen)
+        {
             var found = GeoTiles.PartsIn(chosen);
             if (found.Count == 0) { ShowStatus("No export (environment.json) in " + chosen + " or in the folders inside it."); return; }
             SaveConfig();

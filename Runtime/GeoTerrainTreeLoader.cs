@@ -103,7 +103,13 @@ namespace GeoWorld
                 }
             }
             catch (OperationCanceledException) { }
-            catch (Exception exception) { Debug.LogException(exception, this); }
+            catch (Exception exception)
+            {
+                Debug.LogException(exception, this);
+                // the tile goes on without the trees it could not have: Nature Renderer, which waits for them, starts all the same
+                // (it would otherwise never start on this terrain), and the loader does not try again until the tile loads anew
+                if (this) restored = Ready = true;
+            }
         }
 
         void OnDisable()

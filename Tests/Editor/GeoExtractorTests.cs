@@ -54,6 +54,41 @@ namespace GeoWorld.Editor.Tests
             Assert.That(stripWidth, Is.GreaterThan(45));
         }
 
+        // 40 x 20 km is too large for one export: the fewest parts of at most 100 km² and 20 km a side, their overlap included,
+        // which cover the area and overlap their neighbours by about 100 m.
+        [Test] public void ALargeAreaIsCutIntoTheFewestParts()
+        {
+            Assert.That(GeoExtractor.PartGrid(9, 9), Is.EqualTo((1, 1)));
+            Assert.That(GeoExtractor.PartGrid(40, 20), Is.EqualTo((3, 3)));
+            foreach (var (width, height) in new[] { (40.0, 20.0), (30.0, 30.0), (12.0, 9.0), (45.0, 4.0), (25.0, 40.0) })
+            {
+                var (columns, rows) = GeoExtractor.PartGrid(width, height);
+                double w = width / columns + (columns > 1 ? GeoExtractor.PartOverlapKm : 0), h = height / rows + (rows > 1 ? GeoExtractor.PartOverlapKm : 0);
+                Assert.That(w * h, Is.LessThanOrEqualTo(GeoExtractor.PartKm2 + 1e-9), width + " x " + height);
+                Assert.That(Math.Max(w, h), Is.LessThanOrEqualTo(GeoExtractor.PartSideKm + 1e-9), width + " x " + height);
+                // one part fewer in either direction would be too large
+                foreach (var (c, r) in new[] { (columns - 1, rows), (columns, rows - 1) })
+                {
+                    if (c < 1 || r < 1) continue;
+                    double cw = width / c + (c > 1 ? GeoExtractor.PartOverlapKm : 0), ch = height / r + (r > 1 ? GeoExtractor.PartOverlapKm : 0);
+                    Assert.That(cw * ch > GeoExtractor.PartKm2 || Math.Max(cw, ch) > GeoExtractor.PartSideKm, width + " x " + height + ": " + c + " x " + r + " would do");
+                }
+            }
+            // a 40 x 20 km area near Kharkiv: the parts cover it, meet with an overlap, and none is too large
+            const double s = 49.8, w0 = 36.0, n = 49.8 + 20 / 111.32, e = 36.0 + 40 / (111.32 * 0.6455);
+            var (cols, rws) = GeoExtractor.PartGrid(GeoAreaWindow.SizeKm(s, w0, n, e).width, GeoAreaWindow.SizeKm(s, w0, n, e).height);
+            var a = GeoExtractor.PartBounds(s, w0, n, e, cols, rws, 0, 0);
+            var east = GeoExtractor.PartBounds(s, w0, n, e, cols, rws, 1, 0);
+            var north = GeoExtractor.PartBounds(s, w0, n, e, cols, rws, 0, 1);
+            var last = GeoExtractor.PartBounds(s, w0, n, e, cols, rws, cols - 1, rws - 1);
+            Assert.That(a.south, Is.EqualTo(s)); Assert.That(a.west, Is.EqualTo(w0));
+            Assert.That(last.north, Is.EqualTo(n)); Assert.That(last.east, Is.EqualTo(e));
+            Assert.That(GeoAreaWindow.SizeKm(a.south, east.west, a.north, a.east).width, Is.EqualTo(GeoExtractor.PartOverlapKm).Within(0.01), "overlap east");
+            Assert.That(GeoAreaWindow.SizeKm(north.south, a.west, a.north, a.east).height, Is.EqualTo(GeoExtractor.PartOverlapKm).Within(0.01), "overlap north");
+            var size = GeoAreaWindow.SizeKm(east.south, east.west, east.north, east.east);
+            Assert.That(size.width * size.height, Is.LessThanOrEqualTo(GeoExtractor.PartKm2));
+        }
+
         [Test] public void AMovedAreaKeepsItsSizeOnTheGround()
         {
             const double s = 49.6, w = 36.4, n = 49.68, e = 36.52;

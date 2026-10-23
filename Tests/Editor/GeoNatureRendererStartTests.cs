@@ -124,6 +124,30 @@ namespace GeoWorld.Editor.Tests
             yield return new ExitPlayMode();
         }
 
+        // A tile whose tree data is missing (not regenerated, or left out of a build): the loader says so, and the terrain's Nature
+        // Renderer starts all the same instead of waiting for trees that never come.
+        [UnityTest] public IEnumerator MissingTreeData_DoesNotHoldNatureRendererForever()
+        {
+            MakeInstancedTreeData();
+            AssetDatabase.DeleteAsset(DataPath); // a saved scene for Play mode, and no tree data under the key
+            yield return new EnterPlayMode();
+            LogAssert.Expect(LogType.Exception, new System.Text.RegularExpressions.Regex("Missing Geo World tree data"));
+            var go = Tile();
+            var natureRenderer = go.GetComponent<NatureRenderer>();
+            var loader = go.GetComponent<GeoTerrainTreeLoader>();
+            var start = go.GetComponent<GeoNatureRendererStart>();
+            try
+            {
+                for (int i = 0; i < 600 && !natureRenderer.enabled; i++) yield return null;
+                Assert.That(loader.Ready, Is.True, "The loader gives up on the trees it cannot have.");
+                Assert.That(natureRenderer.enabled, Is.True, "Nature Renderer starts without them.");
+                Assert.That(start.Drawing, Is.True);
+                Assert.That(start.Waiting, Is.False);
+            }
+            finally { Object.Destroy(go); }
+            yield return new ExitPlayMode();
+        }
+
         [UnityTest] public IEnumerator TreeLoader_KeepsTheTreesWhileTheTileIsSwitchedOff_AndLetsThemGoWithTheTile()
         {
             var data = ScriptableObject.CreateInstance<GeoTreeData>();

@@ -29,10 +29,15 @@ namespace GeoWorld.Editor
             public readonly List<string> log = new List<string>();
             public string export, package, error;
             public int buildings;
+            // an area of several exports (ExtractParts): the part being extracted, of how many, and the folder they go to
+            public int part, parts = 1;
+            public string folder;
             public bool Running => process != null && error == null && export == null && !cancelled;
             public bool Finished => export != null;
             internal Process process;
-            internal bool cancelled;
+            internal bool cancelled, partDone;
+            internal string app;
+            internal readonly List<string> queue = new List<string>(); // the arguments of the parts still to extract
             internal readonly ConcurrentQueue<string> lines = new ConcurrentQueue<string>();
         }
 
@@ -119,15 +124,100 @@ namespace GeoWorld.Editor
             if (Current != null && Current.Running) throw new InvalidOperationException("An area is being extracted already.");
             string app = AppFolder ?? throw new FileNotFoundException("The Building Extractor app is not in this package.");
             Directory.CreateDirectory(ExportsFolder);
-            string bbox = string.Join(",", Array.ConvertAll(new[] { south, west, north, east }, v => v.ToString("0.######", CultureInfo.InvariantCulture)));
-            string arguments = $"cli.py --bbox {bbox} --name \"{name.Replace("\"", "")}\" --machine" + (radar ? "" : " --no-radar");
-            var job = new Job { name = name };
-            var process = new Process { StartInfo = StartInfo(app, arguments), EnableRaisingEvents = true };
+            string arguments = $"cli.py --bbox {Box(south, west, north, east)} --name \"{name.Replace("\"", "")}\" --machine" + (radar ? "" : " --no-radar");
+            var job = new Job { name = name, app = app };
+            Start(job, arguments);
+            return job;
+        }
+
+        // ---------------------------------------------------------------- an area of several exports
+
+        // One export is at most this many square kilometres and this many kilometres a side (what the importer and the app
+        // take at once); neighbouring parts overlap by PartOverlapKm, where their ground is blended (GeoHeightBlend).
+        public const double PartKm2 = 100, PartSideKm = 20, PartOverlapKm = 0.1;
+
+        // The fewest parts (columns west to east, rows south to north) that cut an area of width x height km into exports of at
+        // most PartKm2 and PartSideKm, their overlap included.
+        public static (int columns, int rows) PartGrid(double widthKm, double heightKm)
+        {
+            if (widthKm * heightKm <= PartKm2 && widthKm <= PartSideKm && heightKm <= PartSideKm) return (1, 1);
+            (int, int) best = (0, 0); int fewest = int.MaxValue;
+            for (int columns = 1; columns <= 200; columns++)
+            {
+                double w = widthKm / columns + (columns > 1 ? PartOverlapKm : 0);
+                if (w > PartSideKm) continue;
+                double tallest = Math.Min(PartSideKm, PartKm2 / w);
+                int rows = 1;
+                while (heightKm / rows + (rows > 1 ? PartOverlapKm : 0) > tallest) rows++;
+                if (columns * rows < fewest) { fewest = columns * rows; best = (columns, rows); }
+            }
+            return best;
+        }
+
+        // The bounds (south, west, north, east in degrees) of part (column, row) of the area: an equal share of it, reaching
+        // half the overlap into each neighbour.
+        public static (double south, double west, double north, double east) PartBounds(double south, double west, double north, double east, int columns, int rows, int column, int row)
+        {
+            double middle = (south + north) / 2 * Math.PI / 180;
+            double halfLat = PartOverlapKm / 111.32 / 2, halfLon = PartOverlapKm / (111.32 * Math.Cos(middle)) / 2;
+            double stepLat = (north - south) / rows, stepLon = (east - west) / columns;
+            return (Math.Max(south, south + row * stepLat - halfLat), Math.Max(west, west + column * stepLon - halfLon),
+                    Math.Min(north, south + (row + 1) * stepLat + halfLat), Math.Min(east, west + (column + 1) * stepLon + halfLon));
+        }
+
+        // Where the parts of an area go: a folder of its own in the exports folder, one folder per part (part_1, part_2, ... from
+        // the south-west, row by row), which Generate one world from several exports reads as one world.
+        public static string PartsFolder(string name)
+        {
+            string safe = name.Trim();
+            foreach (char c in Path.GetInvalidFileNameChars()) safe = safe.Replace(c, '_');
+            return Path.Combine(ExportsFolder, safe + "_parts");
+        }
+
+        // Extracts an area too large for one export as parts, one after the other in the background, all with one fixed origin
+        // (the area's middle) so that they make one world. Parts already in the folder (an extraction that was stopped) are kept.
+        public static Job ExtractParts(double south, double west, double north, double east, string name, bool radar)
+        {
+            if (Current != null && Current.Running) throw new InvalidOperationException("An area is being extracted already.");
+            string app = AppFolder ?? throw new FileNotFoundException("The Building Extractor app is not in this package.");
+            double middle = (south + north) / 2 * Math.PI / 180;
+            var (columns, rows) = PartGrid((east - west) * 111.32 * Math.Cos(middle), (north - south) * 111.32);
+            string folder = PartsFolder(name);
+            Directory.CreateDirectory(folder);
+            string origin = ((south + north) / 2).ToString("0.########", CultureInfo.InvariantCulture) + "," + ((west + east) / 2).ToString("0.########", CultureInfo.InvariantCulture);
+            var job = new Job { name = name, app = app, parts = columns * rows, folder = folder };
+            for (int row = 0, k = 1; row < rows; row++)
+                for (int column = 0; column < columns; column++, k++)
+                {
+                    string part = Path.Combine(folder, "part_" + k);
+                    if (File.Exists(Path.Combine(part, "environment.json"))) continue;
+                    var (s, w, n, e) = PartBounds(south, west, north, east, columns, rows, column, row);
+                    job.queue.Add($"cli.py --bbox {Box(s, w, n, e)} --origin {origin} --out \"{part}.json\" --environment \"{part}\" --machine" + (radar ? "" : " --no-radar"));
+                }
+            job.part = job.parts - job.queue.Count;
+            if (job.queue.Count == 0)
+            {
+                job.export = job.package = folder; job.progress = 1; job.stage = "Done";
+                Current = job; Changed?.Invoke();
+                return job;
+            }
+            string first = job.queue[0];
+            job.queue.RemoveAt(0);
+            Start(job, first);
+            return job;
+        }
+
+        static string Box(double south, double west, double north, double east) =>
+            string.Join(",", Array.ConvertAll(new[] { south, west, north, east }, v => v.ToString("0.######", CultureInfo.InvariantCulture)));
+
+        static void Start(Job job, string arguments)
+        {
+            var process = new Process { StartInfo = StartInfo(job.app, arguments), EnableRaisingEvents = true };
             process.OutputDataReceived += (s, e) => { if (e.Data != null) job.lines.Enqueue(e.Data); };
             process.ErrorDataReceived += (s, e) => { if (!string.IsNullOrWhiteSpace(e.Data)) job.lines.Enqueue("!" + e.Data); };
             process.Exited += (s, e) => job.lines.Enqueue("#exit");
             try { process.Start(); }
-            catch (Exception e) { throw new InvalidOperationException("Python could not be started (" + StartInfo(app, "").FileName + "): " + e.Message, e); }
+            catch (Exception e) { throw new InvalidOperationException("Python could not be started (" + StartInfo(job.app, "").FileName + "): " + e.Message, e); }
             process.BeginOutputReadLine();
             process.BeginErrorReadLine();
             job.process = process;
@@ -135,7 +225,6 @@ namespace GeoWorld.Editor
             EditorApplication.update -= Pump;
             EditorApplication.update += Pump;
             Changed?.Invoke();
-            return job;
         }
 
         public static void Cancel()
@@ -162,18 +251,30 @@ namespace GeoWorld.Editor
                 if (line.StartsWith("!")) { errors.Add(line.Substring(1)); continue; }
                 JObject message;
                 try { message = JObject.Parse(line); } catch (Newtonsoft.Json.JsonException) { job.log.Add(line); continue; }
-                if (message["progress"] != null && message["progress"].Type != JTokenType.Null) job.progress = (float)message["progress"];
-                if (message["stage"] != null && message["stage"].Type != JTokenType.Null) job.stage = (string)message["stage"];
+                if (message["progress"] != null && message["progress"].Type != JTokenType.Null) job.progress = (job.part + (float)message["progress"]) / job.parts;
+                if (message["stage"] != null && message["stage"].Type != JTokenType.Null) job.stage = (job.parts > 1 ? $"Part {job.part + 1} of {job.parts}: " : "") + (string)message["stage"];
                 if (message["log"] != null) job.log.Add((string)message["log"]);
                 if (message["error"] != null) job.error = (string)message["error"];
                 if (message["done"] is JObject done)
                 {
-                    job.package = (string)done["package"];
-                    job.buildings = (int?)done["buildings"] ?? 0;
-                    job.export = (string)done["export"];
-                    job.progress = 1;
-                    job.stage = "Done";
+                    job.buildings += (int?)done["buildings"] ?? 0;
+                    if (job.queue.Count > 0) job.partDone = true; // the next part when this one's process ends
+                    else
+                    {
+                        job.package = job.folder ?? (string)done["package"];
+                        job.export = job.folder ?? (string)done["export"];
+                        job.progress = 1;
+                        job.stage = "Done";
+                    }
                 }
+            }
+            if (ended && job.partDone && job.error == null && !job.cancelled)
+            {
+                job.partDone = false; job.part++;
+                string next = job.queue[0];
+                job.queue.RemoveAt(0);
+                try { Start(job, next); return; }
+                catch (InvalidOperationException e) { job.error = e.Message; }
             }
             if (ended)
             {

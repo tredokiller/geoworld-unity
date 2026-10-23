@@ -14,7 +14,8 @@ namespace GeoWorld.Editor
     // Geo World window lists, ready to generate.
     // Drag: move the map (right or middle drag: anywhere, also over the area). Shift + drag (or Draw area): the area.
     // Drag the area: move it. Drag a corner of the area: resize it. Wheel: zoom.
-    // An area is at most MaxKm2 square kilometres, of any shape.
+    // An area is at most MaxKm2 square kilometres, of any shape, for one export; up to MaxPartsKm2 it is extracted as several
+    // exports with one origin, which make one world.
     public class GeoAreaWindow : EditorWindow
     {
         const string Imagery = "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
@@ -22,7 +23,8 @@ namespace GeoWorld.Editor
         const string Attribution = "Imagery © Esri, Maxar, Earthstar Geographics · Places © Esri · Search © OpenStreetMap";
         const int TileSize = 256, MinZoom = 5, MaxZoom = 18;
         const double LargeKm2 = 60, RadarKm2 = 250;
-        public const double MaxKm2 = 100;
+        // one export; a larger area, up to MaxPartsKm2 (40 x 30 km), is extracted as parts with one origin (GeoExtractor.ExtractParts)
+        public const double MaxKm2 = 100, MaxPartsKm2 = 1200;
         const float Handle = 12, HandleReach = 9;
         static readonly Color AreaLine = new Color(0.45f, 0.68f, 1f), AtLimit = new Color(1f, 0.66f, 0.25f);
 
@@ -128,7 +130,7 @@ namespace GeoWorld.Editor
         void Stretch(Rect map, Vector2 mouse)
         {
             double left = WorldX(centerLon, zoom) - map.width / 2, top = WorldY(centerLat, zoom) - map.height / 2;
-            var (lat, lon) = Limit(anchorLat, anchorLon, Lat(top + mouse.y - map.y, zoom), Lon(left + mouse.x - map.x, zoom));
+            var (lat, lon) = Limit(anchorLat, anchorLon, Lat(top + mouse.y - map.y, zoom), Lon(left + mouse.x - map.x, zoom), MaxPartsKm2);
             south = Math.Min(anchorLat, lat); north = Math.Max(anchorLat, lat);
             west = Math.Min(anchorLon, lon); east = Math.Max(anchorLon, lon);
         }
@@ -146,7 +148,7 @@ namespace GeoWorld.Editor
         bool TooLarge()
         {
             var (w, h) = SizeKm(south, west, north, east);
-            return w * h > MaxKm2 + 0.05;
+            return w * h > MaxPartsKm2 + 0.05;
         }
 
         // ---------------------------------------------------------------- drawing
@@ -254,7 +256,7 @@ namespace GeoWorld.Editor
             for (int i = 0; i < 4; i++) corners[i] -= map.position;
             var area = Rect.MinMaxRect(corners[0].x, corners[0].y, corners[2].x, corners[2].y);
             var (w, h) = SizeKm(south, west, north, east);
-            bool limit = w * h > MaxKm2 - 0.5;
+            bool limit = w * h > MaxPartsKm2 - 0.5;
             var line = limit ? AtLimit : AreaLine;
             EditorGUI.DrawRect(area, new Color(line.r, line.g, line.b, 0.16f));
             Handles.BeginGUI();
@@ -269,7 +271,8 @@ namespace GeoWorld.Editor
             }
             string size = w.ToString("0.0", CultureInfo.InvariantCulture) + " × " + h.ToString("0.0", CultureInfo.InvariantCulture) + " km  ·  " +
                           (w * h).ToString("0", CultureInfo.InvariantCulture) + " km²" +
-                          (limit ? " (at most " + MaxKm2.ToString("0", CultureInfo.InvariantCulture) + ")" : "");
+                          (limit ? " (at most " + MaxPartsKm2.ToString("0", CultureInfo.InvariantCulture) + ")" : "") +
+                          (w * h > MaxKm2 ? "  ·  " + Parts(w, h) + " parts" : "");
             var style = new GUIStyle(EditorStyles.miniBoldLabel) { normal = { textColor = Color.white }, padding = new RectOffset(5, 5, 1, 1) };
             var content = new GUIContent(size);
             var box = style.CalcSize(content);
@@ -397,8 +400,17 @@ namespace GeoWorld.Editor
                 if (job != null && job.Finished)
                 {
                     GUILayout.BeginHorizontal();
-                    GUILayout.Label($"Extracted {job.name}: {job.buildings:N0} buildings.", EditorStyles.boldLabel);
-                    if (GUILayout.Button("Open in Geo World window", GUILayout.Width(190))) GeoWorldWindow.OpenExport(job.package);
+                    if (job.parts > 1)
+                    {
+                        GUILayout.Label($"Extracted {job.name}: {job.parts} parts, {job.buildings:N0} buildings.", EditorStyles.boldLabel);
+                        if (GUILayout.Button(new GUIContent("Generate one world from the parts", "A tiled world of all the parts on one grid (Several exports... with this folder)"), GUILayout.Width(230)))
+                            GeoWorldWindow.GenerateFromParts(job.folder);
+                    }
+                    else
+                    {
+                        GUILayout.Label($"Extracted {job.name}: {job.buildings:N0} buildings.", EditorStyles.boldLabel);
+                        if (GUILayout.Button("Open in Geo World window", GUILayout.Width(190))) GeoWorldWindow.OpenExport(job.package);
+                    }
                     GUILayout.EndHorizontal();
                 }
                 else if (job != null && job.error != null) EditorGUILayout.HelpBox("The extraction failed: " + job.error, MessageType.Warning);
@@ -410,13 +422,17 @@ namespace GeoWorld.Editor
                     bool tooLarge = TooLarge();
                     var sizeStyle = new GUIStyle(EditorStyles.miniLabel);
                     if (tooLarge) sizeStyle.normal.textColor = AtLimit;
+                    bool inParts = km2 > MaxKm2;
                     GUILayout.Label($"Area {w.ToString("0.0", CultureInfo.InvariantCulture)} × {h.ToString("0.0", CultureInfo.InvariantCulture)} km  ·  {km2.ToString("0.0", CultureInfo.InvariantCulture)} km²" +
-                                    (tooLarge ? $"  ·  too large: at most {MaxKm2:0} km², drag a corner in"
+                                    (tooLarge ? $"  ·  too large: at most {MaxPartsKm2:0} km², drag a corner in"
+                                        : inParts ? $"  ·  extracted as {Parts(w, h)} parts of at most {MaxKm2:0} km² with one origin, one after the other (hours), then generated as one world"
                                         : (km2 > LargeKm2 ? "  ·  large: extracting takes a while" : "") + "  ·  drag it to move it, a corner to resize it"), sizeStyle);
                     GUILayout.BeginHorizontal();
                     areaName = EditorGUILayout.TextField("Name", areaName);
-                    using (new EditorGUI.DisabledScope(km2 > RadarKm2))
-                        radar = GUILayout.Toggle(radar && km2 <= RadarKm2, new GUIContent(" Damage from radar", km2 > RadarKm2
+                    // each part has its own radar estimate
+                    double radarKm2 = inParts ? MaxKm2 : km2;
+                    using (new EditorGUI.DisabledScope(radarKm2 > RadarKm2))
+                        radar = GUILayout.Toggle(radar && radarKm2 <= RadarKm2, new GUIContent(" Damage from radar", radarKm2 > RadarKm2
                             ? "Radar estimates take at most " + RadarKm2 + " km²: draw a smaller area" : "Estimates which buildings are damaged (Sentinel-1); a few minutes the first time"), GUILayout.Width(150));
                     using (new EditorGUI.DisabledScope(!GeoExtractor.Available || string.IsNullOrWhiteSpace(areaName) || tooLarge))
                         if (GUILayout.Button("Extract", GUILayout.Width(90), GUILayout.Height(20))) Extract();
@@ -434,7 +450,18 @@ namespace GeoWorld.Editor
             GUILayout.EndArea();
         }
 
-        void Extract() => Run(() => GeoExtractor.Extract(south, west, north, east, areaName.Trim(), radar));
+        void Extract()
+        {
+            var (w, h) = SizeKm(south, west, north, east);
+            if (w * h > MaxKm2) Run(() => GeoExtractor.ExtractParts(south, west, north, east, areaName.Trim(), radar));
+            else Run(() => GeoExtractor.Extract(south, west, north, east, areaName.Trim(), radar));
+        }
+
+        static int Parts(double widthKm, double heightKm)
+        {
+            var (columns, rows) = GeoExtractor.PartGrid(widthKm, heightKm);
+            return columns * rows;
+        }
 
         void Run(Action action)
         {

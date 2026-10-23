@@ -82,6 +82,14 @@ namespace GeoWorld.Editor
                 if (unsupported.Count > 0)
                     notes.Add("Tree prefab " + prefab.name + ": Nature Renderer cannot draw " + string.Join(", ", unsupported) +
                               " (the shader needs Nature Renderer's instancing: right-click the shader > Nature Renderer > Patch Shader, and use the patched copy).");
+                // Nature Renderer draws through the instancing variants of the shader, and a player build leaves out the instancing
+                // variants of materials that do not ask for them (Graphics settings > Instancing Variants: Strip Unused): the trees
+                // are drawn in the editor and missing in the player
+                var single = prefab.GetComponentsInChildren<Renderer>(true).SelectMany(r => r.sharedMaterials)
+                    .Where(m => m && Drawable(m) && !m.enableInstancing).Select(m => m.name).Distinct().ToList();
+                if (single.Count > 0)
+                    notes.Add("Tree prefab " + prefab.name + ": turn on Enable GPU Instancing on " + string.Join(", ", single) +
+                              ", or a player build leaves out the shader variants Nature Renderer draws them with (they show in the editor, not in the player).");
             }
         }
 
