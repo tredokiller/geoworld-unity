@@ -40,20 +40,20 @@ show their external trees in Edit mode.
 Package Manager > **+** > **Add package from git URL...** and enter the version you want:
 
 ```
-https://github.com/tredokiller/geoworld-unity.git#v1.8.1
+https://github.com/tredokiller/geoworld-unity.git#v1.9.0
 ```
 
 or add it to `Packages/manifest.json`:
 
 ```json
-"com.tredokiller.geoworld": "https://github.com/tredokiller/geoworld-unity.git#v1.8.1"
+"com.tredokiller.geoworld": "https://github.com/tredokiller/geoworld-unity.git#v1.9.0"
 ```
 
 The repository is private: git on the computer must be signed in to GitHub (the same login that can clone it).
 
 ## Update
 
-Change the version after `#` in `Packages/manifest.json` (`#v1.8.1` to `#v1.1.0`) and go back to Unity: it
+Change the version after `#` in `Packages/manifest.json` (`#v1.8.2` to `#v1.9.0`) and go back to Unity: it
 downloads that version. Each version is listed in [CHANGELOG.md](CHANGELOG.md). (Without a version after `#` Unity
 keeps the commit it first downloaded, recorded in `Packages/packages-lock.json`, so a version is the dependable way.)
 
