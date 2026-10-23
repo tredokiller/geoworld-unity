@@ -17,8 +17,10 @@ https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask#2
 ```
 
 New tiled worlds use **Addressable Scenes**. Generation registers each tile scene in its world's Addressables group,
-with one scene per bundle. The master scene goes in Build Settings; build Addressables content using
-**Window > Asset Management > Addressables > Groups > Build > New Build > Default Build Script** before a player build.
+with one scene per bundle, and puts the assets two or more tiles use (models, textures, shaders) into one shared group, so the
+build holds one copy of them instead of one per tile bundle. The master scene goes in Build Settings; build Addressables content using
+**Window > Asset Management > Addressables > Groups > Build > New Build > Default Build Script** before a player build, or
+use **Tools > Geo World > Build player of the open world...**, which does all of it and reports what the build weighs.
 For an existing world, enable **Addressable Scenes** on its Geo Tiled World and choose **Rebuild changed tiles**.
 With Addressable Scenes disabled, add the tile scenes to Build Settings using the world's Inspector.
 
@@ -59,7 +61,8 @@ keeps the commit it first downloaded, recorded in `Packages/packages-lock.json`,
 
 1. **Tools > Geo World > Set up rendering for large worlds** (GPU Resident Drawer, occlusion culling).
 2. **Tools > Geo World > Generator window** › **New area…**: find a place on the map of Ukraine (search, or pan and
-   zoom), press Draw area and drag the area (drag it to move it and its corners to resize it; at most 100 km²), name it, and press
+   zoom), press Draw area and drag the area (drag it to move it and its corners to resize it; up to 100 km² is one export, up to
+   1200 km² — 40 × 30 km — is extracted as parts with one origin and generated as one world), name it, and press
    Extract. The Building Extractor app, which comes with
    the package (with its own Python on Windows: nothing to install), fetches the buildings, roads, terrain and the
    radar damage estimate in the background; a small town takes a few minutes. The export is then selected in the
