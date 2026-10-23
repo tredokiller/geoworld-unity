@@ -31,9 +31,9 @@ namespace GeoWorld.Editor
         DropdownField exportField;
         Label hint, versionChip, bannerText, status, extracting;
         string announced;
-        VisualElement stats, banner, progress, progressFill;
-        Label progressText;
-        IVisualElementScheduledItem progressTicker;
+        VisualElement stats, banner, progress, progressFill, extractBox, extractFill;
+        Label progressText, extractTitle, extractDetail;
+        IVisualElementScheduledItem progressTicker, extractTicker;
         Image preview;
         Texture2D previewTexture;
         Button updateButton, tiledButton, singleButton, generateButton, rebuildButton;
@@ -190,6 +190,22 @@ namespace GeoWorld.Editor
             newArea.SetEnabled(GeoExtractor.Available);
             fullApp.SetEnabled(GeoExtractor.Available);
             exportCard.Add(extract);
+            // an area being extracted (New area): its bar, what the app is doing, and Cancel
+            extractBox = Row("gw-extracting");
+            var extractHead = Row("gw-banner-row");
+            extractTitle = Text("", "gw-banner-text");
+            extractHead.Add(extractTitle);
+            var cancelExtract = new Button(GeoExtractor.CancelAsking) { text = "Cancel", tooltip = "Stop the extraction (the parts of a large area already extracted are kept)" };
+            cancelExtract.AddToClassList("gw-subtle");
+            extractHead.Add(cancelExtract);
+            extractBox.Add(extractHead);
+            var extractTrack = Row("gw-progress");
+            extractFill = Row("gw-progress-fill");
+            extractTrack.Add(extractFill);
+            extractBox.Add(extractTrack);
+            extractDetail = Text("", "gw-progress-text");
+            extractBox.Add(extractDetail);
+            exportCard.Add(extractBox);
             preview = new Image { scaleMode = ScaleMode.ScaleAndCrop };
             preview.AddToClassList("gw-preview");
             exportCard.Add(preview);
@@ -684,8 +700,18 @@ namespace GeoWorld.Editor
         {
             if (extracting == null) return;
             var job = GeoExtractor.Current;
-            extracting.text = job == null ? "" : job.Running ? $"Extracting {job.name}: {job.stage} ({job.progress:P0})" :
-                job.error != null ? "Extracting " + job.name + " failed: " + job.error : job.Finished ? $"{job.name}: {job.buildings:N0} buildings extracted" : "";
+            bool running = job != null && job.Running;
+            extracting.text = job == null || running ? "" :
+                job.error != null ? "Extracting " + job.name + " failed: " + job.error : job.Finished ? $"{job.name}: {job.buildings:N0} buildings extracted" :
+                job.Cancelled ? "Extracting " + job.name + " was cancelled" : "";
+            extractBox.style.display = running ? DisplayStyle.Flex : DisplayStyle.None;
+            if (running)
+            {
+                if (extractTicker == null) extractTicker = rootVisualElement.schedule.Execute(TickExtraction).Every(500);
+                else extractTicker.Resume();
+                TickExtraction();
+            }
+            else extractTicker?.Pause();
             if (job != null && job.Finished && job.package != null && job.package != announced)
             {
                 announced = job.package;
@@ -720,6 +746,18 @@ namespace GeoWorld.Editor
                 TickProgress();
             }
             else progressTicker?.Pause();
+        }
+
+        // The extraction's bar: as far as the app says, and how long it has taken.
+        void TickExtraction()
+        {
+            var job = GeoExtractor.Current;
+            if (job == null || !job.Running) { extractTicker?.Pause(); return; }
+            var elapsed = DateTime.Now - job.started;
+            extractTitle.text = "Extracting " + job.name + (job.parts > 1 ? $"  ·  part {job.part + 1} of {job.parts}" : "");
+            extractFill.style.left = Length.Percent(0);
+            extractFill.style.width = Length.Percent(Mathf.Clamp01(job.progress) * 100);
+            extractDetail.text = $"{job.stage}  ·  {(int)elapsed.TotalHours:0}:{elapsed.Minutes:00}:{elapsed.Seconds:00}  ·  {job.progress:P0}";
         }
 
         // The update's bar: filled as far as Unity says, or (where it says nothing, as for a package from git) a block that goes

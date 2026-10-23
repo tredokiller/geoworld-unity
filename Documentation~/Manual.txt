@@ -23,6 +23,9 @@ Nominatim) to draw an area and extract it with the Building Extractor app, which
 (its Python code and data, and an embeddable Python for Windows; elsewhere the computer's python3). It runs cli.py in the
 background (GeoExtractor) and keeps the app's cache and exports in %LOCALAPPDATA%\GeoWorld; where the package is
 developed it runs the repository's own app with the computer's Python. Open full app starts the app's web page.
+While an area is extracted it stays as it is (Draw area and Clear are off, it cannot be moved or resized; the map still moves),
+and New area and the Geo World window show a bar with what the app is doing, the part of a large area and the time taken, and
+Cancel (the parts of a large area already extracted are kept).
 Tools > Geo World > Generator window: pick an export (the app's exports folder is listed, with a picture of the area,
 its size, roads, buildings and damage), choose a tiled world or one world and four switches, and generate; every other
 setting is under Advanced settings. It also rebuilds the selected world with its settings.

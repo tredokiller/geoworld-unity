@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.9.2
+
+- New area: while an area is being extracted it stays as it is. Draw area and Clear are off, the area can no longer be drawn again, moved or resized (the map still moves and zooms), and its outline turns green. Before, another area could be drawn while the first was still downloading.
+- The extraction's progress is a bar like the update's, in New area and in the Geo World window (under New area…): how far the app is, what it is doing, which part of a large area (part 3 of 9) and how long it has taken, with Cancel. Cancel asks first and says that the parts of a large area already extracted are kept (extracting it again with the same name goes on from them); a cancelled extraction says so.
+
 ## 1.9.1
 
 - Updating shows a bar in the Geo World window: Update hands the job to Unity's Package Manager, which fetches the new version from GitHub for a few minutes and then recompiles, and nothing in the window said so (it looked as if Update did nothing). The banner now has a bar (filled as far as Unity's background tasks say, otherwise a block that goes to and fro), what Unity is doing (downloading, then recompiling) and for how long; the Console says when it starts, when the download is done and, after the recompile, which version it went from and to, and the banner turns green with the new version until OK. (This shows from the next update on: an update is run by the version that is installed.)

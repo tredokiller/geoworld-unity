@@ -26,7 +26,20 @@ namespace GeoWorld.Editor
         // one export; a larger area, up to MaxPartsKm2 (40 x 30 km), is extracted as parts with one origin (GeoExtractor.ExtractParts)
         public const double MaxKm2 = 100, MaxPartsKm2 = 1200;
         const float Handle = 12, HandleReach = 9;
-        static readonly Color AreaLine = new Color(0.45f, 0.68f, 1f), AtLimit = new Color(1f, 0.66f, 0.25f);
+        static readonly Color AreaLine = new Color(0.45f, 0.68f, 1f), AtLimit = new Color(1f, 0.66f, 0.25f), Extracting = new Color(0.36f, 0.84f, 0.55f);
+
+        // An area is being extracted: it cannot be drawn again, moved or resized until it is done or cancelled (the map still moves).
+        static bool Locked => GeoExtractor.Current != null && GeoExtractor.Current.Running;
+
+        double nextTick;
+
+        // the time on the extraction's bar goes on between the app's messages
+        void Tick()
+        {
+            if (!Locked || EditorApplication.timeSinceStartup < nextTick) return;
+            nextTick = EditorApplication.timeSinceStartup + 0.5;
+            Repaint();
+        }
 
         [SerializeField] double centerLat = 48.6, centerLon = 31.3;
         [SerializeField] int zoom = 6;
@@ -61,11 +74,16 @@ namespace GeoWorld.Editor
             window.minSize = new Vector2(520, 520);
         }
 
-        void OnEnable() => GeoExtractor.Changed += Repaint;
+        void OnEnable()
+        {
+            GeoExtractor.Changed += Repaint;
+            EditorApplication.update += Tick;
+        }
 
         void OnDisable()
         {
             GeoExtractor.Changed -= Repaint;
+            EditorApplication.update -= Tick;
             foreach (var request in loading.Values) request.Dispose();
             loading.Clear();
             foreach (var texture in tiles.Values) if (texture) DestroyImmediate(texture);
@@ -175,10 +193,14 @@ namespace GeoWorld.Editor
             GUILayout.FlexibleSpace();
             var drawButton = GUILayoutUtility.GetRect(92, 18, GUILayout.Width(92), GUILayout.Height(18));
             drawButton.y += 1;
-            drawMode = AccentToggle(drawButton, drawMode, drawMode ? "Drawing…" : "Draw area",
-                drawMode ? "Drag on the map to draw the area; press again to stop" : "Drag on the map to draw the area (or hold Shift while dragging)");
+            bool locked = Locked;
+            if (locked) drawMode = false;
+            using (new EditorGUI.DisabledScope(locked))
+                drawMode = AccentToggle(drawButton, drawMode, drawMode ? "Drawing…" : "Draw area",
+                    locked ? "An area is being extracted: cancel it, or wait until it is done, to draw another" :
+                    drawMode ? "Drag on the map to draw the area; press again to stop" : "Drag on the map to draw the area (or hold Shift while dragging)");
             GUILayout.Space(4);
-            using (new EditorGUI.DisabledScope(!hasArea))
+            using (new EditorGUI.DisabledScope(!hasArea || locked))
                 if (GUILayout.Button("Clear", EditorStyles.toolbarButton, GUILayout.Width(48))) hasArea = false;
             if (GUILayout.Button("Ukraine", EditorStyles.toolbarButton, GUILayout.Width(58))) { centerLat = 48.6; centerLon = 31.3; zoom = 6; }
             GUILayout.EndHorizontal();
@@ -194,13 +216,22 @@ namespace GeoWorld.Editor
             accentText ??= new GUIStyle(EditorStyles.boldLabel) { alignment = TextAnchor.MiddleCenter, fontSize = 11, normal = { textColor = Color.white } };
             if (Event.current.type == EventType.Repaint)
             {
-                var color = on ? AccentOn : rect.Contains(Event.current.mousePosition) ? AccentHover : Accent;
+                var color = !GUI.enabled ? new Color(0.45f, 0.45f, 0.48f) : on ? AccentOn : rect.Contains(Event.current.mousePosition) ? AccentHover : Accent;
                 GUI.DrawTexture(rect, Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, color, 0, 6);
                 accentText.Draw(rect, text, false, false, false, false);
             }
-            EditorGUIUtility.AddCursorRect(rect, MouseCursor.Link);
+            if (GUI.enabled) EditorGUIUtility.AddCursorRect(rect, MouseCursor.Link);
             if (GUI.Button(rect, new GUIContent("", tooltip), GUIStyle.none)) on = !on;
             return on;
+        }
+
+        // A bar like the Geo World window's: a rounded track and the blue fill as far as fraction (0 to 1).
+        static void Bar(Rect rect, float fraction)
+        {
+            if (Event.current.type != EventType.Repaint) return;
+            GUI.DrawTexture(rect, Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, new Color(0.5f, 0.5f, 0.5f, 0.25f), 0, 4);
+            float width = rect.width * Mathf.Clamp01(fraction);
+            if (width >= 1) GUI.DrawTexture(new Rect(rect.x, rect.y, Mathf.Max(width, 8), rect.height), Texture2D.whiteTexture, ScaleMode.StretchToFill, false, 0, Accent, 0, 4);
         }
 
         void DrawMap(Rect map)
@@ -226,7 +257,7 @@ namespace GeoWorld.Editor
                 GUI.EndClip();
             }
             // the area and its corners show that they can be dragged (the corners' cursors, added last, win over the area's)
-            if (hasArea && !drawMode)
+            if (hasArea && !drawMode && !Locked)
             {
                 var corners = Corners(map);
                 var inside = Rect.MinMaxRect(corners[0].x, corners[0].y, corners[2].x, corners[2].y);
@@ -256,8 +287,8 @@ namespace GeoWorld.Editor
             for (int i = 0; i < 4; i++) corners[i] -= map.position;
             var area = Rect.MinMaxRect(corners[0].x, corners[0].y, corners[2].x, corners[2].y);
             var (w, h) = SizeKm(south, west, north, east);
-            bool limit = w * h > MaxPartsKm2 - 0.5;
-            var line = limit ? AtLimit : AreaLine;
+            bool limit = w * h > MaxPartsKm2 - 0.5, locked = Locked;
+            var line = locked ? Extracting : limit ? AtLimit : AreaLine;
             EditorGUI.DrawRect(area, new Color(line.r, line.g, line.b, 0.16f));
             Handles.BeginGUI();
             Handles.color = line;
@@ -272,7 +303,7 @@ namespace GeoWorld.Editor
             string size = w.ToString("0.0", CultureInfo.InvariantCulture) + " × " + h.ToString("0.0", CultureInfo.InvariantCulture) + " km  ·  " +
                           (w * h).ToString("0", CultureInfo.InvariantCulture) + " km²" +
                           (limit ? " (at most " + MaxPartsKm2.ToString("0", CultureInfo.InvariantCulture) + ")" : "") +
-                          (w * h > MaxKm2 ? "  ·  " + Parts(w, h) + " parts" : "");
+                          (w * h > MaxKm2 ? "  ·  " + Parts(w, h) + " parts" : "") + (locked ? "  ·  extracting" : "");
             var style = new GUIStyle(EditorStyles.miniBoldLabel) { normal = { textColor = Color.white }, padding = new RectOffset(5, 5, 1, 1) };
             var content = new GUIContent(size);
             var box = style.CalcSize(content);
@@ -321,10 +352,12 @@ namespace GeoWorld.Editor
                 case EventType.MouseDown when e.button == 0:
                 {
                     double mouseLat = Lat(top + e.mousePosition.y - map.y, zoom), mouseLon = Lon(left + e.mousePosition.x - map.x, zoom);
-                    int corner = hasArea && !drawMode ? HitCorner(map, e.mousePosition) : -1;
+                    // while an area is being extracted it stays as it is: the left button only moves the map
+                    bool locked = Locked;
+                    int corner = hasArea && !drawMode && !locked ? HitCorner(map, e.mousePosition) : -1;
                     if (corner >= 0) { resizing = corner; (anchorLat, anchorLon) = Corner((corner + 2) % 4); }
-                    else if (drawMode || e.shift) { drawing = true; dragStart = e.mousePosition; anchorLat = mouseLat; anchorLon = mouseLon; }
-                    else if (hasArea && mouseLat >= south && mouseLat <= north && mouseLon >= west && mouseLon <= east)
+                    else if ((drawMode || e.shift) && !locked) { drawing = true; dragStart = e.mousePosition; anchorLat = mouseLat; anchorLon = mouseLon; }
+                    else if (hasArea && !locked && mouseLat >= south && mouseLat <= north && mouseLon >= west && mouseLon <= east)
                     {
                         moving = true; moveLat = mouseLat; moveLon = mouseLon;
                         moveSouth = south; moveNorth = north; moveWest = west; moveEast = east;
@@ -390,10 +423,16 @@ namespace GeoWorld.Editor
             }
             if (job != null && job.Running)
             {
-                GUILayout.Label("Extracting " + job.name, EditorStyles.boldLabel);
-                var bar = GUILayoutUtility.GetRect(10, 18, GUILayout.ExpandWidth(true));
-                EditorGUI.ProgressBar(bar, job.progress, job.stage);
-                if (GUILayout.Button("Cancel", GUILayout.Width(80))) GeoExtractor.Cancel();
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("Extracting " + job.name + (job.parts > 1 ? $"  ·  part {job.part + 1} of {job.parts}" : ""), EditorStyles.boldLabel);
+                GUILayout.FlexibleSpace();
+                if (GUILayout.Button(new GUIContent("Cancel", "Stop the extraction" + (job.parts > 1 ? " (the parts already extracted are kept)" : "")), GUILayout.Width(80))) GeoExtractor.CancelAsking();
+                GUILayout.EndHorizontal();
+                var bar = GUILayoutUtility.GetRect(10, 8, GUILayout.ExpandWidth(true));
+                Bar(bar, job.progress);
+                var elapsed = DateTime.Now - job.started;
+                GUILayout.Label($"{job.stage}  ·  {(int)elapsed.TotalHours:0}:{elapsed.Minutes:00}:{elapsed.Seconds:00}  ·  {job.progress:P0}", EditorStyles.miniLabel);
+                GUILayout.Label("The area stays as it is while it is extracted; the map can still be moved and zoomed.", EditorStyles.miniLabel);
             }
             else
             {
@@ -414,6 +453,8 @@ namespace GeoWorld.Editor
                     GUILayout.EndHorizontal();
                 }
                 else if (job != null && job.error != null) EditorGUILayout.HelpBox("The extraction failed: " + job.error, MessageType.Warning);
+                else if (job != null && job.Cancelled)
+                    EditorGUILayout.HelpBox("The extraction of " + job.name + " was cancelled." + (job.parts > 1 && job.part > 0 ? $" The {job.part} parts already extracted are kept: Extract again with the same name to go on from them." : ""), MessageType.Info);
                 if (!hasArea) GUILayout.Label("No area yet.", EditorStyles.miniLabel);
                 else
                 {

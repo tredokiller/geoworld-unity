@@ -83,7 +83,19 @@
     flex-shrink: 1;
 }
 
-/* the update's bar */
+/* an area being extracted (New area) */
+
+.gw-extracting {
+    flex-direction: column;
+    margin-top: 10px;
+    padding: 8px 8px 8px 12px;
+    border-radius: 8px;
+    border-left-width: 3px;
+    border-color: #3d7eff;
+    background-color: rgba(61, 126, 255, 0.12);
+}
+
+/* the update's and the extraction's bars */
 
 .gw-progress {
     height: 6px;

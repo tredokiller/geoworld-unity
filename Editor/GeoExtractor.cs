@@ -34,6 +34,8 @@ namespace GeoWorld.Editor
             public string folder;
             public bool Running => process != null && error == null && export == null && !cancelled;
             public bool Finished => export != null;
+            public bool Cancelled => cancelled;
+            public readonly DateTime started = DateTime.Now;
             internal Process process;
             internal bool cancelled, partDone;
             internal string app;
@@ -225,6 +227,16 @@ namespace GeoWorld.Editor
             EditorApplication.update -= Pump;
             EditorApplication.update += Pump;
             Changed?.Invoke();
+        }
+
+        // Cancel, after asking (an extraction of parts says that the parts done are kept).
+        public static void CancelAsking()
+        {
+            var job = Current;
+            if (job == null || !job.Running) return;
+            string kept = job.parts > 1 && job.part > 0
+                ? $"\n\nThe {job.part} parts already extracted are kept: extract the same area again (same name) to go on from them." : "";
+            if (EditorUtility.DisplayDialog("Cancel extraction", $"Stop extracting {job.name}?{kept}", "Stop", "Keep going")) Cancel();
         }
 
         public static void Cancel()
