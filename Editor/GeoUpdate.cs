@@ -27,7 +27,16 @@ namespace GeoWorld.Editor
         // raised on the main thread whenever State changes
         public static event Action Changed;
 
-        const string CheckedKey = "GeoWorld.UpdateChecked";
+        // While updating (the Geo World window draws it as a bar): when it began, what Unity is doing, and how far it is from 0
+        // to 1 where Unity's background tasks say (below 0: no measure, the bar goes to and fro). Unity's Package Manager gives
+        // no progress of its own for adding a package from git, and fetching the repository takes a few minutes.
+        public static DateTime Started { get; private set; }
+        public static string Stage { get; private set; } = "";
+        public static float Fraction { get; private set; } = -1;
+        // The version this editor had before the update that ended with the last recompile (null: none): the window says so once.
+        public static string UpdatedFrom { get; private set; }
+
+        const string CheckedKey = "GeoWorld.UpdateChecked", UpdatingKey = "GeoWorld.UpdatingFrom";
         static PackageInfo info;
         static AddRequest adding;
 
@@ -37,6 +46,19 @@ namespace GeoWorld.Editor
         {
             EditorApplication.delayCall += () =>
             {
+                // an update started before the recompile that brought this code: done, or (the same version) not
+                string from = SessionState.GetString(UpdatingKey, "");
+                if (from != "")
+                {
+                    SessionState.EraseString(UpdatingKey);
+                    if (from != Installed)
+                    {
+                        UpdatedFrom = from;
+                        Debug.Log($"[GeoWorld] Geo World updated from {from} to {Installed}. What changed is in the package's CHANGELOG.md.");
+                        SceneView.lastActiveSceneView?.ShowNotification(new GUIContent($"Geo World updated to {Installed}"), 6);
+                        Changed?.Invoke();
+                    }
+                }
                 if (Info == null || Info.source != PackageSource.Git) { Set(Status.Developing); return; }
                 if (Application.isBatchMode || SessionState.GetBool(CheckedKey, false)) return;
                 SessionState.SetBool(CheckedKey, true);
@@ -74,9 +96,20 @@ namespace GeoWorld.Editor
             if (State != Status.Available || Latest == null) return;
             if (!EditorUtility.DisplayDialog("Update Geo World", $"Update Geo World {Installed} to {Latest}?\n\nWhat changed is in the package's CHANGELOG.md. " +
                 "Unity downloads the new version and recompiles; worlds made with the old one keep working.", "Update", "Cancel")) return;
+            Started = DateTime.Now; Fraction = -1;
+            Stage = $"Downloading Geo World {Latest} from GitHub";
+            SessionState.SetString(UpdatingKey, Installed);
+            Debug.Log($"[GeoWorld] Updating Geo World {Installed} to {Latest}: Unity's Package Manager downloads it from GitHub (a few minutes), then Unity recompiles.");
             Set(Status.Updating);
             adding = Client.Add(Repository(Info) + "#v" + Latest);
             EditorApplication.update += WaitForAdd;
+        }
+
+        // The updated banner has been read.
+        public static void Dismiss()
+        {
+            UpdatedFrom = null;
+            Changed?.Invoke();
         }
 
         [MenuItem("Tools/Geo World/Update Geo World...", false, 40)]
@@ -103,15 +136,43 @@ namespace GeoWorld.Editor
 
         static void WaitForAdd()
         {
-            if (adding == null || !adding.IsCompleted) return;
+            if (adding == null) { EditorApplication.update -= WaitForAdd; return; }
+            if (!adding.IsCompleted) { Watch(); return; }
             EditorApplication.update -= WaitForAdd;
-            if (adding.Status == StatusCode.Success) Debug.Log("[GeoWorld] Geo World updated to " + adding.Result.version + ".");
+            if (adding.Status == StatusCode.Success)
+            {
+                // Unity compiles the new version now and reloads; the window says it is done after that
+                Stage = $"Installing Geo World {adding.Result.version}: Unity is recompiling";
+                Fraction = -1;
+                Debug.Log("[GeoWorld] Geo World " + adding.Result.version + " is downloaded; Unity recompiles it.");
+                Changed?.Invoke();
+            }
             else
             {
+                SessionState.EraseString(UpdatingKey);
+                Stage = ""; Fraction = -1;
                 Set(Status.Available);
                 EditorUtility.DisplayDialog("Update Geo World", "The update failed: " + adding.Error?.message, "OK");
             }
             adding = null;
+        }
+
+        // What Unity's background tasks say about the package being fetched (the status bar's spinner): its own description and
+        // how far it is, where it says.
+        static void Watch()
+        {
+            float fraction = -1; string what = null;
+            foreach (var item in Progress.EnumerateItems())
+            {
+                if (item == null || item.finished) continue;
+                string text = item.name + " " + item.description;
+                if (text.IndexOf("package", StringComparison.OrdinalIgnoreCase) < 0 && text.IndexOf("resolv", StringComparison.OrdinalIgnoreCase) < 0 &&
+                    text.IndexOf("git", StringComparison.OrdinalIgnoreCase) < 0) continue;
+                if (!item.indefinite && item.progress > 0) fraction = Mathf.Clamp01(item.progress);
+                if (!string.IsNullOrEmpty(item.description)) what = item.description;
+            }
+            Fraction = fraction;
+            if (what != null) Stage = $"Downloading Geo World {Latest}: {what}";
         }
 
         static void Set(Status state)

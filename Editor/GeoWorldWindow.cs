@@ -31,7 +31,9 @@ namespace GeoWorld.Editor
         DropdownField exportField;
         Label hint, versionChip, bannerText, status, extracting;
         string announced;
-        VisualElement stats, banner;
+        VisualElement stats, banner, progress, progressFill;
+        Label progressText;
+        IVisualElementScheduledItem progressTicker;
         Image preview;
         Texture2D previewTexture;
         Button updateButton, tiledButton, singleButton, generateButton, rebuildButton;
@@ -152,11 +154,20 @@ namespace GeoWorld.Editor
             page.Add(header);
 
             banner = Row("gw-banner");
+            var bannerRow = Row("gw-banner-row");
             bannerText = Text("", "gw-banner-text");
-            banner.Add(bannerText);
-            updateButton = new Button(GeoUpdate.UpdateNow) { text = "Update" };
+            bannerRow.Add(bannerText);
+            updateButton = new Button(() => { if (GeoUpdate.UpdatedFrom != null) GeoUpdate.Dismiss(); else GeoUpdate.UpdateNow(); }) { text = "Update" };
             updateButton.AddToClassList("gw-accent");
-            banner.Add(updateButton);
+            bannerRow.Add(updateButton);
+            banner.Add(bannerRow);
+            // while updating: a bar, and what Unity is doing for how long
+            progress = Row("gw-progress");
+            progressFill = Row("gw-progress-fill");
+            progress.Add(progressFill);
+            banner.Add(progress);
+            progressText = Text("", "gw-progress-text");
+            banner.Add(progressText);
             page.Add(banner);
 
             var exportCard = Card(page, "1", "Export");
@@ -692,10 +703,45 @@ namespace GeoWorld.Editor
             versionChip.text = "v" + GeoUpdate.Installed + (state == GeoUpdate.Status.Developing ? "  ·  development" :
                 state == GeoUpdate.Status.UpToDate ? "  ·  up to date" : state == GeoUpdate.Status.Checking ? "  ·  checking…" : "");
             versionChip.tooltip = state == GeoUpdate.Status.Failed ? "The update check failed: " + GeoUpdate.Error : "";
-            bool show = state == GeoUpdate.Status.Available || state == GeoUpdate.Status.Updating;
+            bool updating = state == GeoUpdate.Status.Updating, updated = GeoUpdate.UpdatedFrom != null && !updating;
+            bool show = state == GeoUpdate.Status.Available || updating || updated;
             banner.style.display = show ? DisplayStyle.Flex : DisplayStyle.None;
-            bannerText.text = state == GeoUpdate.Status.Updating ? "Updating to Geo World " + GeoUpdate.Latest + "…" : "Geo World " + GeoUpdate.Latest + " is available";
-            updateButton.SetEnabled(state == GeoUpdate.Status.Available);
+            banner.EnableInClassList("gw-banner-done", updated);
+            bannerText.text = updated ? $"Updated to Geo World {GeoUpdate.Installed} (from {GeoUpdate.UpdatedFrom}). What changed is in the package's CHANGELOG.md."
+                : updating ? "Updating to Geo World " + GeoUpdate.Latest + "…" : "Geo World " + GeoUpdate.Latest + " is available";
+            updateButton.text = updated ? "OK" : "Update";
+            updateButton.style.display = updating ? DisplayStyle.None : DisplayStyle.Flex;
+            updateButton.SetEnabled(updated || state == GeoUpdate.Status.Available);
+            progress.style.display = progressText.style.display = updating ? DisplayStyle.Flex : DisplayStyle.None;
+            if (updating)
+            {
+                if (progressTicker == null) progressTicker = rootVisualElement.schedule.Execute(TickProgress).Every(33);
+                else progressTicker.Resume();
+                TickProgress();
+            }
+            else progressTicker?.Pause();
+        }
+
+        // The update's bar: filled as far as Unity says, or (where it says nothing, as for a package from git) a block that goes
+        // to and fro; below it what Unity is doing and for how long.
+        void TickProgress()
+        {
+            if (GeoUpdate.State != GeoUpdate.Status.Updating) { progressTicker?.Pause(); return; }
+            var elapsed = DateTime.Now - GeoUpdate.Started;
+            float fraction = GeoUpdate.Fraction;
+            if (fraction >= 0)
+            {
+                progressFill.style.left = Length.Percent(0);
+                progressFill.style.width = Length.Percent(fraction * 100);
+            }
+            else
+            {
+                float t = (float)(elapsed.TotalSeconds % 1.8 / 1.8), at = (1 - Mathf.Cos(t * 2 * Mathf.PI)) / 2;
+                progressFill.style.width = Length.Percent(28);
+                progressFill.style.left = Length.Percent(at * 72);
+            }
+            progressText.text = $"{GeoUpdate.Stage}  ·  {(int)elapsed.TotalMinutes}:{elapsed.Seconds:00}" +
+                                (fraction >= 0 ? $"  ·  {fraction:P0}" : elapsed.TotalSeconds > 20 ? "  ·  the download takes a few minutes" : "");
         }
 
         void ShowStatus(string text)
