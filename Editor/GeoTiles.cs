@@ -178,7 +178,7 @@ namespace GeoWorld.Editor
                 world.separateScenes = separateScenes; world.folder = folder;
                 // tiles that no export reaches any more
                 foreach (var gone in world.tiles.Where(t => !plan.tiles.ContainsKey(t.index)).ToList()) { Discard(world, gone); world.tiles.Remove(gone); }
-                if (separateScenes) EnsureStreamer(world);
+                if (separateScenes) EnsureStreamer(world).SetRadius(settings.loadRadius);
 
                 // the middle of the world first: an interrupted run leaves the part that is looked at
                 var order = plan.tiles.Keys.ToList();
@@ -798,6 +798,7 @@ namespace GeoWorld.Editor
             string libraries = Guid(copy.ruinLibrary) + "|" + Guid(copy.homeLibrary) + "|" + Guid(copy.propCatalog) + "|" +
                                string.Join(",", (copy.treePrefabs ?? new GameObject[0]).Select(p => Guid(p)));
             copy.ruinLibrary = null; copy.homeLibrary = null; copy.propCatalog = null; copy.treePrefabs = null;
+            copy.loadRadius = 0; // how far the tiles stream around the camera does not change what a tile is
             string text = string.Join("|", GeoTiles.Version, files, JsonUtility.ToJson(copy), libraries,
                 core.minX.ToString("R"), core.minZ.ToString("R"), tileSize.ToString("R"), baseY.ToString("R"), range.ToString("R"));
             using (var md5 = MD5.Create()) return BitConverter.ToString(md5.ComputeHash(Encoding.UTF8.GetBytes(text))).Replace("-", "");
@@ -841,8 +842,26 @@ namespace GeoWorld.Editor
         {
             var world = (GeoTiledWorld)target;
             EditorGUILayout.HelpBox(string.IsNullOrEmpty(world.report) ? "Tiled world" : world.report, MessageType.Info);
+            float before = world.settings.loadRadius;
             DrawDefaultInspector();
             EditorGUILayout.Space(6);
+            if (world.separateScenes)
+            {
+                GUILayout.Label("Streaming", EditorStyles.boldLabel);
+                EditorGUI.BeginChangeCheck();
+                float radius = GeoTileStreamerEditor.RadiusSlider(world.settings.loadRadius, world.tileSize, world);
+                // the slider here, or the settings' own field above
+                if (EditorGUI.EndChangeCheck() || world.settings.loadRadius != before)
+                {
+                    if (world.settings.loadRadius != before) radius = world.settings.loadRadius;
+                    Undo.RecordObject(world, "Load radius");
+                    world.settings.loadRadius = radius;
+                    var streamer = GeoTiles.EnsureStreamer(world);
+                    Undo.RecordObject(streamer, "Load radius");
+                    streamer.SetRadius(radius);
+                    EditorUtility.SetDirty(world); EditorUtility.SetDirty(streamer);
+                }
+            }
             if (world.separateScenes)
             {
                 GUILayout.Label("Tiles in the editor", EditorStyles.boldLabel);

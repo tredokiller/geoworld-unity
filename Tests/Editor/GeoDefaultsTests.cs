@@ -29,6 +29,30 @@ namespace GeoWorld.Editor.Tests
             Assert.AreEqual(GeoHomeUse.IntactAndUnknown, tile.homeModels);
         }
 
+        // Tiles stream 2 km round the camera unless set otherwise (1-10 km); the settings say how many tiles that keeps loaded,
+        // and a tile goes 600 m further before it is unloaded.
+        [Test] public void LoadRadiusIsTwoKilometres_AndSaysHowManyTilesItKeeps()
+        {
+            Assert.AreEqual(GeoTileStreamer.DefaultRadius, new GenerationSettings().loadRadius);
+            Assert.AreEqual(2000, GeoTileStreamer.DefaultRadius);
+            Assert.AreEqual((9, 12), GeoTileStreamer.TilesWithin(1000, 1000));
+            Assert.AreEqual((21, 24), GeoTileStreamer.TilesWithin(2000, 1000));
+            Assert.AreEqual((357, 360), GeoTileStreamer.TilesWithin(10000, 1000));
+            Assert.AreEqual((9, 12), GeoTileStreamer.TilesWithin(4000, 2000), "the same radius in tiles of twice the size");
+            var go = new UnityEngine.GameObject("Streamer test");
+            try
+            {
+                var streamer = go.AddComponent<GeoTileStreamer>();
+                streamer.SetRadius(5000);
+                Assert.AreEqual(5000, streamer.loadRadius);
+                Assert.AreEqual(5600, streamer.UnloadDistance);
+                // an unload radius left smaller than the load radius: tiles still go 600 m beyond it
+                streamer.loadRadius = 3000; streamer.unloadRadius = 2600;
+                Assert.AreEqual(3600, streamer.UnloadDistance);
+            }
+            finally { UnityEngine.Object.DestroyImmediate(go); }
+        }
+
         [Test] public void AutoSatelliteTextureFollowsTheAreaSize()
         {
             Assert.AreEqual(1024, GeoSatellite.AutoResolution(Square(300)));

@@ -322,7 +322,13 @@ and paint): 0.78 GB, built in 5 minutes; an empty tile is about 6 MB, a dense to
 
 FRAME RATE (LARGE WORLDS)
 Streaming: the main scene of a tiled world has a Geo tile streamer, which loads the tiles within Load Radius
-(2 km) of the camera while playing and unloads those beyond Unload Radius. A tile scene does not hold its homes: they
+(2 km) of the camera while playing and unloads those beyond Unload Radius (always at least 600 m beyond the load radius, so a
+tile that has just come in does not go again as soon as the camera turns back). The load radius is a slider of 1 to 10 km in
+the Geo World window (Advanced settings > Tiles and streaming, kept in the config and given to the streamer when the world is
+generated), in the Geo Tiled World's Inspector and in the streamer's; below it, how many tiles it keeps loaded around the camera:
+1 km 9-12 tiles of 1 km, 2 km 21-24, 5 km about 100, 10 km about 360. Every one of them is in memory (a town tile tens of MB) and
+they take a while to load at the start, so check memory and frame rate with a flight (below) before going far beyond 2-3 km.
+Changing it does not rebuild any tile. A tile scene does not hold its homes: they
 are a list in the tile's asset (Geo Home Set), and a Geo Home Instances on each "Homes x_y" group makes their objects
 when the tile loads, 2 ms worth per frame for all tiles together while playing (at once in the editor; they are never
 saved with the scene). Saved as objects, a town tile's 2,000 homes were 8,000 objects and 20 MB of scene, read and
@@ -370,7 +376,7 @@ What a tile weighs (1 km, the defaults): the satellite texture 2048 x 2048 (0.7-
 513 x 513 (0.5 MB), the tree data (up to about 0.4 MB in a forest), and what is built on it (a village a few MB, a town tile
 10-25 MB). A 40 x 20 km world is 800 tiles: about 2-3 GB, most of it satellite imagery and towns. The imagery's size is the
 Texture Size (Auto: 0.4 m a texel, 2048 for 1 km) and the Crunch quality; check the tile server's terms before shipping it.
-Frame rate does not grow with the world: what is drawn is the tiles within the load radius (2 km: about 16-21 tiles of 1 km).
+Frame rate does not grow with the world: what is drawn is the tiles within the load radius (2 km: 21-24 tiles of 1 km).
 
 SATELLITE IMAGERY ON THE TERRAIN
 Satellite imagery is the default way of generating (the made-up riverside sample keeps the blended ground).

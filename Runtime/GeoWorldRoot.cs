@@ -67,6 +67,9 @@ namespace GeoWorld
         public GeoSatelliteCompression satelliteCompression = GeoSatelliteCompression.Crunched;
         [Tooltip("Crunch quality, 1-100: higher keeps more of the picture's detail and is bigger. At 75 the blocks of Crunch hardly show from a street's height; 50 is Unity's default for imported textures.")]
         [Range(1, 100)] public int satelliteQuality = 75;
+        [Header("Streaming (a tiled world)")]
+        [Tooltip("Metres around the camera within which the tiles are loaded while playing (1-10 km). Every tile within it is in memory: 2 km is 21-24 tiles of 1 km, 5 km about 100, 10 km about 360; memory and the time to load grow with the square of the radius. Applied to the world's tile streamer; the tiles are not rebuilt.")]
+        [Range(GeoTileStreamer.MinRadius, GeoTileStreamer.MaxRadius)] public float loadRadius = GeoTileStreamer.DefaultRadius;
         [Header("Props and vegetation")]
         public bool mappedProps = true;
         public bool vegetation = true;

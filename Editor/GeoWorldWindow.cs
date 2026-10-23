@@ -497,8 +497,13 @@ namespace GeoWorld.Editor
         void DrawSettings()
         {
             EditorGUIUtility.labelWidth = 200;
+            if (tiled)
+            {
+                Section("Tiles and streaming");
+                tileSize = EditorGUILayout.Slider("Tile size (m)", tileSize, 250, 4000);
+                settings.loadRadius = GeoTileStreamerEditor.RadiusSlider(settings.loadRadius, tileSize, null);
+            }
             Section("Terrain and roads");
-            if (tiled) tileSize = EditorGUILayout.Slider("Tile size (m)", tileSize, 250, 4000);
             settings.heightResolution = EditorGUILayout.IntPopup(tiled ? "Heightmap resolution (a tile)" : "Heightmap resolution", settings.heightResolution, new[] { "257", "513", "1025" }, new[] { 257, 513, 1025 });
             settings.textureResolution = EditorGUILayout.IntPopup("Ground texture resolution", settings.textureResolution, new[] { "256", "512", "1024" }, new[] { 256, 512, 1024 });
             settings.roadPaintResolution = EditorGUILayout.IntPopup("Road paint detail", settings.roadPaintResolution, new[] { "1024", "2048", "4096" }, new[] { 1024, 2048, 4096 });

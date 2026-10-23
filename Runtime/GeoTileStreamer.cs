@@ -14,10 +14,16 @@ namespace GeoWorld
     public class GeoTileStreamer : MonoBehaviour
     {
         public GeoTiledWorld world;
+        // The load radius the settings offer (metres), and how much further a tile goes before it is unloaded: a tile that has
+        // just come within the radius is not unloaded again as soon as the camera turns back a step.
+        public const float MinRadius = 1000, MaxRadius = 10000, DefaultRadius = 2000, UnloadMargin = 600;
+
         [Tooltip("What the tiles follow; empty: the main camera.")]
         public Transform target;
-        [Min(100)] public float loadRadius = 2000;
-        [Min(100)] public float unloadRadius = 2600;
+        [Tooltip("Metres around the camera within which tiles are loaded (GenerationSettings.loadRadius sets it when the world is generated).")]
+        [Min(100)] public float loadRadius = DefaultRadius;
+        [Tooltip("Metres beyond which loaded tiles are unloaded; at least the load radius and UnloadMargin.")]
+        [Min(100)] public float unloadRadius = DefaultRadius + UnloadMargin;
         [Range(1, 8)] public int loadsAtOnce = 2;
         [Range(0, 30)] public int framesBetweenTiles = 3;
 
@@ -39,6 +45,44 @@ namespace GeoWorld
         public int LoadedTiles => loaded.Count;
         // Is the tile's scene loaded and switched on (scenePath of GeoTiledWorld.Tile)?
         public bool IsLoaded(string scenePath) => !string.IsNullOrEmpty(scenePath) && loaded.ContainsKey(scenePath);
+        // Where loaded tiles are unloaded: the unload radius, but never closer than UnloadMargin beyond the load radius.
+        public float UnloadDistance => Mathf.Max(unloadRadius, loadRadius + UnloadMargin);
+
+        // Sets the load radius (metres) and the unload radius that goes with it.
+        public void SetRadius(float radius)
+        {
+            loadRadius = radius;
+            unloadRadius = radius + UnloadMargin;
+        }
+
+        // How many square tiles of tileSize metres lie (at least partly) within radius metres of the camera: the fewest (the
+        // camera in the middle of a tile) and the most (the camera on a corner of four).
+        public static (int fewest, int most) TilesWithin(float radius, float tileSize)
+        {
+            if (tileSize <= 0) return (0, 0);
+            int Count(float offset)
+            {
+                int reach = Mathf.CeilToInt(radius / tileSize) + 1, count = 0;
+                for (int j = -reach; j <= reach; j++)
+                    for (int i = -reach; i <= reach; i++)
+                    {
+                        // the tile [i, i + 1) x [j, j + 1) in tiles, the camera at (offset, offset)
+                        float dx = Mathf.Max(0, Mathf.Max(i - offset, offset - (i + 1))) * tileSize, dz = Mathf.Max(0, Mathf.Max(j - offset, offset - (j + 1))) * tileSize;
+                        if (dx * dx + dz * dz <= radius * radius) count++;
+                    }
+                return count;
+            }
+            int middle = Count(0.5f), corner = Count(0);
+            return (Mathf.Min(middle, corner), Mathf.Max(middle, corner));
+        }
+
+        // The tiles of a world within radius metres of a point.
+        public static int TilesWithin(GeoTiledWorld world, Vector3 point, float radius)
+        {
+            int count = 0;
+            if (world) foreach (var tile in world.tiles) if (Distance(tile.area, point) <= radius) count++;
+            return count;
+        }
 
         void OnEnable() { lifetime = new CancellationTokenSource(); next = 0; }
 
@@ -62,7 +106,7 @@ namespace GeoWorld
                 }
                 if (loaded.TryGetValue(key, out var existing))
                 {
-                    if (distance > Mathf.Max(loadRadius, unloadRadius) && !unloading.Contains(key))
+                    if (distance > UnloadDistance && !unloading.Contains(key))
                     {
                         loaded.Remove(key);
                         UnloadAsync(key, existing).Forget();
