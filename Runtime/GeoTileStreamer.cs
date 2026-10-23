@@ -37,6 +37,8 @@ namespace GeoWorld
         float next;
         public bool Busy { get; private set; } = true;
         public int LoadedTiles => loaded.Count;
+        // Is the tile's scene loaded and switched on (scenePath of GeoTiledWorld.Tile)?
+        public bool IsLoaded(string scenePath) => !string.IsNullOrEmpty(scenePath) && loaded.ContainsKey(scenePath);
 
         void OnEnable() { lifetime = new CancellationTokenSource(); next = 0; }
 

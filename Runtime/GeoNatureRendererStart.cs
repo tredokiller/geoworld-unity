@@ -23,6 +23,11 @@ namespace GeoWorld
         int loadedFrame;
         GeoTerrainTreeLoader treeLoader;
 
+        // Nature Renderer is drawing this terrain's trees (or it is not Geo World's to start): for checks of a world in Play mode.
+        public bool Drawing => !managed || (natureRenderer && natureRenderer.enabled && !waiting);
+        // Nature Renderer is still held back: the tile is waiting for its trees or for its turn.
+        public bool Waiting => managed && waiting;
+
         // Frame numbers start again with every Play mode: without this, a Play mode entered without a domain reload would wait
         // for the frame count to catch up with the last one's.
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]

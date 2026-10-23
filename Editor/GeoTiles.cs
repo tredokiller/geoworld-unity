@@ -263,6 +263,12 @@ namespace GeoWorld.Editor
                     (parts.Count > 1 ? "The exports share one grid; each tile is built once, and where exports meet from every export that reaches it. " : "") +
                     (separateScenes ? "Every tile is a scene of its own in " + folder + "/Tiles: open the tiles you need from this object's Inspector." : "") +
                     (notes.Count > 0 ? "\n" + string.Join("\n", notes.Distinct()) : "");
+                // one copy of what the tiles share in the Addressables build, not one in every tile's bundle
+                if (separateScenes && world.addressableScenes && built > 0)
+                {
+                    int shared = GeoTileAddressables.ShareDependencies(world);
+                    if (shared > 0) world.report += $"\n{shared} assets the tiles share are in the Addressables group \"{GeoTileAddressables.SharedGroupName(world)}\".";
+                }
                 EditorUtility.SetDirty(world);
                 if (separateScenes) EditorSceneManager.SaveScene(master);
                 else EditorSceneManager.MarkSceneDirty(world.gameObject.scene);
@@ -855,7 +861,12 @@ namespace GeoWorld.Editor
                 using (new EditorGUILayout.HorizontalScope())
                 {
                     if (GUILayout.Button("Stream tiles while playing")) Selection.activeObject = GeoTiles.EnsureStreamer(world);
-                    if (GUILayout.Button("Add scenes to Build Settings")) Debug.Log(GeoTiles.AddToBuildSettings(world) + " scenes added to the Build Settings.");
+                    if (world.addressableScenes)
+                    {
+                        if (GUILayout.Button(new GUIContent("Share common assets", "Puts the assets two or more tiles use into one Addressables group, so the build has one copy of them instead of one in every tile's bundle.")))
+                            Debug.Log(GeoTileAddressables.ShareDependencies(world) + " assets added to the Addressables group \"" + GeoTileAddressables.SharedGroupName(world) + "\".");
+                    }
+                    else if (GUILayout.Button("Add scenes to Build Settings")) Debug.Log(GeoTiles.AddToBuildSettings(world) + " scenes added to the Build Settings.");
                 }
             }
             GUILayout.Label("Rebuild", EditorStyles.boldLabel);

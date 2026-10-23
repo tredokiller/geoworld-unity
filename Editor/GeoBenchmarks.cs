@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
@@ -30,20 +31,82 @@ namespace GeoWorld.Editor
             EditorApplication.isPlaying = true;
         }
 
-        // A Windows player of a tiled world (its main scene and every tile), for benchmarks without the editor's overhead:
-        // run it with -geoBenchmark request.json (GeoBenchmark.Request). Returns the error, or null.
+        // A flight along a path of several legs (x0, z0, x1, z1, ... in world metres): see RunFlight. The report also says whether
+        // every tile near the camera was loaded and every terrain's trees were drawn on the way.
+        public static void RunFlight(float[] path, float speed, float height, float streamRadius, string output, float spikeMs = 33)
+        {
+            if (Application.isPlaying) throw new System.InvalidOperationException("Stop Play mode first.");
+            var request = new GeoBenchmark.Request { streamRadius = streamRadius, output = output, warmup = 60, flySpeed = speed, flyHeight = height, flyPath = path, spikeMs = spikeMs };
+            SessionState.SetString(GeoBenchmark.SessionKey, JsonUtility.ToJson(request));
+            PlayerSettings.enableFrameTimingStats = true;
+            EditorApplication.isPlaying = true;
+        }
+
+        // The tiles' extent: (min x, min z, max x, max z) in world metres.
+        public static Rect Extent(GeoTiledWorld world)
+        {
+            float minX = float.MaxValue, minZ = float.MaxValue, maxX = float.MinValue, maxZ = float.MinValue;
+            foreach (var tile in world.tiles) { minX = Mathf.Min(minX, tile.area.xMin); minZ = Mathf.Min(minZ, tile.area.yMin); maxX = Mathf.Max(maxX, tile.area.xMax); maxZ = Mathf.Max(maxZ, tile.area.yMax); }
+            return world.tiles.Count == 0 ? Rect.zero : Rect.MinMaxRect(minX, minZ, maxX, maxZ);
+        }
+
+        // A path over the whole world: lanes along its longer side, `spacing` metres apart (two load radii see every tile),
+        // joined at their ends, a little inside the edge.
+        public static float[] Tour(GeoTiledWorld world, float spacing)
+        {
+            var e = Extent(world);
+            bool alongX = e.width >= e.height;
+            float across = alongX ? e.height : e.width, inset = Mathf.Min(spacing * 0.5f, across * 0.5f);
+            int lanes = Mathf.Max(1, Mathf.CeilToInt((across - 2 * inset) / spacing) + 1);
+            var path = new List<float>();
+            for (int i = 0; i < lanes; i++)
+            {
+                float c = lanes == 1 ? across * 0.5f : inset + (across - 2 * inset) * i / (lanes - 1);
+                float a0 = inset, a1 = (alongX ? e.width : e.height) - inset;
+                if (i % 2 == 1) { float t = a0; a0 = a1; a1 = t; }
+                foreach (float a in new[] { a0, a1 })
+                {
+                    if (alongX) { path.Add(e.xMin + a); path.Add(e.yMin + c); } else { path.Add(e.xMin + c); path.Add(e.yMin + a); }
+                }
+            }
+            return path.ToArray();
+        }
+
+        static float StreamRadius(GeoTiledWorld world)
+        {
+            var streamer = Object.FindFirstObjectByType<GeoTileStreamer>();
+            return streamer ? streamer.loadRadius : 2000;
+        }
+
+        [MenuItem("Tools/Geo World/Fly across the open world (play mode)", false, 32)]
+        static void FlyAcrossMenu()
+        {
+            var world = Object.FindFirstObjectByType<GeoTiledWorld>();
+            if (!world) { EditorUtility.DisplayDialog("Geo World", "Open the main scene of a tiled world first.", "OK"); return; }
+            var e = Extent(world);
+            var path = e.width >= e.height ? new[] { e.xMin + 200, e.center.y, e.xMax - 200, e.center.y } : new[] { e.center.x, e.yMin + 200, e.center.x, e.yMax - 200 };
+            RunFlight(path, 100, 60, StreamRadius(world), System.IO.Path.Combine(Application.dataPath, "../Logs/GeoFlight.txt"));
+        }
+
+        [MenuItem("Tools/Geo World/Fly over the whole open world (play mode)", false, 33)]
+        static void TourMenu()
+        {
+            var world = Object.FindFirstObjectByType<GeoTiledWorld>();
+            if (!world) { EditorUtility.DisplayDialog("Geo World", "Open the main scene of a tiled world first.", "OK"); return; }
+            float radius = StreamRadius(world);
+            RunFlight(Tour(world, 2 * radius), 100, 60, radius, System.IO.Path.Combine(Application.dataPath, "../Logs/GeoFlight.txt"));
+        }
+
+        // A Windows player of a tiled world, for benchmarks without the editor's overhead (GeoBuild: with Addressable Scenes the
+        // main scene and the bundles of the tiles, otherwise every tile scene): run it with -geoBenchmark request.json
+        // (GeoBenchmark.Request). Returns the error, or null.
         public static string BuildPlayer(GeoTiledWorld world, string exe)
         {
-            var scenes = new System.Collections.Generic.List<string> { world.gameObject.scene.path };
-            foreach (var tile in world.tiles) if (!string.IsNullOrEmpty(tile.scenePath) && System.IO.File.Exists(tile.scenePath)) scenes.Add(tile.scenePath);
             PlayerSettings.enableFrameTimingStats = true;
             PlayerSettings.runInBackground = true;
-            var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
-            {
-                scenes = scenes.ToArray(), locationPathName = exe, target = BuildTarget.StandaloneWindows64, options = BuildOptions.None
-            });
-            return report.summary.result == UnityEditor.Build.Reporting.BuildResult.Succeeded ? null :
-                report.summary.result + ": " + report.summary.totalErrors + " errors";
+            string error = GeoBuild.Build(world, exe, BuildTarget.StandaloneWindows64, out string report);
+            if (error == null) Debug.Log(report);
+            return error;
         }
 
 #if GEOWORLD_DEVELOPMENT // only where the package is developed (its project defines this)

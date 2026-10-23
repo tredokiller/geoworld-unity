@@ -30,6 +30,12 @@ namespace GeoWorld
             // flight (streaming hitches) instead of the views: from (flyFromX, flyFromZ) to (flyToX, flyToZ) at flySpeed m/s,
             // flyHeight above the ground at the start; every frame slower than spikeMs is listed with what took the time
             public float flySpeed, flyFromX, flyFromZ, flyToX, flyToZ, flyHeight = 60, spikeMs = 33;
+            // a flight of several legs instead of from-to: x0, z0, x1, z1, ... in world metres (GeoBenchmarks.Tour: over a whole world)
+            public float[] flyPath;
+            // what is checked on the way, every checkEvery seconds: the tiles within checkRadius metres of the camera (0: three
+            // quarters of the load radius) that are not loaded, and the terrains whose trees Nature Renderer is not drawing
+            // natureGrace seconds after they loaded
+            public float checkEvery = 0.5f, checkRadius, natureGrace = 5;
         }
 
         public struct View { public string name; public Vector2 offset; public float distance, pitch, yaw, lift; }
@@ -130,23 +136,38 @@ namespace GeoWorld
 #endif
         }
 
-        // Flies the camera in a straight line over the world while the streamer loads and unloads tiles, and lists
-        // every frame slower than spikeMs with the main-thread profiler markers that took the most of it and the
-        // tiles that were loaded or unloaded around it.
+        // Flies the camera over the world (a straight line, or the legs of flyPath) while the streamer loads and unloads tiles,
+        // and reports how steady the frame rate is (median, 1 % and 0.1 % lows, the spread), every frame slower than spikeMs
+        // with the main-thread profiler markers that took the most of it and the tiles that were loaded or unloaded around it,
+        // and whether the world was there all the way: tiles near the camera that were not loaded, and terrains whose trees
+        // Nature Renderer had not started drawing a while after their tile loaded.
         IEnumerator Flight(Camera camera, GeoTileStreamer streamer, StringBuilder report)
         {
-            var from = new Vector3(request.flyFromX, 0, request.flyFromZ);
-            var to = new Vector3(request.flyToX, 0, request.flyToZ);
-            float length = Vector3.Distance(from, to);
-            var direction = length > 0 ? (to - from) / length : Vector3.forward;
-            var rotation = Quaternion.LookRotation(direction) * Quaternion.Euler(12, 0, 0);
-            camera.transform.SetPositionAndRotation(from + Vector3.up * 300, rotation);
+            var path = new List<Vector3>();
+            if (request.flyPath != null && request.flyPath.Length >= 4)
+                for (int i = 0; i + 1 < request.flyPath.Length; i += 2) path.Add(new Vector3(request.flyPath[i], 0, request.flyPath[i + 1]));
+            else { path.Add(new Vector3(request.flyFromX, 0, request.flyFromZ)); path.Add(new Vector3(request.flyToX, 0, request.flyToZ)); }
+            var along = new float[path.Count];
+            for (int i = 1; i < path.Count; i++) along[i] = along[i - 1] + Vector3.Distance(path[i - 1], path[i]);
+            float length = along[path.Count - 1];
+            Vector3 At(float distance, out Vector3 direction)
+            {
+                int leg = 1;
+                while (leg < path.Count - 1 && along[leg] < distance) leg++;
+                float span = Mathf.Max(0.001f, along[leg] - along[leg - 1]);
+                direction = (path[leg] - path[leg - 1]) / span;
+                return Vector3.Lerp(path[leg - 1], path[leg], (distance - along[leg - 1]) / span);
+            }
+            At(0, out var heading);
+            camera.transform.SetPositionAndRotation(path[0] + Vector3.up * 300, Quaternion.LookRotation(heading.sqrMagnitude > 0 ? heading : Vector3.forward) * Quaternion.Euler(12, 0, 0));
             yield return Settle(streamer);
-            float height = Ground(from) + request.flyHeight;
-            camera.transform.position = from + Vector3.up * height;
+            float height = Ground(path[0]) + request.flyHeight;
+            camera.transform.position = path[0] + Vector3.up * height;
             yield return Settle(streamer);
             for (int i = 0; i < request.warmup; i++) yield return null;
 
+            var world = streamer && streamer.world ? streamer.world : FindFirstObjectByType<GeoTiledWorld>();
+            float checkRadius = request.checkRadius > 0 ? request.checkRadius : (streamer ? streamer.loadRadius * 0.75f : 0);
             var recorders = MainThreadMarkers();
             var events = new List<(int frame, string text)>();
             int frame = 0;
@@ -156,7 +177,14 @@ namespace GeoWorld
             SceneManager.sceneUnloaded += onUnloaded;
             var times = new List<float>();
             var spikes = new List<(int frame, float ms, float at, string top)>();
-            float travelled = 0;
+            // the world on the way: checks with a tile missing, the most missing at once, where; Nature Renderer per terrain
+            int checks = 0, checksWithHoles = 0, mostHoles = 0; float mostHolesAt = 0;
+            var holeTiles = new HashSet<string>();
+            var natureSeen = new Dictionary<GeoNatureRendererStart, float>();
+            var natureDelays = new List<float>();
+            var natureLate = new HashSet<string>();
+            float nextCheck = 0, travelled = 0, clock = 0;
+            var rotation = camera.transform.rotation;
             try
             {
                 while (travelled < length)
@@ -165,9 +193,32 @@ namespace GeoWorld
                     frame++;
                     float ms = Time.unscaledDeltaTime * 1000;
                     times.Add(ms);
+                    clock += Time.unscaledDeltaTime;
                     if (ms > request.spikeMs) spikes.Add((frame, ms, travelled, Top(recorders, 22)));
                     travelled += request.flySpeed * Mathf.Min(Time.unscaledDeltaTime, 0.1f); // a long frame does not jump ahead
-                    camera.transform.position = from + direction * travelled + Vector3.up * height;
+                    var position = At(Mathf.Min(travelled, length), out var direction) + Vector3.up * height;
+                    if (direction.sqrMagnitude > 0)
+                        rotation = Quaternion.RotateTowards(rotation, Quaternion.LookRotation(direction) * Quaternion.Euler(12, 0, 0), 45 * Time.unscaledDeltaTime);
+                    camera.transform.SetPositionAndRotation(position, rotation);
+                    if (clock < nextCheck) continue;
+                    nextCheck = clock + Mathf.Max(0.05f, request.checkEvery);
+                    checks++;
+                    if (world && streamer && checkRadius > 0)
+                    {
+                        int holes = 0;
+                        foreach (var tile in world.tiles)
+                            if (!string.IsNullOrEmpty(tile.scenePath) && GeoTileStreamer.Distance(tile.area, position) <= checkRadius && !streamer.IsLoaded(tile.scenePath))
+                            { holes++; holeTiles.Add(tile.index.x + "_" + tile.index.y); }
+                        if (holes > 0) checksWithHoles++;
+                        if (holes > mostHoles) { mostHoles = holes; mostHolesAt = travelled; }
+                    }
+                    foreach (var start in FindObjectsByType<GeoNatureRendererStart>(FindObjectsSortMode.None))
+                    {
+                        if (!natureSeen.TryGetValue(start, out float since)) natureSeen[start] = since = clock;
+                        if (since < 0) continue; // drawing already
+                        if (start.Drawing) { natureDelays.Add(clock - since); natureSeen[start] = -1; }
+                        else if (clock - since > request.natureGrace) natureLate.Add(start.gameObject.scene.name);
+                    }
                 }
             }
             finally
@@ -178,10 +229,26 @@ namespace GeoWorld
             }
             var sorted = new List<float>(times);
             sorted.Sort();
-            report.AppendLine($"flight {length:F0} m at {request.flySpeed:F0} m/s, {request.flyHeight:F0} m up: {times.Count} frames, " +
-                              $"median {sorted[sorted.Count / 2]:F1} ms, 99% under {sorted[(int)(sorted.Count * 0.99f)]:F1} ms, worst {sorted[sorted.Count - 1]:F1} ms; " +
+            float mean = 0; foreach (var t in times) mean += t; mean /= Mathf.Max(1, times.Count);
+            float spread = 0; foreach (var t in times) spread += (t - mean) * (t - mean); spread = Mathf.Sqrt(spread / Mathf.Max(1, times.Count));
+            float p99 = sorted[Mathf.Min(sorted.Count - 1, (int)(sorted.Count * 0.99f))], p999 = sorted[Mathf.Min(sorted.Count - 1, (int)(sorted.Count * 0.999f))];
+            report.AppendLine($"flight {length:F0} m in {path.Count - 1} legs at {request.flySpeed:F0} m/s, {request.flyHeight:F0} m up: {times.Count} frames, " +
+                              $"median {sorted[sorted.Count / 2]:F1} ms, mean {1000 / mean:F0} fps, 1% low {1000 / p99:F0} fps ({p99:F1} ms), 0.1% low {1000 / p999:F0} fps, " +
+                              $"spread {spread:F1} ms, worst {sorted[sorted.Count - 1]:F1} ms; " +
                               $"over 33 ms: {sorted.FindAll(x => x > 33).Count}, over 50 ms: {sorted.FindAll(x => x > 50).Count}, over 100 ms: {sorted.FindAll(x => x > 100).Count}; " +
                               $"{events.FindAll(e => e.text.StartsWith("loaded")).Count} tiles loaded, {events.FindAll(e => e.text.StartsWith("unloaded")).Count} unloaded");
+            if (world && streamer && checkRadius > 0)
+                report.AppendLine(checksWithHoles == 0
+                    ? $"tiles: every tile within {checkRadius:F0} m of the camera was loaded at all {checks} checks"
+                    : $"tiles: a tile within {checkRadius:F0} m of the camera was missing at {checksWithHoles} of {checks} checks, at most {mostHoles} at once (at {mostHolesAt:F0} m); " +
+                      $"{holeTiles.Count} tiles were late: {string.Join(" ", holeTiles)} (fly slower, or raise the streamer's Loads At Once)");
+            if (natureSeen.Count > 0)
+            {
+                natureDelays.Sort();
+                report.AppendLine($"Nature Renderer: drawing on {natureDelays.Count} of {natureSeen.Count} terrains" +
+                                  (natureDelays.Count > 0 ? $", {natureDelays[natureDelays.Count / 2]:F1} s after the tile loaded (median), {natureDelays[natureDelays.Count - 1]:F1} s at most" : "") +
+                                  (natureLate.Count > 0 ? $"; not drawing {request.natureGrace:F0} s after loading: {string.Join(", ", natureLate)}" : "; none was late"));
+            }
             foreach (var spike in spikes)
             {
                 var near = events.FindAll(e => Math.Abs(e.frame - spike.frame) <= 2).ConvertAll(e => e.text);
