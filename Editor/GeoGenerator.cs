@@ -158,7 +158,9 @@ namespace GeoWorld.Editor
                 // terrain drawn with GPU instancing (far fewer draw calls), trees as far as they are worth drawing
                 root.terrain.drawInstanced=true;root.terrain.treeDistance=1500;
                 var terrainShader=Shader.Find("Universal Render Pipeline/Terrain/Lit");
-                if(terrainShader!=null) root.terrain.materialTemplate=context.Save(new Material(terrainShader){name="Terrain URP"});
+                // instancing on the material: a build strips the instancing variants of a shader when no material has it on, and a terrain drawn
+                // instanced (above) with its shader stripped is not drawn at all
+                if(terrainShader!=null) root.terrain.materialTemplate=context.Save(new Material(terrainShader){name="Terrain URP",enableInstancing=true});
 
                 var roads=Group("Roads - select a road to edit",root.transform);
                 var rivers=Group("Rivers",root.transform);
@@ -599,6 +601,9 @@ namespace GeoWorld.Editor
                 foreach(var pair in groups.OrderBy(g=>g.Key.z).ThenBy(g=>g.Key.x).ThenBy(g=>g.Key.material.name,StringComparer.Ordinal).ThenBy(g=>g.Key.edges))
                 {
                     var draft=new MeshDraft();var normals=new List<Vector3>();
+                    // a vertex that triangles share is one vertex: the crossings come in as triangle soup (three vertices a triangle), which
+                    // made a city tile's crossings 2 million vertices; welded they are a quarter of that, looking the same
+                    var weld=new Dictionary<(Vector3,Vector3,Vector2,Vector2),int>();
                     foreach(var (piece,submesh) in pair.Value)
                     {
                         // only the vertices this sub-mesh uses
@@ -607,10 +612,15 @@ namespace GeoWorld.Editor
                         {
                             if(!index.TryGetValue(v,out int n))
                             {
-                                n=draft.vertices.Count;index[v]=n;draft.vertices.Add(piece.vertices[v]);
-                                normals.Add(piece.normals.Length>v?piece.normals[v]:Vector3.up);
-                                draft.uv.Add(piece.uv.Count>v?piece.uv[v]:Vector2.zero);
-                                if(pair.Key.edges)draft.uv2.Add(piece.uv2[v]);
+                                var position=piece.vertices[v];var normal=piece.normals.Length>v?piece.normals[v]:Vector3.up;
+                                var uv0=piece.uv.Count>v?piece.uv[v]:Vector2.zero;var uv1=pair.Key.edges?piece.uv2[v]:Vector2.zero;
+                                var key=(position,normal,uv0,uv1);
+                                if(!weld.TryGetValue(key,out n))
+                                {
+                                    n=draft.vertices.Count;weld[key]=n;draft.vertices.Add(position);normals.Add(normal);draft.uv.Add(uv0);
+                                    if(pair.Key.edges)draft.uv2.Add(uv1);
+                                }
+                                index[v]=n;
                             }
                             draft.triangles.Add(n);
                         }

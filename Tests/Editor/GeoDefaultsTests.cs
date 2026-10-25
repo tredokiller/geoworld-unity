@@ -38,7 +38,8 @@ namespace GeoWorld.Editor.Tests
             Assert.AreEqual((9, 12), GeoTileStreamer.TilesWithin(1000, 1000));
             Assert.AreEqual((21, 24), GeoTileStreamer.TilesWithin(2000, 1000));
             Assert.AreEqual((357, 360), GeoTileStreamer.TilesWithin(10000, 1000));
-            Assert.AreEqual((9, 12), GeoTileStreamer.TilesWithin(4000, 2000), "the same radius in tiles of twice the size");
+            Assert.AreEqual((9, 12), GeoTileStreamer.TilesWithin(2000, 2000), "the same radius in tiles (one) of twice the size");
+            Assert.AreEqual((21, 24), GeoTileStreamer.TilesWithin(4000, 2000), "two tiles of twice the size, as two of the first size");
             var go = new UnityEngine.GameObject("Streamer test");
             try
             {

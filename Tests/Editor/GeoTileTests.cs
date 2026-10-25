@@ -89,6 +89,28 @@ namespace GeoWorld.Editor.Tests
             ruinModels = GeoRuinUse.Off, homeModels = GeoHomeUse.Off, groundTextures = false, maxProps = 2000, vegetation = false
         };
 
+        [Test] public void EnsureTerrainInstancing_SetsItOnTheTerrainMaterialsOfOlderTiles()
+        {
+            string folder = "Assets/GeoWorld/Generated/InstancingTest" + Guid.NewGuid().ToString("N").Substring(0, 8);
+            System.IO.Directory.CreateDirectory(folder); AssetDatabase.Refresh();
+            assets.Add(folder);
+            string path = folder + "/Tile.asset";
+            AssetDatabase.CreateAsset(ScriptableObject.CreateInstance<GeoGenerationAssets>(), path);
+            var terrain = new Material(Shader.Find("Universal Render Pipeline/Terrain/Lit")) { name = "Terrain URP", enableInstancing = false };
+            var other = new Material(Shader.Find("Universal Render Pipeline/Lit")) { name = "Other", enableInstancing = false };
+            AssetDatabase.AddObjectToAsset(terrain, path); AssetDatabase.AddObjectToAsset(other, path);
+            AssetDatabase.SaveAssets();
+            var go = new GameObject("World"); owned.Add(go);
+            var world = go.AddComponent<GeoTiledWorld>();
+            world.tiles.Add(new GeoTiledWorld.Tile { assetPath = path });
+
+            Assert.That(GeoTileAddressables.EnsureTerrainInstancing(world), Is.EqualTo(1));
+            var materials = AssetDatabase.LoadAllAssetsAtPath(path).OfType<Material>().ToDictionary(m => m.name);
+            Assert.That(materials["Terrain URP"].enableInstancing, Is.True);
+            Assert.That(materials["Other"].enableInstancing, Is.False, "only the terrain material is touched");
+            Assert.That(GeoTileAddressables.EnsureTerrainInstancing(world), Is.Zero, "nothing left to do");
+        }
+
         [Test] public void TiledSample_TilesMeetAndHoldEveryBuildingOnce()
         {
             string folder = "Assets/GeoWorld/Generated/TileTest" + Guid.NewGuid().ToString("N").Substring(0, 8);
@@ -114,6 +136,9 @@ namespace GeoWorld.Editor.Tests
             foreach (var tile in tiles)
             {
                 Assert.That(tile.terrain.groupingID, Is.EqualTo(GeoTiles.TerrainGroup));
+                // a player build strips the instancing variants of a shader that no material has instancing on for, and an instanced
+                // terrain without them is not drawn: the terrain's material has it on
+                Assert.That(tile.terrain.drawInstanced && tile.terrain.materialTemplate && tile.terrain.materialTemplate.enableInstancing, "the terrain material has GPU Instancing on");
                 foreach (var step in new[] { Vector2Int.right, Vector2Int.up })
                 {
                     if (!byIndex.TryGetValue(tile.tileIndex + step, out var next)) continue;
@@ -139,6 +164,12 @@ namespace GeoWorld.Editor.Tests
                     Assert.That(box.min.z, Is.GreaterThan(tile.tileArea.yMin - 4)); Assert.That(box.max.z, Is.LessThan(tile.tileArea.yMax + 4));
                 }
             Assert.That(tiles.Sum(t => t.roadCount), Is.GreaterThanOrEqualTo(single.roadCount));
+            // the crossings are batched meshes with shared vertices (they came as triangle soup, three vertices a triangle: four times the vertices)
+            var junctions = tiles.SelectMany(t => t.transform.Find("Roads - select a road to edit").GetComponentsInChildren<MeshFilter>())
+                .Where(f => f.sharedMesh && f.name.StartsWith("Junctions ") && f.sharedMesh.triangles.Length >= 18).ToList();
+            Assert.That(junctions, Is.Not.Empty);
+            foreach (var filter in junctions)
+                Assert.That(filter.sharedMesh.vertexCount, Is.LessThan(filter.sharedMesh.triangles.Length * 0.8f), filter.name + " shares its vertices");
             // a tile draws its ground roads a few meshes per chunk: objects of their own only for bridges and raised roads
             foreach (var tile in tiles)
                 Assert.That(tile.transform.Find("Roads - select a road to edit").GetComponentsInChildren<GeoPath>().All(p => p.bridge || p.layer != 0));

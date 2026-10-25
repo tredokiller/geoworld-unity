@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.9.3
+
+- Fixed: the terrain was not drawn in a player build. A tile's terrain is drawn instanced and its material (Terrain URP) had GPU Instancing off, so a build with Instancing Variants set to Strip Unused (Unity's default; the Interceptor Drones project) left out the instancing variants of the terrain shader, and the whole satellite ground was missing: buildings, roads, water and trees floating over the background colour (the editor, which does not strip, drew it). The material has GPU Instancing on, and a tiled world made by an older version gets it set when its player is built (`GeoTileAddressables.EnsureTerrainInstancing`, called by GeoBuild; the build report says how many). A game that builds by its own means: Rebuild changed tiles (tile version 19) or call it before the build.
+- Fixed: Build player of the open world ended in "MissingReferenceException ... GeoTiledWorld has been destroyed" after a successful build: Unity reopens the open scenes when the player is built, and the report used the world object of before. The player was built, but there was no size report.
+- Smaller tiles: the road crossings of a tile (batched into meshes named Junctions) came as triangle soup, three vertices a triangle, and were never welded: a city tile had 1.96 million vertices in them for 849 thousand triangles. Vertices that triangles share are one vertex now (the same position, normal and texture coordinates, so the same picture): 0.6 million, a city tile's meshes take 72 MB of memory instead of 144, its assets in the project 114 MB for four tiles instead of 226, and its bundle a sixth less (25 MB instead of 30 for the densest). Tiles are rebuilt (tile version 19): Rebuild changed tiles.
+- Tests: three new (the terrain material's instancing in a generated tile, crossings sharing vertices, and EnsureTerrainInstancing on a tile of an older version).
+- The load radius test expected the tiles of a 4 km radius over 2 km tiles to be those of 1 km over 1 km (9 and 12): it is two tiles' radius in both (21 and 24), as the code says; the test is corrected.
+
 ## 1.9.2
 
 - New area: while an area is being extracted it stays as it is. Draw area and Clear are off, the area can no longer be drawn again, moved or resized (the map still moves and zooms), and its outline turns green. Before, another area could be drawn while the first was still downloading.

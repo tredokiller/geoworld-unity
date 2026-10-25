@@ -47,6 +47,27 @@ namespace GeoWorld.Editor
             AssetDatabase.SaveAssets();
         }
 
+        // The terrain material of a tile made before it had GPU instancing on: set. A build strips the instancing variants of a shader
+        // that no material has instancing on for, and a terrain drawn instanced with its shader stripped is not drawn at all (the
+        // satellite imagery of the whole world was missing in a player). Returns how many materials were changed.
+        public static int EnsureTerrainInstancing(GeoTiledWorld world)
+        {
+            int changed = 0;
+            foreach (var tile in world.tiles)
+            {
+                if (string.IsNullOrEmpty(tile.assetPath) || !File.Exists(tile.assetPath)) continue;
+                foreach (var o in AssetDatabase.LoadAllAssetsAtPath(tile.assetPath))
+                    if (o is UnityEngine.Material material && material.name == "Terrain URP" && !material.enableInstancing)
+                    {
+                        material.enableInstancing = true;
+                        EditorUtility.SetDirty(material);
+                        changed++;
+                    }
+            }
+            if (changed > 0) AssetDatabase.SaveAssets();
+            return changed;
+        }
+
         public static string SharedGroupName(GeoTiledWorld world) => "Geo World " + UnityEngine.Hash128.Compute(world.folder) + " shared";
 
         // The assets that two or more tiles of the world use (the home and ruin models with their textures, the road and ground

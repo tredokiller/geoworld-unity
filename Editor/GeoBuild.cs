@@ -71,6 +71,8 @@ namespace GeoWorld.Editor
             report = "";
             var scenes = new List<string> { world.gameObject.scene.path };
             var notes = new StringBuilder();
+            int terrains = GeoTileAddressables.EnsureTerrainInstancing(world);
+            if (terrains > 0) notes.AppendLine($"{terrains} tiles' terrain materials got GPU Instancing (tiles made by an older version; without it the terrain is not drawn in a player).");
             AddressableAssetSettings settings = null;
             var previous = AddressableAssetSettings.PlayerBuildOption.PreferencesValue;
             if (world.addressableScenes)
@@ -100,6 +102,9 @@ namespace GeoWorld.Editor
             finally { if (settings) settings.BuildAddressablesWithPlayerBuild = previous; }
             if (build.summary.result != UnityEditor.Build.Reporting.BuildResult.Succeeded)
                 return build.summary.result + ": " + build.summary.totalErrors + " errors";
+            // the player build reopens the scenes that were open: the world object of before is gone
+            if (!world) world = UnityEngine.Object.FindFirstObjectByType<GeoTiledWorld>();
+            if (!world) return "The build succeeded, but the open scene lost its Geo Tiled World, so there is no size report.";
             report = PlayerReport(world, Path.GetDirectoryName(Path.GetFullPath(exe)), build.summary.totalTime) + notes + "\n" + ProjectReport(world);
             File.WriteAllText(Path.Combine(Path.GetDirectoryName(Path.GetFullPath(exe)), "GeoBuildReport.txt"), report);
             return null;
