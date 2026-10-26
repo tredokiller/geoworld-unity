@@ -101,6 +101,24 @@ namespace GeoWorld.Editor.Tests
             yield return new ExitPlayMode();
         }
 
+        // Nature Renderer's own default sets a terrain up only within its rendering distance (0 on a terrain Geo World made): the
+        // trees of a tile were not drawn at all. Every tile's Nature Renderer draws where the tile is loaded.
+        [UnityTest] public IEnumerator NatureRendererIsNotLeftToSetUpTerrainsOnlyNearTheCamera()
+        {
+            MakeInstancedTreeData();
+            yield return new EnterPlayMode();
+            var go = Tile();
+            var natureRenderer = go.GetComponent<NatureRenderer>();
+            try
+            {
+                Assert.That(natureRenderer.OnlyInitializeWithinRenderingDistance, Is.False);
+                for (int i = 0; i < 600 && !natureRenderer.enabled; i++) yield return null;
+                Assert.That(natureRenderer.OnlyInitializeWithinRenderingDistance, Is.False, "Still so when it starts.");
+            }
+            finally { Object.Destroy(go); }
+            yield return new ExitPlayMode();
+        }
+
         [UnityTest] public IEnumerator NatureRendererThatIsRunningWhenTheTreesCome_StartsAgainOnThem()
         {
             MakeInstancedTreeData();

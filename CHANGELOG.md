@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.9.4
+
+- Fixed: the trees of a tile were not drawn by Nature Renderer, or only on some terrains as the camera moved (a game flying through a streamed world saw them come and go). Nature Renderer's default (Only Initialize Within Rendering Distance) sets a terrain up only while the camera is within its rendering distance, which is 0 on a terrain Geo World made: it was initialized and enabled, and drew nothing. A tile's Nature Renderer is now told to draw wherever the tile is loaded (GeoNatureRendererStart, when the tile loads: tiles made by earlier versions are fixed too, and Prepare sets it on new ones).
+- Test: a stand-in Nature Renderer with that default, and a tile that must leave it off.
+- Water: one material for all of it (Resources/GeoWorld/Water, URP Simple Lit: teal, a little specular, no reflections of the sky). The water of a tile was a URP Lit material of its own with smoothness 0.88: under a bright sky (the game's environment sky) the far stretches of a river and every wide lake surface reflected it and turned white, and each tile held a copy of the material. New tiles use the shared one, and a tile that loads in Play mode takes it too (GeoWaterLook, from GeoWorldRoot), so worlds made earlier look right without being generated again.
+- Tests: the water group of a tile takes the shared material and nothing else does.
+
 ## 1.9.3
 
 - Fixed: the terrain was not drawn in a player build. A tile's terrain is drawn instanced and its material (Terrain URP) had GPU Instancing off, so a build with Instancing Variants set to Strip Unused (Unity's default; the Interceptor Drones project) left out the instancing variants of the terrain shader, and the whole satellite ground was missing: buildings, roads, water and trees floating over the background colour (the editor, which does not strip, drew it). The material has GPU Instancing on, and a tiled world made by an older version gets it set when its player is built (`GeoTileAddressables.EnsureTerrainInstancing`, called by GeoBuild; the build report says how many). A game that builds by its own means: Rebuild changed tiles (tile version 19) or call it before the build.

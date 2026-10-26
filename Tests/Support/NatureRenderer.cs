@@ -12,6 +12,8 @@ namespace GeoWorld.Tests.Support
         public TerrainData TerrainData { get; set; }
         public int starts, restarts;
         public bool treesInWhenStarted = true;
+        // Nature Renderer's default: a terrain is set up only while the camera is within its rendering distance
+        public bool OnlyInitializeWithinRenderingDistance { get; set; } = true;
         public TerrainData dataWhenStarted;
 
         void OnEnable()

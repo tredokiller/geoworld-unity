@@ -67,6 +67,7 @@ namespace GeoWorld.Editor
             if (!natureRenderer) natureRenderer = terrain.gameObject.AddComponent(component);
             // switched off for a moment while a tile loads (GeoNatureRendererStart): Unity's own tree drawing stays off
             component.GetProperty("EnableUnityRendererWhenDisabled")?.SetValue(natureRenderer, false);
+            GeoNatureRendererStart.DrawEverywhere((Behaviour)natureRenderer);
             if (!terrain.GetComponent<GeoNatureRendererStart>()) terrain.gameObject.AddComponent<GeoNatureRendererStart>();
         }
 

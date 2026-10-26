@@ -40,7 +40,17 @@ namespace GeoWorld
                 if (behaviour && behaviour.GetType().Name == "NatureRenderer") natureRenderer = behaviour;
             managed = natureRenderer && natureRenderer.enabled;
             treeLoader = GetComponent<GeoTerrainTreeLoader>();
+            if (natureRenderer) DrawEverywhere(natureRenderer);
             if (managed) natureRenderer.enabled = false; // before its own Awake
+        }
+
+        // Nature Renderer's default is to set a terrain up only while the camera is within its rendering distance, which is
+        // measured from the detail distance of its own settings (0 on a terrain Geo World made): the trees of a tile were not
+        // drawn at all, or on the terrains it happened to take up as the camera moved. Geo World streams the tiles itself and
+        // loads those the camera needs: every terrain that is loaded is drawn.
+        public static void DrawEverywhere(Behaviour natureRenderer)
+        {
+            natureRenderer.GetType().GetProperty("OnlyInitializeWithinRenderingDistance")?.SetValue(natureRenderer, false);
         }
 
         // Every time the tile is switched on: Nature Renderer waits again.

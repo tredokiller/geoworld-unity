@@ -747,7 +747,7 @@ namespace GeoWorld.Editor
                  case GroundSurface.Paving:return Mat("Paved road",new Color(0.55f,0.52f,0.46f),0.12f,true);
                  default:return Mat("Asphalt road",new Color(0.13f,0.15f,0.16f),0.18f,true);}
             }
-            public Material Water=>Mat("River water",new Color(0.08f,0.35f,0.39f),0.88f);
+            public Material Water=>GeoWaterLook.Material?GeoWaterLook.Material:Mat("River water",new Color(0.08f,0.35f,0.39f),0.88f);
             public Material Marking=>Mat("Road paint",new Color(0.74f,0.74f,0.70f),0.05f);
             public Material Foundation=>Mat("Concrete",new Color(0.43f,0.43f,0.39f));
             public Material Roof=>Mat("Terracotta roofs",new Color(0.39f,0.15f,0.10f));

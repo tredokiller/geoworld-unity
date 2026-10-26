@@ -107,5 +107,8 @@ namespace GeoWorld
         [HideInInspector] public Rect tileArea;
         [HideInInspector] public float tileSize, tileBaseY, tileHeightRange;
         [HideInInspector] public int tileParts = 1; // exports this tile is built from (more than one where exports meet)
+
+        // The tile's water takes the water material all tiles share (tiles made before it had a Lit material of their own that reflected the sky).
+        void Awake() { if (Application.isPlaying) GeoWaterLook.Apply(transform); }
     }
 }
