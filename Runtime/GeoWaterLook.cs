@@ -2,9 +2,10 @@ using UnityEngine;
 
 namespace GeoWorld
 {
-    // The water of a world is drawn with one material that all tiles share (Resources/GeoWorld/Water: URP Simple Lit, teal, a little
-    // specular, no reflections of the sky). A tile made before it carries a URP Lit material of its own (smoothness 0.88) that reflects
-    // the environment: under a bright sky a river turned white along its far stretches, and every tile held a copy of the material.
+    // The water of a world is drawn with one material that all tiles share (Resources/GeoWorld/Water: the GeoWorld/Water shader,
+    // coloured by the water's depth, with a soft shore, small waves and only a part of the sky's colour at grazing angles, no
+    // mirror reflections). A tile made before it carries a URP Lit material of its own (smoothness 0.88) that reflects the
+    // environment: under a bright sky a river turned white along its far stretches, and every tile held a copy of the material.
     // A tile that loads in Play mode takes the shared material (GeoWorldRoot), so worlds made earlier look right without being
     // generated again.
     public static class GeoWaterLook

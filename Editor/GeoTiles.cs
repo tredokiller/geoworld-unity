@@ -341,7 +341,19 @@ namespace GeoWorld.Editor
             GeoTileAddressables.Unregister(entry);
             var child = Child(world, entry.index);
             if (child) Object.DestroyImmediate(child.gameObject);
-            if (!string.IsNullOrEmpty(entry.scenePath) && File.Exists(entry.scenePath) && !SceneManager.GetSceneByPath(entry.scenePath).isLoaded) AssetDatabase.DeleteAsset(entry.scenePath);
+            // a tile open in the editor is closed first: else its scene stayed open and on disk, drawing ground whose data was
+            // deleted. One with unsaved changes is kept whole.
+            if (!string.IsNullOrEmpty(entry.scenePath))
+            {
+                var open = SceneManager.GetSceneByPath(entry.scenePath);
+                if (open.isLoaded && !open.isDirty) EditorSceneManager.CloseScene(open, true);
+                if (SceneManager.GetSceneByPath(entry.scenePath).isLoaded)
+                {
+                    Debug.LogWarning($"Geo World: tile {entry.index.x}, {entry.index.y} is no longer part of the world, but its scene is open with unsaved changes, so it is kept: {entry.scenePath}");
+                    return;
+                }
+            }
+            if (!string.IsNullOrEmpty(entry.scenePath) && File.Exists(entry.scenePath)) AssetDatabase.DeleteAsset(entry.scenePath);
             if (!string.IsNullOrEmpty(entry.assetPath) && File.Exists(entry.assetPath)) AssetDatabase.DeleteAsset(entry.assetPath);
         }
 

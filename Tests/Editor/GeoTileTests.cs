@@ -247,6 +247,13 @@ namespace GeoWorld.Editor.Tests
             Assert.That(GeoTilePlan.Make(new[] { Bounds(0.2f, -0.2f, 1000.3f, 1000) }, 500).tiles.Count, Is.EqualTo(4));
             // but not a real strip of one
             Assert.That(GeoTilePlan.Make(new[] { Bounds(0, 0, 1040, 1000) }, 500).tiles.Count, Is.EqualTo(6));
+            // nor a few metres past the grid: an export of 2 x 2 km round its origin is 2 x 2 tiles of 1 km, not 4 x 3
+            var square = GeoTilePlan.Make(new[] { Bounds(-1004.16f, -1000.96f, 1004.16f, 1001.15f) }, 1000);
+            Assert.That(square.first, Is.EqualTo(new Vector2Int(-1, -1))); Assert.That(square.columns, Is.EqualTo(2)); Assert.That(square.rows, Is.EqualTo(2));
+            Assert.That(GeoTilePlan.Make(new[] { Bounds(0, 0, 1010, 1000) }, 500).tiles.Count, Is.EqualTo(4));
+            // where exports meet, the one that only grazes a tile still builds its strip of it
+            var seam = GeoTilePlan.Make(new[] { Bounds(0, 0, 1010, 1000), Bounds(1000, 0, 2000, 1000) }, 500);
+            Assert.That(seam.tiles[new Vector2Int(2, 0)], Is.EquivalentTo(new[] { 0, 1 }));
             // a single export is cut on the shared grid, not on its own corner
             var one = GeoTilePlan.Make(new[] { Bounds(-240, -180, 240, 180) }, 200);
             Assert.That(one.first, Is.EqualTo(new Vector2Int(-2, -1))); Assert.That(one.columns, Is.EqualTo(4)); Assert.That(one.rows, Is.EqualTo(2));

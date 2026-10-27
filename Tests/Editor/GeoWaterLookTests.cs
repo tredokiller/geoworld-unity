@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace GeoWorld.Editor.Tests
 {
-    // The water of every tile is drawn with the material they share (a Simple Lit one: no reflections of the sky), also in a tile made
+    // The water of every tile is drawn with the material they share (GeoWorld/Water: no mirror reflections of the sky), also in a tile made
     // before it, which carries a Lit material of its own.
     public class GeoWaterLookTests
     {
@@ -20,7 +20,7 @@ namespace GeoWorld.Editor.Tests
                 house.AddComponent<MeshFilter>(); house.AddComponent<MeshRenderer>().sharedMaterial = lit;
 
                 Assert.That(GeoWaterLook.Material, Is.Not.Null, "The package ships the water material in Resources/" + GeoWaterLook.Resource + ".");
-                Assert.That(GeoWaterLook.Material.shader.name, Is.EqualTo("Universal Render Pipeline/Simple Lit"));
+                Assert.That(GeoWaterLook.Material.shader.name, Is.EqualTo("GeoWorld/Water"));
                 Assert.That(GeoWaterLook.Apply(root.transform), Is.EqualTo(1));
                 Assert.That(water.GetComponent<MeshRenderer>().sharedMaterial, Is.EqualTo(GeoWaterLook.Material));
                 Assert.That(house.GetComponent<MeshRenderer>().sharedMaterial, Is.EqualTo(lit), "Only the water group is touched.");

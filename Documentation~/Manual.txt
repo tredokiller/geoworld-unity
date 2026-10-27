@@ -138,7 +138,10 @@ WHAT THIS SAMPLE GENERATES
   are excluded from ground junctions. Layer-only roads have an estimated 5 m per layer
   height offset, reported after import; this is a placeholder rather than surveyed height.
 - River ribbons and carved channels, plus approximate rasterized water-body surfaces
-  with islands excluded. Water has a simple opaque material, without fluid simulation.
+  with islands excluded. Water has a simple material of its own (GeoWorld/Water, shared by all tiles): coloured by the
+  water's depth under it (light at the shore, dark in the middle; needs the pipeline's Depth Texture), the shore fading
+  out softly, small waves that calm down with distance, and a part of the sky's colour at grazing angles. No fluid
+  simulation and no mirror reflections.
 - Basic raised bridge decks/parapets. Tunnels and culverts are skipped.
 - Editable buildings extruded from the exported footprint, including L-shaped and
   other concave outlines. Flat/gabled/hipped/single-slope roofs and static mesh collision follow the same
@@ -267,6 +270,8 @@ several exports..., or "Several exports..." in the Geo World window, and choose 
 they overlap.
 One grid: tile (i, j) is the square [i x size, (i + 1) x size) x [j x size, (j + 1) x size) of the export coordinates,
 the same for every export. A tile therefore has one index, one place and one name however the exports are cut.
+A tile that the exports only graze (a strip of at most 25 m, a fortieth of the tile, along its edge) is not built: an
+export of 2 x 2 km round its origin is 2 x 2 tiles of 1 km, not 4 x 3 with a ring of bare satellite ground.
 The border: neighbouring parts overlap a little (tens of metres). Each part owns the ground of its bounds that no earlier
 part owns (its region, a rectangle), so regions do not overlap and nothing is built twice. A tile that lies on one part is
 built from that part alone; a tile where parts meet is built once from all of them: each gives the terrain height, roads,

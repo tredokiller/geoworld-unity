@@ -30,12 +30,17 @@ namespace GeoWorld.Editor
 
         // A sliver of a tile (a thousandth of its side) is not a tile: exports rarely end on the grid.
         float MinSide => Mathf.Max(0.5f, tileSize * 0.001f);
+        // Nor is a tile that every export only grazes with a strip along its edge: an export of 2 x 2 km that ends 4 m past
+        // the grid would otherwise get a row of tiles of bare satellite ground, without roads, water or buildings. The strip
+        // (at most 25 m of the export's edge) is left out. Where exports meet, one of them has most of the tile, so it stays.
+        float EdgeSide => Mathf.Min(25f, tileSize * 0.025f);
 
         public static GeoTilePlan Make(IList<GeoBounds> exports, float tileSize)
         {
             if (exports == null || exports.Count == 0) throw new ArgumentException("A world needs at least one export.");
             var plan = new GeoTilePlan(tileSize, exports.Count);
             var share = new Dictionary<Vector2Int, Dictionary<int, double>>();
+            var widest = new Dictionary<Vector2Int, float>(); // each tile: the narrow side of its largest piece
             for (int i = 0; i < exports.Count; i++)
             {
                 plan.bounds[i] = Copy(exports[i]);
@@ -53,8 +58,10 @@ namespace GeoWorld.Editor
                         if (cut == null || cut.Width <= plan.MinSide || cut.Depth <= plan.MinSide) continue;
                         if (!share.TryGetValue(index, out var parts)) share[index] = parts = new Dictionary<int, double>();
                         parts[i] = (double)cut.Width * cut.Depth;
+                        widest[index] = Mathf.Max(widest.TryGetValue(index, out var side) ? side : 0, Mathf.Min(cut.Width, cut.Depth));
                     }
             }
+            foreach (var pair in widest) if (pair.Value <= plan.EdgeSide) share.Remove(pair.Key);
             if (share.Count == 0) throw new InvalidOperationException("The exports hold no ground to build.");
             foreach (var pair in share)
                 plan.tiles[pair.Key] = pair.Value.OrderByDescending(p => p.Value).ThenBy(p => p.Key).Select(p => p.Key).ToList();
