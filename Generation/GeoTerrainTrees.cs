@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using System.IO;
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
 using UnityEngine;
 
 namespace GeoWorld.Editor
@@ -22,8 +24,11 @@ namespace GeoWorld.Editor
         {
             if (cached != null && System.Array.TrueForAll(cached, p => p)) return cached;
             var prefabs = new GameObject[Tones];
-            for (int i = 0; i < Tones; i++) prefabs[i] = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath(i));
+            for (int i = 0; i < Tones; i++) prefabs[i] = GeoAssets.Load<GameObject>(PrefabPath(i));
             if (System.Array.TrueForAll(prefabs, p => p)) return cached = prefabs;
+#if !UNITY_EDITOR
+            throw new System.InvalidOperationException("Geo World's tree prefabs are not in GeoRuntimeAssets (Tools > Geo World > Runtime generation > Prepare runtime assets).");
+#else
             Directory.CreateDirectory(Folder); AssetDatabase.Refresh();
             var mesh = AssetDatabase.LoadAssetAtPath<Mesh>(Folder + "/Geo tree.asset");
             if (!mesh) { mesh = Model(); AssetDatabase.CreateAsset(mesh, Folder + "/Geo tree.asset"); }
@@ -49,10 +54,12 @@ namespace GeoWorld.Editor
             }
             AssetDatabase.SaveAssets();
             return cached = prefabs;
+#endif
         }
 
         public static string PrefabPath(int tone) => Folder + "/Geo tree " + tone + ".prefab";
 
+#if UNITY_EDITOR
         static Material MakeMaterial(string path, Color color)
         {
             var material = AssetDatabase.LoadAssetAtPath<Material>(path);
@@ -63,6 +70,7 @@ namespace GeoWorld.Editor
             AssetDatabase.CreateAsset(material, path);
             return material;
         }
+#endif
 
         // the baked chunks' tree, with the trunk and the crown as two sub-meshes
         static Mesh Model()
@@ -196,7 +204,9 @@ namespace GeoWorld.Editor
             }
             data.treePrototypes = System.Array.ConvertAll(prefabs, prefab => new TreePrototype { prefab = prefab });
             data.SetTreeInstances(instances.ToArray(), false);
+#if UNITY_EDITOR
             EditorUtility.SetDirty(data);
+#endif
             return instances.Count;
         }
 
@@ -218,7 +228,9 @@ namespace GeoWorld.Editor
         {
             if (!terrain || terrain.terrainData.treeInstanceCount == 0) return;
             terrain.terrainData.SetTreeInstances(new TreeInstance[0], false);
+#if UNITY_EDITOR
             EditorUtility.SetDirty(terrain.terrainData);
+#endif
         }
     }
 }

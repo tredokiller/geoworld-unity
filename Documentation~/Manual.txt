@@ -407,6 +407,67 @@ What a tile weighs (1 km, the defaults): the satellite texture 2048 x 2048 (0.7-
 Texture Size (Auto: 0.4 m a texel, 2048 for 1 km) and the Crunch quality; check the tile server's terms before shipping it.
 Frame rate does not grow with the world: what is drawn is the tiles within the load radius (2 km: 21-24 tiles of 1 km).
 
+RUNTIME GENERATION (A PLAYER, WITHOUT THE EDITOR)
+A built player makes worlds itself: an instructor sets an area, the player downloads it and generates its tiles, and the result
+is a world package on disk that the player (or every client of a session) loads tile by tile.
+Setting up a project: Tools > Geo World > Runtime generation > Prepare runtime assets. It writes
+Assets/GeoWorld/Resources/GeoWorldRuntimeAssets.asset (GeoRuntimeAssets): the package's library (home and ruin models, their reduced
+copies, the tree prefabs, road and ground pictures, building styles, the water material), the shaders, and template materials, one
+per shader and keyword set the generator makes, so that a build keeps those shader variants (a build strips the variants no
+material in it uses, and the generated materials are made in the player). A package refers to library assets by key (their GUID and
+local file id) and never carries them. Prepare again after updating the package. A standalone player build of the project then gets
+the Building Extractor app (Extractor~, with its own Python on Windows, about 30 MB) in <name>_Data/StreamingAssets/GeoWorld/Extractor
+(GeoRuntimeBuild, after the build; folders ending in ~ are never part of a build). A folder GeoWorldExtractor next to the executable
+works too (GeoExtractorRunner.AppFolderOverride for another place).
+In code (assembly GeoWorld.Generation, which runs in a player; namespace GeoWorld):
+  var package = await GeoWorldGenerator.GenerateAsync(new GeoWorldRequest { south = .., west = .., north = .., east = .., name = "area",
+      settings = null /* the tiled world defaults */ }, progress, cancellationToken);
+  var tile = await package.LoadTileAsync(new Vector2Int(x, z), parent, new GeoTileLoadOptions(), cancellationToken);
+  ... tile.Unload();
+GeoWorldPackage.Load(folder) opens a package made before; GeoWorldPackageStreamer loads its tiles around a target and unloads those
+left behind. Progress (GeoWorldProgress) has the stage (extracting, preparing, tiles, writing, done), the share of the whole request,
+the app's or the generator's message and the tile (k of n). Cancelling stops the app's process (and those it started) or the
+generation between two steps; no package is left (it is made in <folder>.part and moved in place when complete). One generation
+at a time. The extraction runs in a process of its own; the generation runs on the main thread (the export is read and the files
+are written on worker threads), and a tile takes the main thread for the whole of its build: half a minute for a dense town tile
+(Lyman's centre, 2 000 buildings a tile). A game whose UI must keep going generates in a second process of itself instead:
+  var package = await GeoWorldGeneratorHost.GenerateAsync(request, progress, cancellationToken);
+starts the player's own executable with -batchmode -geoworld-host <request.json> (no window; not -nographics: a player without a
+graphics device keeps no values in its materials, so generation refuses to run there) (the game's scenes are loaded but never
+woken in it: their objects are switched off before Awake), reads its progress from a file, kills it on cancel, and loads the package it
+wrote. The player must allow a second instance (Force Single Instance off); the request's settings cross as their plain values.
+Limits: one export (up to 100 km² and 20 km a side); Nature Renderer trees, prop catalogs and your own tree prefabs are the editor's.
+A player keeps its things in Application.persistentDataPath/GeoWorld (GeoWorldGenerator.Home): exports and the app's cache, the
+satellite tiles, packages/<name>. The editor's in %LOCALAPPDATA%\GeoWorld (the satellite tiles in Library).
+The package: <folder>/world.json and <folder>/tiles/tile_<x>_<z>.gwt.
+  world.json (GeoWorldManifest, JSON): format "geoworld-package" and formatVersion; name; generator (package and version), tileVersion
+  and unityVersion; origin (lat, lon, crs local-enu-wgs84: x east and z north in metres on the tangent plane at the origin, y up;
+  ground: the height above sea level of y 0); request (the area in degrees); bounds (metres); tileSize and the grid (first tile,
+  columns, rows); baseY and heightRange (the terrains' shared height scale); tiles (index, file, bytes, SHA-256, area, buildings,
+  roads, trees, props, empty); stats (area, lowest and highest ground, relief, mean slope, shares of forest, built-up, water and open
+  ground from the export's ground map, buildings and damaged buildings, the share under building footprints, km of road); settings;
+  attribution; notes; inputHash (the export's files, the settings, the generator: what it was made from); contentHash (the manifest
+  without contentHash and created, with every tile's SHA-256: two packages with the same contentHash are the same); created.
+  A tile file: "GWT1", version, a JSON header (GeoTileHeader: index, area, height scale, counts, the generator's report), then a deflate
+  stream: the objects made for the tile (textures as their raw GPU data, meshes as their vertex and index buffers in their compact
+  formats, materials as shader, keywords and properties, terrain layers, terrain data with 16-bit heights, tree instances, home sets)
+  and its objects with their transforms and components, and its buildings for navigation.
+  generation-report.json (not part of the content): how long the extraction and the generation took, the package's size, peak memory.
+The same export with the same settings and package version gives the same bytes (a test makes it twice), in the editor and in a
+player alike (the satellite tiles come from the cache the second time; imagery downloaded again may have changed on the server).
+Navigation: a package has no NavMesh (a game builds its own for its agent types). A loaded tile has its terrain collider, the colliders
+of bridges and props, and (GeoTileLoadOptions.buildingColliders) mesh colliders of its buildings' outlines extruded to their height, one
+per 200 m cell under "Navigation" (the drawn buildings, merged chunks and homes, have no colliders). GeoNavigationTag marks the terrain
+(ground, walkable), the buildings (not walkable), the water surfaces (not walkable) and bridges, for a game to map to its areas;
+GeoWorldTileHandle.Navigation lists every building on the tile with its outline (world x, z), ground, height and condition.
+Satellite imagery in a package is DXT1 (Crunch needs the editor): a 1 km tile's 2048 texture is 2.7 MB, read without decoding.
+Check the tile server's terms before storing or handing out packages with Esri's imagery (see below).
+Demo: Tools > Geo World > Runtime generation > Create demo scene / Build demo player... (GeoRuntimeDemoBuild). The player has fields
+for the area, Generate, the progress and Cancel, and the packages made, which stream around the camera (GeoPreviewCamera). From the
+command line: -geoDemoArea S,W,N,E -geoDemoName n [-geoDemoNoRadar] -geoDemoReport report.json -geoDemoShot shot.png -geoDemoQuit.
+In the editor: Make a world package from an export... (or batch: -executeMethod GeoWorld.Editor.GeoRuntimeSetup.BatchPackage -geoExport
+<folder> -geoOut <package folder>) makes the same package from an export without a player.
+
 SATELLITE IMAGERY ON THE TERRAIN
 Satellite imagery is the default way of generating (the made-up riverside sample keeps the blended ground).
 Texture Size Auto, the default, sizes the texture to the area: the power of two nearest to 0.4 m a texel, the

@@ -6,55 +6,10 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using UnityEditor;
 using UnityEngine;
 
 namespace GeoWorld.Editor
 {
-    // The export's local-enu-wgs84 projection: metres east (x) and north (z) on the tangent plane at the origin.
-    // The same maths as extractor/geo.py EnuProjection, in double precision.
-    public class GeoEnu
-    {
-        const double A = 6378137.0, F = 1.0 / 298.257223563, E2 = F * (2.0 - F);
-        readonly double lat0, lon0, x0, y0, z0, sp, cp, sl, cl;
-
-        public GeoEnu(double lat, double lon)
-        {
-            lat0 = lat; lon0 = lon;
-            Ecef(lat, lon, out x0, out y0, out z0);
-            double p = lat * Math.PI / 180, l = lon * Math.PI / 180;
-            sp = Math.Sin(p); cp = Math.Cos(p); sl = Math.Sin(l); cl = Math.Cos(l);
-        }
-
-        static void Ecef(double lat, double lon, out double x, out double y, out double z)
-        {
-            double p = lat * Math.PI / 180, l = lon * Math.PI / 180, s = Math.Sin(p), c = Math.Cos(p);
-            double n = A / Math.Sqrt(1.0 - E2 * s * s);
-            x = n * c * Math.Cos(l); y = n * c * Math.Sin(l); z = n * (1.0 - E2) * s;
-        }
-
-        public void Forward(double lat, double lon, out double east, out double north)
-        {
-            Ecef(lat, lon, out double x, out double y, out double z);
-            double dx = x - x0, dy = y - y0, dz = z - z0;
-            east = -sl * dx + cl * dy;
-            north = -sp * cl * dx - sp * sl * dy + cp * dz;
-        }
-
-        // Lat/lon of a local point, by fixed-point iteration on Forward().
-        public void Inverse(double east, double north, out double lat, out double lon)
-        {
-            lat = lat0; lon = lon0;
-            for (int i = 0; i < 6; i++)
-            {
-                Forward(lat, lon, out double fx, out double fy);
-                double p = lat * Math.PI / 180, s2 = Math.Sin(p) * Math.Sin(p), w = Math.Sqrt(1.0 - E2 * s2);
-                double mLat = Math.PI / 180 * A * (1.0 - E2) / (w * w * w), mLon = Math.PI / 180 * A / w * Math.Cos(p);
-                lat += (north - fy) / mLat; lon += (east - fx) / mLon;
-            }
-        }
-    }
-
     // Satellite imagery for the terrain: XYZ (Web Mercator) tiles from a tile server, downloaded once into
     // Library/GeoWorld/SatelliteTiles and resampled into one texture that covers the world's bounds.
     public static class GeoSatellite
@@ -221,23 +176,9 @@ namespace GeoWorld.Editor
         // takes a quarter of the bytes or less in the world's assets and in a build and becomes the same DXT1 when Unity loads it
         // (on the loading thread). The satellite textures are most of a tiled world's size: a 1 km tile's 2048 texture is
         // 2.7 MB as DXT1. Where this editor cannot crunch, the texture is DXT1 and the report says so.
-        public static void Compress(Texture2D texture, Color32[] pixels, GenerationSettings settings, List<string> notes)
-        {
-            if (settings.satelliteCompression == GeoSatelliteCompression.Crunched)
-            {
-                string reason = null;
-                try { EditorUtility.CompressTexture(texture, TextureFormat.DXT1Crunched, Mathf.Clamp(settings.satelliteQuality, 1, 100)); }
-                catch (Exception e) { reason = e.Message; }
-                if (texture.format == TextureFormat.DXT1Crunched) return;
-                notes?.Add("Satellite imagery: the texture could not be crunched" + (reason != null ? " (" + reason + ")" : "") + "; it is DXT1.");
-                if (texture.format != TextureFormat.RGBA32)
-                {
-                    texture.Reinitialize(texture.width, texture.height, TextureFormat.RGBA32, true);
-                    texture.SetPixels32(pixels); texture.Apply(true);
-                }
-            }
-            EditorUtility.CompressTexture(texture, TextureFormat.DXT1, TextureCompressionQuality.Best);
-        }
+        // (The editor's compressor: GeoEditorGeneration; a player's: GeoMemoryTarget.)
+        public static void Compress(Texture2D texture, Color32[] pixels, GenerationSettings settings, List<string> notes) =>
+            GeoGeneration.Target.CompressSatellite(texture, pixels, settings, notes);
 
         // Tiles whose bytes repeat across the area are the server's placeholder ("map data not yet available"),
         // not imagery: they are dropped (left grey). Returns how many.
@@ -272,12 +213,15 @@ namespace GeoWorld.Editor
                 (byte)(a.b * w0 + c.b * w1 + d.b * w2 + e.b * w3 + 0.5f), 255);
         }
 
+        // Where downloaded tiles are kept: the project's Library in the editor; a player sets a folder of its own (GeoWorldGenerator).
+        public static string CacheRoot = Path.Combine("Library", "GeoWorld", "SatelliteTiles");
+
         public static string CacheFolder(string template)
         {
             using (var md5 = MD5.Create())
             {
                 var hash = md5.ComputeHash(Encoding.UTF8.GetBytes(template));
-                return Path.Combine("Library", "GeoWorld", "SatelliteTiles", BitConverter.ToString(hash, 0, 6).Replace("-", "").ToLowerInvariant());
+                return Path.Combine(CacheRoot, BitConverter.ToString(hash, 0, 6).Replace("-", "").ToLowerInvariant());
             }
         }
 

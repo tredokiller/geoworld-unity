@@ -1,0 +1,12 @@
+{
+    "name": "GeoWorld.Generation",
+    "references": [
+        "GeoWorld.Runtime",
+        "UniTask"
+    ],
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "Newtonsoft.Json.dll"
+    ],
+    "autoReferenced": true
+}

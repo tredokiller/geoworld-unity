@@ -39,5 +39,20 @@ namespace GeoWorld
 
         // The mesh to draw for a source mesh of the library.
         public static Mesh For(Mesh source) => source && reduced != null && reduced.TryGetValue(source, out var mesh) ? mesh : source;
+
+        // What the set saves (the generator's report), the same in the editor and in a player.
+        public static string Summary(GeoReducedModels set)
+        {
+            long before = 0, after = 0;
+            foreach (var e in set.entries) if (e.source && e.reduced) { before += Triangles(e.source); after += Triangles(e.reduced); }
+            return $"{set.entries.Count} library meshes reduced: {before} triangles to {after} ({(before > 0 ? 100f * after / before : 0):F0}%).";
+        }
+
+        public static long Triangles(Mesh mesh)
+        {
+            long count = 0;
+            for (int s = 0; s < mesh.subMeshCount; s++) count += (long)mesh.GetIndexCount(s) / 3;
+            return count;
+        }
     }
 }

@@ -15,65 +15,6 @@ using Object = UnityEngine.Object;
 
 namespace GeoWorld.Editor
 {
-    // One tile for GeoGenerator: its share of the export, read once for the whole world.
-    internal sealed class GeoTileJob
-    {
-        public EnvironmentData env;     // bounds = the tile; the features that reach into its margin
-        public BuildingsData buildings; // centres on the tile or its margin (those on the margin only keep trees back)
-        public HeightField field;       // the tile and its margin, on the grid all tiles share
-        public int margin;              // cells of margin on each side of the field
-        public List<PathBuild> paths;   // roads and rivers cut to the margin, with heights from the whole export
-        public List<PathBuild> rivers;  // rivers cut to RiverReach beyond the margin, for the water (GeoWater): the line of a wide river's area may lie beyond the margin
-        public float[] waterLevels;     // for env.water, from the whole lake
-        public GeoBounds core;
-        public Vector2Int index;
-        public float size, baseY, range;
-        public string folder, name;
-        public int part;                // the export this comes from, in a tile that several exports build
-        public int parts = 1;           // exports the tile is built from
-
-        // One tile from what each export that reaches it gives (the first has most of the tile): their roads, rivers,
-        // lakes, buildings and props side by side, and the ground from the export that owns each point of it.
-        public static GeoTileJob Merge(IList<GeoTileJob> fragments, GeoTilePlan plan)
-        {
-            var main = fragments[0];
-            var env = new EnvironmentData { format = main.env.format, version = main.env.version, origin = main.env.origin, bounds = main.core,
-                terrain = main.env.terrain, materials = main.env.materials, surround = main.env.surround, outer = plan.Outer() };
-            var buildings = new BuildingsData { format = main.buildings.format, version = main.buildings.version, origin = main.buildings.origin, area = new BuildingArea { bounds = main.core } };
-            var levels = new List<float>();
-            var pieces = new List<PathBuild>(); var rivers = new List<PathBuild>();
-            foreach (var f in fragments)
-            {
-                env.roads.AddRange(f.env.roads); env.waterways.AddRange(f.env.waterways); env.railways.AddRange(f.env.railways); env.water.AddRange(f.env.water);
-                env.areas.AddRange(f.env.areas); env.barriers.AddRange(f.env.barriers); env.hedges.AddRange(f.env.hedges); env.treeRows.AddRange(f.env.treeRows);
-                env.trees.AddRange(f.env.trees); env.props.AddRange(f.env.props);
-                buildings.buildings.AddRange(f.buildings.buildings);
-                levels.AddRange(f.waterLevels); pieces.AddRange(f.paths); if (f.rivers != null) rivers.AddRange(f.rivers);
-            }
-            var field = new HeightField(main.field.bounds, main.field.resolution);
-            var byPart = new Dictionary<int, GeoTileJob>();
-            foreach (var f in fragments) byPart[f.part] = f;
-            for (int z = 0; z < field.resolution; z++)
-                for (int x = 0; x < field.resolution; x++)
-                {
-                    var from = byPart.TryGetValue(plan.OwnerOf(field.X(x), field.Z(z)), out var owner) ? owner : main;
-                    field.heights[z, x] = from.field.heights[z, x];
-                }
-            float baseY = fragments.Min(f => f.baseY), top = fragments.Max(f => f.baseY + f.range);
-            return new GeoTileJob { env = env, buildings = buildings, field = field, margin = main.margin, paths = pieces, rivers = rivers, waterLevels = levels.ToArray(),
-                core = main.core, index = main.index, size = main.size, baseY = baseY, range = top - baseY, folder = main.folder, name = main.name, part = main.part, parts = fragments.Count };
-        }
-
-        // the height field of the tile alone: the terrain
-        public HeightField Core(HeightField field)
-        {
-            int n = field.resolution - 2 * margin;
-            var result = new HeightField(core, n);
-            for (int z = 0; z < n; z++) for (int x = 0; x < n; x++) result.heights[z, x] = field.heights[z + margin, x + margin];
-            return result;
-        }
-    }
-
     // A large world cut into square tiles. Everything that depends on more than its surroundings is worked out once for
     // the whole export: road and river heights (a bridge rises between its two ends), lake levels (from the whole shore)
     // and the height scale of the terrain. Then every tile is built like a small world from its share of the export
@@ -84,23 +25,12 @@ namespace GeoWorld.Editor
     // world is, a tile can be rebuilt alone, and tiles whose export and settings did not change are skipped.
     public static class GeoTiles
     {
-        public const int TerrainGroup = 4127;
-        // Far more than any road grading or junction reaches, and room for the buildings next to a tile.
-        public const float MarginMetres = 96;
-        // Metres beyond the margin that a tile's water reads rivers from (GeoTileJob.rivers): a river area up to a kilometre wide
-        // takes its level from its line, wherever the line is.
-        public const float RiverReach = 600;
-        // The settings as a tile's fingerprint takes them: without the overview (GenerationSettings' last field), which is not
-        // what a tile is built from. The JSON is then the same as before the overview had settings, so no tile is rebuilt for it.
-        public static string TileSettingsJson(GenerationSettings settings)
-        {
-            string json = JsonUtility.ToJson(settings);
-            int cut = json.LastIndexOf(",\"overview\":", StringComparison.Ordinal);
-            return cut >= 0 ? json.Substring(0, cut) + "}" : json;
-        }
-
-        // bump when the generator draws tiles differently, so that "Rebuild changed tiles" rebuilds them
-        internal const string Version = "geo-tiles-19"; // 19: the terrain material has GPU instancing on (the terrain was not drawn in a build), crossings with shared vertices; 18: rivers and their water areas one surface on the terrain grid (GeoWater), no ribbons; 17: lake shores go back to the ground without a wall and never leave the water in the air; 16: lakes carved with a bank and drawn on the terrain grid, one ground for exports that meet; 15: one grid for every export, tiles where exports meet built from all of them; 13: ground roads one mesh per chunk and material; 12: crossings likewise; 11: Auto building mode merges in tiles; 10: homes made from a list when the tile loads
+        public const int TerrainGroup = GeoTileGeometry.TerrainGroup;
+        public const float MarginMetres = GeoTileGeometry.MarginMetres;
+        public const float RiverReach = GeoTileGeometry.RiverReach;
+        internal const string Version = GeoTileGeometry.Version;
+        // The settings as a tile's fingerprint takes them (GeoTileGeometry.TileSettingsJson).
+        public static string TileSettingsJson(GenerationSettings settings) => GeoTileGeometry.TileSettingsJson(settings);
 
         public static string DefaultFolder(string environmentPath) => GeoPaths.Project + "/Tiled/" + PackageName(environmentPath);
         // Several exports: named after the folder that holds them (the parts of one area), else after the first.
@@ -474,21 +404,7 @@ namespace GeoWorld.Editor
             finally { EditorUtility.ClearProgressBar(); }
         }
 
-        static GenerationSettings Sanitized(GenerationSettings settings)
-        {
-            settings = JsonUtility.FromJson<GenerationSettings>(JsonUtility.ToJson(settings ?? new GenerationSettings()));
-            settings.heightResolution = Mathf.Clamp(Mathf.ClosestPowerOfTwo(settings.heightResolution - 1), 32, 1024) + 1;
-            settings.pathStep = Mathf.Clamp(settings.pathStep, 0.5f, 10);
-            settings.riverDepth = Mathf.Clamp(settings.riverDepth, 0.5f, 8);
-            // Road meshes draw the roads: the paint under them needs no more detail than the ground (three RGBA maps
-            // of 1024 are 16 MB in every tile, of 512 a quarter of that).
-            if (settings.roadMeshes) settings.roadPaintResolution = Mathf.Min(settings.roadPaintResolution, settings.textureResolution);
-            // A tiled world is a town or a city: Auto merges its buildings and props. Counted per tile, Auto would keep an
-            // object per building wherever a tile has fewer than Merge Above buildings (a tile of Kharkiv's apartment
-            // blocks has a few hundred): 15 000 objects and 7 500 mesh colliders a tile, 250 MB, seconds to load.
-            if (settings.buildingMode == GeoBuildingMode.Auto) settings.buildingMode = GeoBuildingMode.Merged;
-            return settings;
-        }
+        static GenerationSettings Sanitized(GenerationSettings settings) => GeoWorldBuild.TileSettings(settings);
 
         static void Bar(string label, float value)
         { if (EditorUtility.DisplayCancelableProgressBar("Geo World Generator", label, value)) throw new OperationCanceledException("Generation cancelled."); }
@@ -584,287 +500,17 @@ namespace GeoWorld.Editor
             foreach (var scene in scenes) EditorSceneManager.CloseScene(scene, true);
         }
 
+        public static bool Touches(PathBuild path, GeoBounds b) => GeoTileGeometry.Touches(path, b);
+        public static List<PathBuild> ClipPath(PathBuild path, GeoBounds box, float pathStep) => GeoTileGeometry.ClipPath(path, box, pathStep);
+        public static Mesh Clip(Mesh mesh, GeoBounds b) => GeoTileGeometry.Clip(mesh, b);
+
         public static float Distance(GeoTiledWorld.Tile tile, Vector3 point)
         {
             float dx = Mathf.Max(tile.area.xMin - point.x, 0, point.x - tile.area.xMax), dz = Mathf.Max(tile.area.yMin - point.z, 0, point.z - tile.area.yMax);
             return Mathf.Sqrt(dx * dx + dz * dz);
         }
 
-        // --- geometry -------------------------------------------------------------------------------------------------
 
-        // Does the road or river (with its width) reach onto the bounds?
-        public static bool Touches(PathBuild path, GeoBounds b)
-        {
-            float pad = path.feature.width * 0.5f + 2;
-            var s = path.samples;
-            for (int i = 1; i < s.Count; i++)
-                if (Mathf.Max(s[i - 1].x, s[i].x) + pad >= b.minX && Mathf.Min(s[i - 1].x, s[i].x) - pad <= b.maxX &&
-                    Mathf.Max(s[i - 1].z, s[i].z) + pad >= b.minZ && Mathf.Min(s[i - 1].z, s[i].z) - pad <= b.maxZ) return true;
-            return false;
-        }
-
-        // The pieces of a road or river inside the bounds, on the path's own samples (so that every tile sees the same
-        // points and heights), each with its control points in that stretch.
-        public static List<PathBuild> ClipPath(PathBuild path, GeoBounds box, float pathStep)
-        {
-            var result = new List<PathBuild>();
-            var s = path.samples;
-            if (s == null || s.Count < 2) return result;
-            var controlAt = ControlSamples(path, pathStep);
-            int segment = 0, segments = s.Count - 1;
-            while (segment < segments)
-            {
-                while (segment < segments && !Overlaps(s[segment], s[segment + 1], box)) segment++;
-                if (segment >= segments) break;
-                int first = segment;
-                while (segment < segments && Overlaps(s[segment], s[segment + 1], box)) segment++;
-                int last = segment; // samples first..last
-                var controls = new List<Vector3> { s[first] };
-                if (controlAt != null) { for (int c = 0; c < controlAt.Length; c++) if (controlAt[c] > first && controlAt[c] < last) controls.Add(path.controls[c]); }
-                else for (int i = first + 1; i < last; i++) controls.Add(s[i]);
-                controls.Add(s[last]);
-                result.Add(new PathBuild { feature = path.feature, river = path.river, controls = controls, samples = s.GetRange(first, last - first + 1),
-                    widths = path.widths != null && path.widths.Count == s.Count ? path.widths.GetRange(first, last - first + 1) : null });
-            }
-            return result;
-        }
-
-        static bool Overlaps(Vector3 a, Vector3 b, GeoBounds box) =>
-            Mathf.Max(a.x, b.x) >= box.minX && Mathf.Min(a.x, b.x) <= box.maxX && Mathf.Max(a.z, b.z) >= box.minZ && Mathf.Min(a.z, b.z) <= box.maxZ;
-
-        // The sample index of each control point (GeoData.Resample puts every control point among the samples), or null when
-        // the samples were not made from these controls.
-        static int[] ControlSamples(PathBuild path, float pathStep)
-        {
-            var c = path.controls;
-            if (c == null || c.Count < 2) return null;
-            float step = Mathf.Max(0.5f, pathStep);
-            var result = new int[c.Count];
-            int at = 0;
-            for (int i = 1; i < c.Count; i++) { at += Mathf.Max(1, Mathf.CeilToInt(Vector3.Distance(c[i - 1], c[i]) / step)); result[i] = at; }
-            return at == path.samples.Count - 1 ? result : null;
-        }
-
-        // The triangles of a world-space mesh whose centre is on the bounds (west and south edges included, east and north
-        // not, so that every triangle belongs to one tile). Returns the mesh itself when it lies on the bounds already.
-        public static Mesh Clip(Mesh mesh, GeoBounds b)
-        {
-            var vertices = mesh.vertices;
-            if (vertices.Length == 0) return mesh;
-            var box = mesh.bounds;
-            if (box.min.x >= b.minX && box.max.x < b.maxX && box.min.z >= b.minZ && box.max.z < b.maxZ) return mesh;
-            var remap = new int[vertices.Length];
-            for (int i = 0; i < remap.Length; i++) remap[i] = -1;
-            var kept = new List<int>();
-            var triangles = new List<int>[mesh.subMeshCount];
-            for (int sub = 0; sub < mesh.subMeshCount; sub++)
-            {
-                var source = mesh.GetTriangles(sub); var list = triangles[sub] = new List<int>(source.Length);
-                for (int t = 0; t + 2 < source.Length; t += 3)
-                {
-                    Vector3 p = vertices[source[t]], q = vertices[source[t + 1]], r = vertices[source[t + 2]];
-                    float cx = (p.x + q.x + r.x) / 3, cz = (p.z + q.z + r.z) / 3;
-                    if (cx < b.minX || cx >= b.maxX || cz < b.minZ || cz >= b.maxZ) continue;
-                    for (int k = 0; k < 3; k++)
-                    {
-                        int v = source[t + k];
-                        if (remap[v] < 0) { remap[v] = kept.Count; kept.Add(v); }
-                        list.Add(remap[v]);
-                    }
-                }
-            }
-            var normals = mesh.normals; var tangents = mesh.tangents; var uv = mesh.uv; var uv2 = mesh.uv2; var colors = mesh.colors32;
-            var result = new Mesh { name = mesh.name, indexFormat = kept.Count > 65535 ? IndexFormat.UInt32 : IndexFormat.UInt16 };
-            result.SetVertices(kept.Select(v => vertices[v]).ToList());
-            if (normals.Length == vertices.Length) result.SetNormals(kept.Select(v => normals[v]).ToList());
-            if (tangents.Length == vertices.Length) result.SetTangents(kept.Select(v => tangents[v]).ToList());
-            if (uv.Length == vertices.Length) result.SetUVs(0, kept.Select(v => uv[v]).ToList());
-            if (uv2.Length == vertices.Length) result.SetUVs(1, kept.Select(v => uv2[v]).ToList());
-            if (colors.Length == vertices.Length) result.SetColors(kept.Select(v => colors[v]).ToList());
-            result.subMeshCount = triangles.Length;
-            for (int sub = 0; sub < triangles.Length; sub++) result.SetTriangles(triangles[sub], sub, false);
-            result.RecalculateBounds();
-            Object.DestroyImmediate(mesh);
-            return result;
-        }
-    }
-
-    // The whole export, read and prepared once for all its tiles.
-    internal sealed class GeoTileSource
-    {
-        public EnvironmentData env;
-        public BuildingsData buildings;
-        public GeoHeightSource heights;
-        public Func<float, float, float> heightAt; // the ground: the export's own heights, or where exports meet the world's
-        public List<PathBuild> paths;
-        public float[] waterLevels;
-        public string environmentPath, buildingsPath;
-        public float tileSize, baseY, range;
-        public Vector2 origin;
-        public int resolution;
-        public readonly List<string> notes = new List<string>();
-        GenerationSettings settings;
-        string files;
-        Rect[] pathBox, roadBox, waterwayBox, waterBox, areaBox, barrierBox, hedgeBox, rowBox, railBox;
-        readonly Dictionary<Vector2Int, List<BuildingFeature>> cells = new Dictionary<Vector2Int, List<BuildingFeature>>();
-
-        // origin: the south-west corner of tile (0, 0); null: the corner of the coordinates (0, 0), the same for every export
-        // (see GeoTilePlan). env: the export when it has been read already.
-        // blend, part: the ground of an export that meets others (GeoHeightBlend); lakeLevels: the level of each lake by its id,
-        // so that a lake in two exports has one level.
-        public static GeoTileSource Prepare(string environmentPath, string buildingsPath, GenerationSettings settings, float tileSize, Vector2? origin, EnvironmentData env = null,
-            GeoHeightBlend blend = null, int part = 0, Dictionary<string, float> lakeLevels = null)
-        {
-            var s = new GeoTileSource { environmentPath = environmentPath, buildingsPath = buildingsPath, settings = settings, tileSize = tileSize };
-            s.env = env ?? GeoData.ReadEnvironment(environmentPath);
-            s.buildings = string.IsNullOrEmpty(buildingsPath)
-                ? new BuildingsData { format = "geo-buildings", version = 1, origin = s.env.origin }
-                : GeoData.ReadBuildings(buildingsPath, s.env.origin);
-            s.heights = blend != null ? blend.Source(part) : GeoHeightSource.Load(s.env, environmentPath);
-            if (s.heights == null && (blend == null || !blend.HasHeights)) s.notes.Add("No heightmap: generated flat terrain at Y = 0.");
-            var heights = s.heights;
-            // exports that meet: the ground is the world's one, not this export's own
-            Func<float, float, float> height = blend != null ? (Func<float, float, float>)blend.Sample : heights != null ? (Func<float, float, float>)heights.Sample : (x, z) => 0;
-            s.heightAt = blend != null || heights != null ? height : null;
-            s.paths = GeoGenerator.PreparePaths(s.env, height, settings, s.notes, GeoWaterMask.Load(s.env, environmentPath));
-            s.waterLevels = GeoGenerator.WaterLevels(s.env.water, height);
-            if (lakeLevels != null)
-                for (int i = 0; i < s.env.water.Count; i++)
-                {
-                    string id = s.env.water[i].id;
-                    if (string.IsNullOrEmpty(id)) continue;
-                    if (lakeLevels.TryGetValue(id, out var level)) s.waterLevels[i] = level; else lakeLevels[id] = s.waterLevels[i];
-                }
-            // a river through a lake is at the lake's level (on the whole river, so every tile has the same)
-            GeoWater.SettleRivers(s.paths, s.env.water, s.waterLevels);
-            // room below for river beds and lakes, as a single world has (for exports that meet: below the lowest of them)
-            s.baseY = (blend != null ? blend.Low : heights?.min ?? 0) - 8 - (settings.carveRivers ? settings.riverDepth + 1 : 0);
-            s.range = Mathf.Max(32, (blend != null ? blend.High : heights?.max ?? 0) - s.baseY + 8);
-            s.origin = origin ?? Vector2.zero;
-            s.resolution = settings.heightResolution;
-            s.pathBox = s.paths.Select(p => Box(p.samples, p.feature.width)).ToArray();
-            s.roadBox = s.env.roads.Select(f => Box(f?.points, f?.width ?? 0)).ToArray();
-            s.waterwayBox = s.env.waterways.Select(f => Box(f?.points, f?.width ?? 0)).ToArray();
-            s.railBox = s.env.railways.Select(f => Box(f?.points, f?.width ?? 0)).ToArray();
-            s.waterBox = s.env.water.Select(f => Box(f?.rings)).ToArray();
-            s.areaBox = s.env.areas.Select(f => Box(f?.rings)).ToArray();
-            s.barrierBox = s.env.barriers.Select(f => Box(f?.points, f?.width ?? 0)).ToArray();
-            s.hedgeBox = s.env.hedges.Select(f => Box(f?.points, f?.width ?? 0)).ToArray();
-            s.rowBox = s.env.treeRows.Select(f => Box(f?.points, f?.width ?? 0)).ToArray();
-            foreach (var building in s.buildings.buildings)
-            {
-                if (building == null || !GeoData.Finite(building.x) || !GeoData.Finite(building.z)) continue;
-                var cell = s.Cell(building.x, building.z);
-                if (!s.cells.TryGetValue(cell, out var list)) s.cells[cell] = list = new List<BuildingFeature>();
-                list.Add(building);
-            }
-            var text = new StringBuilder();
-            foreach (var file in new[] { environmentPath, buildingsPath, Package(s.env.terrain?.heightmap?.file), Package(s.env.materials?.file), Package(s.env.materials?.canopyFile) })
-                if (!string.IsNullOrEmpty(file) && File.Exists(file)) { var info = new FileInfo(file); text.Append(info.Name).Append(info.Length).Append(info.LastWriteTimeUtc.Ticks).Append('|'); }
-            if (blend != null) text.Append(blend.Fingerprint(part));
-            s.files = text.ToString();
-            return s;
-
-            string Package(string name) => string.IsNullOrEmpty(name) ? null : GeoData.PackageFile(environmentPath, name);
-        }
-
-        Vector2Int Cell(float x, float z) => new Vector2Int(Mathf.FloorToInt((x - origin.x) / tileSize), Mathf.FloorToInt((z - origin.y) / tileSize));
-
-        public GeoBounds Core(Vector2Int index)
-        {
-            float x = (float)(origin.x + (double)index.x * tileSize), z = (float)(origin.y + (double)index.y * tileSize);
-            return new GeoBounds { minX = x, minZ = z, maxX = (float)(origin.x + (double)(index.x + 1) * tileSize), maxZ = (float)(origin.y + (double)(index.y + 1) * tileSize) };
-        }
-
-        // plan, part: a tile that several exports build is cut for this export (part): it gives what lies on its own
-        // region. Null: the export builds the whole tile.
-        public GeoTileJob Job(Vector2Int index, GeoBounds core, string folder, string name, GeoTilePlan plan = null, int part = -1)
-        {
-            double cell = (double)tileSize / (resolution - 1);
-            int margin = Mathf.CeilToInt(GeoTiles.MarginMetres / (float)cell);
-            var around = new GeoBounds { minX = (float)(core.minX - margin * cell), minZ = (float)(core.minZ - margin * cell),
-                maxX = (float)(core.minX + (resolution - 1 + margin) * cell), maxZ = (float)(core.minZ + (resolution - 1 + margin) * cell) };
-            // every grid point from the tile's corner and the shared cell size, so neighbours sample the same places
-            int n = resolution + 2 * margin;
-            var field = new HeightField(around, n);
-            if (heightAt != null)
-                for (int z = 0; z < n; z++) for (int x = 0; x < n; x++)
-                    field.heights[z, x] = heightAt((float)(core.minX + (x - margin) * cell), (float)(core.minZ + (z - margin) * cell));
-            // the ground this export gives to the tile: all of it, or its region where exports meet
-            bool shared = plan != null && plan.tiles.TryGetValue(index, out var builders) && builders.Count > 1;
-            var reach = shared ? GeoTilePlan.Intersection(around, plan.region[part]) : around;
-            if (reach == null) return null;
-            Func<float, float, bool> owns = shared ? (Func<float, float, bool>)((x, z) => plan.OwnerOf(x, z) == part) : (x, z) => true;
-            var area = new Rect(reach.minX, reach.minZ, reach.Width, reach.Depth);
-            var e = new EnvironmentData { format = env.format, version = env.version, origin = env.origin, bounds = core, terrain = env.terrain,
-                materials = env.materials, surround = around, outer = env.bounds };
-            e.roads = Pick(env.roads, roadBox, area); e.waterways = Pick(env.waterways, waterwayBox, area); e.railways = Pick(env.railways, railBox, area);
-            e.areas = Pick(env.areas, areaBox, area); e.barriers = Pick(env.barriers, barrierBox, area);
-            e.hedges = Pick(env.hedges, hedgeBox, area); e.treeRows = Pick(env.treeRows, rowBox, area);
-            var levels = new List<float>();
-            for (int i = 0; i < env.water.Count; i++) if (waterBox[i].Overlaps(area)) { e.water.Add(env.water[i]); levels.Add(waterLevels[i]); }
-            e.trees = env.trees.Where(t => t != null && around.Contains(t.x, t.z) && owns(t.x, t.z)).ToList();
-            e.props = env.props.Where(p => p != null && around.Contains(p.x, p.z) && owns(p.x, p.z)).ToList();
-            var pieces = new List<PathBuild>();
-            for (int i = 0; i < paths.Count; i++) if (pathBox[i].Overlaps(area)) pieces.AddRange(GeoTiles.ClipPath(paths[i], reach, settings.pathStep));
-            // the rivers for the water: further out, but where exports meet still only on this export's region
-            var wide = new GeoBounds { minX = around.minX - GeoTiles.RiverReach, minZ = around.minZ - GeoTiles.RiverReach, maxX = around.maxX + GeoTiles.RiverReach, maxZ = around.maxZ + GeoTiles.RiverReach };
-            var riverReach = shared ? GeoTilePlan.Intersection(wide, plan.region[part]) : wide;
-            var rivers = new List<PathBuild>();
-            if (riverReach != null)
-            {
-                var riverArea = new Rect(riverReach.minX, riverReach.minZ, riverReach.Width, riverReach.Depth);
-                for (int i = 0; i < paths.Count; i++) if (paths[i].river && pathBox[i].Overlaps(riverArea)) rivers.AddRange(GeoTiles.ClipPath(paths[i], riverReach, settings.pathStep));
-            }
-            var nearby = new BuildingsData { format = buildings.format, version = buildings.version, origin = buildings.origin, area = new BuildingArea { bounds = core } };
-            for (int dz = -1; dz <= 1; dz++) for (int dx = -1; dx <= 1; dx++)
-                if (cells.TryGetValue(new Vector2Int(index.x + dx, index.y + dz), out var list))
-                    nearby.buildings.AddRange(list.Where(b => around.Contains(b.x, b.z) && owns(b.x, b.z)));
-            return new GeoTileJob { env = e, buildings = nearby, field = field, margin = margin, paths = pieces, rivers = rivers, waterLevels = levels.ToArray(),
-                core = core, index = index, size = tileSize, baseY = baseY, range = range, folder = folder, name = name, part = part };
-        }
-
-        // Fingerprint of what a tile is built from: the export files, the settings (libraries by asset), the tile and the grid.
-        public string Hash(GeoBounds core, GenerationSettings settings)
-        {
-            var copy = JsonUtility.FromJson<GenerationSettings>(JsonUtility.ToJson(settings));
-            // assets by their GUIDs (in the JSON they would be instance IDs, new in every editor session)
-            string libraries = Guid(copy.ruinLibrary) + "|" + Guid(copy.homeLibrary) + "|" + Guid(copy.propCatalog) + "|" +
-                               string.Join(",", (copy.treePrefabs ?? new GameObject[0]).Select(p => Guid(p)));
-            copy.ruinLibrary = null; copy.homeLibrary = null; copy.propCatalog = null; copy.treePrefabs = null;
-            copy.loadRadius = 0; // how far the tiles stream around the camera does not change what a tile is
-            string text = string.Join("|", GeoTiles.Version, files, GeoTiles.TileSettingsJson(copy), libraries,
-                core.minX.ToString("R"), core.minZ.ToString("R"), tileSize.ToString("R"), baseY.ToString("R"), range.ToString("R"));
-            using (var md5 = MD5.Create()) return BitConverter.ToString(md5.ComputeHash(Encoding.UTF8.GetBytes(text))).Replace("-", "");
-        }
-
-        static string Guid(Object asset) => asset ? AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(asset)) : "";
-
-        static List<T> Pick<T>(List<T> features, Rect[] boxes, Rect area)
-        {
-            var result = new List<T>();
-            for (int i = 0; i < features.Count; i++) if (features[i] != null && boxes[i].Overlaps(area)) result.Add(features[i]);
-            return result;
-        }
-
-        static Rect Box(List<Vector3> points, float width)
-        {
-            if (points == null || points.Count == 0) return Rect.zero;
-            float minX = float.MaxValue, minZ = float.MaxValue, maxX = float.MinValue, maxZ = float.MinValue;
-            foreach (var p in points) { minX = Mathf.Min(minX, p.x); maxX = Mathf.Max(maxX, p.x); minZ = Mathf.Min(minZ, p.z); maxZ = Mathf.Max(maxZ, p.z); }
-            float pad = width * 0.5f + 2;
-            return Rect.MinMaxRect(minX - pad, minZ - pad, maxX + pad, maxZ + pad);
-        }
-
-        static Rect Box(float[] flat, float width) => Box(GeoData.Points(flat), width);
-
-        static Rect Box(float[][] rings)
-        {
-            if (rings == null) return Rect.zero;
-            var points = new List<Vector3>();
-            foreach (var ring in rings) points.AddRange(GeoData.Points(ring));
-            return Box(points, 0);
-        }
     }
 
     [CustomEditor(typeof(GeoTiledWorld))]

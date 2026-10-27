@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+#if UNITY_EDITOR
 using UnityEditor;
 using UnityEditor.SceneManagement;
+#endif
 using UnityEngine;
 using Object=UnityEngine.Object;
 
@@ -14,11 +16,14 @@ namespace GeoWorld.Editor
         public static GeoBuildingStyle DefaultStyle(string category)
         {
             string kind=category=="house"||category=="farm"||category=="shed"?"House":category=="apartments"?"Apartments":"Industrial";
-            var style=AssetDatabase.LoadAssetAtPath<GeoBuildingStyle>(GeoPaths.Package+"/BuildingStyles/"+kind+".asset");
+            var style=GeoAssets.Load<GeoBuildingStyle>(GeoPaths.Package+"/BuildingStyles/"+kind+".asset");
             if(style)return style;
             string folder=GeoPaths.Project+"/BuildingStyles",path=folder+"/"+kind+".asset";
-            style=AssetDatabase.LoadAssetAtPath<GeoBuildingStyle>(path);
+            style=GeoAssets.Load<GeoBuildingStyle>(path);
             if(style)return style;
+#if !UNITY_EDITOR
+            return null; // a player has the package's styles (GeoRuntimeAssets) and makes none
+#else
             Directory.CreateDirectory(folder);AssetDatabase.Refresh();
             style=ScriptableObject.CreateInstance<GeoBuildingStyle>();style.name=kind;
             AssetDatabase.CreateAsset(style,path);
@@ -41,6 +46,7 @@ namespace GeoWorld.Editor
                 AssetDatabase.AddObjectToAsset(band,path);style.modules=new GeoBuildingModule[]{band};
             }
             EditorUtility.SetDirty(style);AssetDatabase.SaveAssets();return style;
+#endif
         }
 
         public static void Import(GeoBuilding building,BuildingFeature source,List<string> notes=null)
@@ -264,6 +270,7 @@ namespace GeoWorld.Editor
             return value!=null&&value.Length==7&&value[0]=='#'&&ColorUtility.TryParseHtmlString(value,out color);
         }
 
+#if UNITY_EDITOR
         public static void Rebuild(GeoBuilding building,bool recordUndo=true)
         {
             if(Application.isPlaying)throw new InvalidOperationException("Stop Play mode before rebuilding a building.");
@@ -294,8 +301,8 @@ namespace GeoWorld.Editor
             string assetPath=null;Transform generated=null;
             try
             {
-                Directory.CreateDirectory(GeoGenerator.OutputFolder);AssetDatabase.Refresh();
-                assetPath=AssetDatabase.GenerateUniqueAssetPath(GeoGenerator.OutputFolder+"/Building.asset");
+                Directory.CreateDirectory(GeoPaths.Project+"/Generated");AssetDatabase.Refresh();
+                assetPath=AssetDatabase.GenerateUniqueAssetPath(GeoPaths.Project+"/Generated/Building.asset");
                 var asset=ScriptableObject.CreateInstance<GeoGenerationAssets>();asset.summary="Editable building: "+building.sourceId;
                 AssetDatabase.CreateAsset(asset,assetPath);
                 generated=Install(building,output,obj=>AssetDatabase.AddObjectToAsset(obj,assetPath));
@@ -328,5 +335,6 @@ namespace GeoWorld.Editor
                 throw;
             }
         }
+#endif
     }
 }

@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
 using UnityEngine;
 
 namespace GeoWorld.Editor
@@ -21,11 +23,11 @@ namespace GeoWorld.Editor
         public const float WidthMetres = 6f, LengthMetres = 12f;
         const int Version = 1;
         static readonly float[] WearOf = { 0.15f, 0.4f, 0.65f, 0.92f };
-        static string VersionFile => Folder + "/version.txt";
+        internal static string VersionFile => Folder + "/version.txt";
 
         public static string DiffusePath(int variant) => Folder + "/asphalt_road_" + variant + "_diffuse.png";
         public static string NormalPath(int variant) => Folder + "/asphalt_road_" + variant + "_normal.png";
-        public static bool Available => GeoPaths.Exists(VersionFile) && File.ReadAllText(GeoPaths.Disk(VersionFile)).Trim() == Version.ToString() && GeoPaths.Exists(DiffusePath(Variants - 1)) && File.Exists(NormalPath(Variants - 1));
+        public static bool Available => GeoPaths.Exists(VersionFile) && GeoPaths.ReadText(VersionFile).Trim() == Version.ToString() && GeoPaths.Exists(DiffusePath(Variants - 1)) && GeoPaths.Exists(NormalPath(Variants - 1));
 
         // Which variant a road gets: its wear (the export's, or a middling guess) with a little variety between roads.
         public static int VariantOf(string id, float wear)
@@ -35,6 +37,7 @@ namespace GeoWorld.Editor
             return Mathf.Clamp(Mathf.FloorToInt(wear * Variants + jitter * 1.6f), 0, Variants - 1);
         }
 
+#if UNITY_EDITOR
         public static void EnsureGenerated() { if (!Available) Generate(); }
 
         public static void Generate()
@@ -79,6 +82,8 @@ namespace GeoWorld.Editor
             if (!texture.LoadImage(File.ReadAllBytes(path))) { UnityEngine.Object.DestroyImmediate(texture); throw new InvalidDataException("Cannot read " + path); }
             return texture;
         }
+#endif
+
 
         // ------------------------------------------------------------------------------------------ the picture
 

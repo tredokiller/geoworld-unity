@@ -16,6 +16,8 @@ namespace GeoWorld
         // A file on disk for an asset path: a package installed from git is not under Packages/ on disk, and
         // Path.GetFullPath is what Unity resolves package paths with.
         public static string Disk(string assetPath) => Path.GetFullPath(assetPath);
-        public static bool Exists(string assetPath) => File.Exists(Disk(assetPath));
+        // In a player there are no asset files: what the editor has is in GeoRuntimeAssets (GeoAssets).
+        public static bool Exists(string assetPath) => GeoAssets.Exists(assetPath);
+        public static string ReadText(string assetPath) => GeoAssets.ReadText(assetPath);
     }
 }

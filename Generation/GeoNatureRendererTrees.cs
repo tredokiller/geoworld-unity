@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -20,8 +22,13 @@ namespace GeoWorld.Editor
         const string DefaultInclude = "Assets/Visual Design Cafe/Nature Renderer/Shader Includes/Nature Renderer.templatex";
 
         // Nature Renderer's component, or null where the project does not have it.
+#if UNITY_EDITOR
         public static Type Component => TypeCache.GetTypesDerivedFrom<MonoBehaviour>()
             .FirstOrDefault(t => t.Name == "NatureRenderer" && (t.Namespace ?? "").StartsWith("VisualDesignCafe", StringComparison.Ordinal));
+#else
+        // a player generates worlds without it (its tree shader is written into the project by the editor)
+        public static Type Component => null;
+#endif
 
         // asked on every repaint of the window and the Inspector: found once per domain (importing or removing Nature
         // Renderer reloads it)
@@ -31,6 +38,9 @@ namespace GeoWorld.Editor
         // Nature Renderer's shader code: in its documented folder, or wherever it was moved.
         public static string Include()
         {
+#if !UNITY_EDITOR
+            return null;
+#else
             if (File.Exists(DefaultInclude)) return DefaultInclude;
             foreach (var guid in AssetDatabase.FindAssets("Nature Renderer"))
             {
@@ -38,6 +48,7 @@ namespace GeoWorld.Editor
                 if (path.EndsWith("/Nature Renderer.templatex", StringComparison.Ordinal)) return path;
             }
             return null;
+#endif
         }
 
         // The trees on the terrain, drawn by Nature Renderer (a terrain without trees gets no component). Returns how
@@ -61,7 +72,9 @@ namespace GeoWorld.Editor
             {
                 int patches = Mathf.Clamp(Mathf.CeilToInt(Mathf.Max(data.size.x, data.size.z) / 125f), 1, 128);
                 data.SetDetailResolution(patches * 16, 16);
+#if UNITY_EDITOR
                 EditorUtility.SetDirty(data);
+#endif
             }
             var natureRenderer = terrain.GetComponent(component);
             if (!natureRenderer) natureRenderer = terrain.gameObject.AddComponent(component);
@@ -109,6 +122,7 @@ namespace GeoWorld.Editor
             Array.IndexOf(material.shader.keywordSpace.keywordNames, "PROCEDURAL_INSTANCING_ON") >= 0 ||
             string.Equals(material.GetTag("NatureRendererInstancing", false), "True", StringComparison.OrdinalIgnoreCase);
 
+#if UNITY_EDITOR
         // Geo World's four trees with materials of the Nature Renderer tree shader, made in Folder when missing.
         public static GameObject[] Prefabs()
         {
@@ -167,6 +181,9 @@ namespace GeoWorld.Editor
             }
             return AssetDatabase.LoadAssetAtPath<Shader>(path);
         }
+#else
+        public static GameObject[] Prefabs() => throw new NotSupportedException("Trees drawn by Nature Renderer are made in the editor.");
+#endif
 
         // Geo World's low-poly tree for URP: a colour, the main light with its shadows, ambient light and fog, and the
         // shadow, depth and depth-normals passes. Every pass has Nature Renderer's procedural instancing (the tag, the
@@ -338,18 +355,5 @@ Shader ""GeoWorld/Tree (Nature Renderer)""
     }
 }
 ";
-    }
-
-    // Settings for Nature Renderer are shown only where the project has it.
-    [CustomPropertyDrawer(typeof(GeoNatureRendererOnlyAttribute))]
-    public class GeoNatureRendererOnlyDrawer : PropertyDrawer
-    {
-        public override float GetPropertyHeight(SerializedProperty property, GUIContent label) =>
-            GeoNatureRendererTrees.Installed ? EditorGUI.GetPropertyHeight(property, label, true) : -EditorGUIUtility.standardVerticalSpacing;
-
-        public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
-        {
-            if (GeoNatureRendererTrees.Installed) EditorGUI.PropertyField(position, property, label, true);
-        }
     }
 }

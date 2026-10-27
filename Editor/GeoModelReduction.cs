@@ -29,12 +29,7 @@ namespace GeoWorld.Editor
             Debug.Log(Summary(result), result);
         }
 
-        public static string Summary(GeoReducedModels set)
-        {
-            long before = 0, after = 0;
-            foreach (var e in set.entries) if (e.source && e.reduced) { before += Triangles(e.source); after += Triangles(e.reduced); }
-            return $"{set.entries.Count} library meshes reduced: {before} triangles to {after} ({(before > 0 ? 100f * after / before : 0):F0}%).";
-        }
+        public static string Summary(GeoReducedModels set) => GeoModelDetail.Summary(set);
 
         // The reduced set for these libraries, made for every source mesh that is new or changed since it was reduced.
         public static GeoReducedModels Ensure(GeoRuinLibrary ruins, GeoHomeLibrary homes)
@@ -95,12 +90,7 @@ namespace GeoWorld.Editor
             return mesh.vertexCount + "/" + mesh.subMeshCount + "/" + indices + "/" + b.center.ToString("F3") + b.size.ToString("F3");
         }
 
-        public static long Triangles(Mesh mesh)
-        {
-            long count = 0;
-            for (int s = 0; s < mesh.subMeshCount; s++) count += (long)mesh.GetIndexCount(s) / 3;
-            return count;
-        }
+        public static long Triangles(Mesh mesh) => GeoModelDetail.Triangles(mesh);
 
         // A copy of the mesh with at most `ratio` of its triangles, on a subset of the source's vertices, moving the
         // surface by at most a hundredth of the model's size (10 cm on a 10 m house); null when nothing could go.

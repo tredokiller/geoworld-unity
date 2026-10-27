@@ -1,8 +1,20 @@
 {
   "name": "GeoWorld.Tests",
-  "references": ["GeoWorld.Runtime", "GeoWorld.Editor", "GeoWorld.Tests.Support"],
+  "references": [
+    "GeoWorld.Runtime",
+    "GeoWorld.Generation",
+    "GeoWorld.Editor",
+    "GeoWorld.Tests.Support"
+  ],
   "overrideReferences": true,
-  "precompiledReferences": ["Newtonsoft.Json.dll", "nunit.framework.dll"],
-  "includePlatforms": ["Editor"],
-  "optionalUnityReferences": ["TestAssemblies"]
+  "precompiledReferences": [
+    "Newtonsoft.Json.dll",
+    "nunit.framework.dll"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ]
 }

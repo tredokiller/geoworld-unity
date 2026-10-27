@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
 using UnityEngine;
 
 namespace GeoWorld.Editor
@@ -29,14 +31,15 @@ namespace GeoWorld.Editor
         // The asphalt is darkened and its cracks are softened (a lifted floor): its cracks are far too bold at a few metres a tile.
         public static Vector4 RemapMin(int layer) => layer == 8 ? new Vector4(0.2f, 0.2f, 0.2f, 0f) : Vector4.zero;
         const int Version = 3; // raise it to convert again after changing the tables above
-        static string Stamp => Folder + "/version.txt";
+        internal static string Stamp => Folder + "/version.txt";
 
         public static string DiffusePath(int layer) => Folder + "/" + Names[layer] + "_diffuse.png";
         public static string NormalPath(int layer) => Folder + "/" + Names[layer] + "_normal.png";
         public static float Tile(int layer) => TileMetres[layer];
         public static bool HasLayer(int layer) => layer >= 0 && layer < Names.Length && Names[layer] != null && GeoPaths.Exists(DiffusePath(layer)) && GeoPaths.Exists(NormalPath(layer));
-        public static bool Available => HasLayer(0) && HasLayer(11) && GeoPaths.Exists(Stamp) && File.ReadAllText(GeoPaths.Disk(Stamp)).Trim() == Version.ToString();
+        public static bool Available => HasLayer(0) && HasLayer(11) && GeoPaths.Exists(Stamp) && GeoPaths.ReadText(Stamp).Trim() == Version.ToString();
 
+#if UNITY_EDITOR
         // the Geo World window offers it when the textures are missing (they ship with the package)
         public static void ImportMenu()
         {
@@ -115,6 +118,8 @@ namespace GeoWorld.Editor
             catch { foreach (var p in written) AssetDatabase.DeleteAsset(p); throw; }
             return count;
         }
+#endif
+
 
         static Texture2D Load(string path)
         {

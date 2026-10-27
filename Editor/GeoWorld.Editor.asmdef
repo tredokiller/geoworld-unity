@@ -2,6 +2,7 @@
   "name": "GeoWorld.Editor",
   "references": [
     "GeoWorld.Runtime",
+    "GeoWorld.Generation",
     "Unity.Addressables.Editor",
     "Unity.Addressables",
     "Unity.ResourceManager"

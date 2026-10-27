@@ -81,6 +81,15 @@ kept small (colour as JPEG, normal maps as 1024 px PNG; about 310 MB for the who
 make goes into the project's `Assets/GeoWorld` (generated worlds, tiles, reduced copies of the models, roofs tinted
 to the export's colours); the package itself is read-only.
 
+## Generating worlds in a built player
+
+A player can make worlds itself, without the editor: **Tools > Geo World > Runtime generation > Prepare runtime assets** once (and
+after updating the package), then in code `await GeoWorldGenerator.GenerateAsync(request, progress, cancellation)` (or
+`GeoWorldGeneratorHost.GenerateAsync` to run it in a second process of the player and keep the game's frames) returns a world package
+on disk, whose tiles load with `package.LoadTileAsync(index, parent)` and unload with the handle. A standalone build gets the Building
+Extractor app in `StreamingAssets/GeoWorld/Extractor`. **Create demo scene** / **Build demo player...** under the same menu make a player
+to try it. See RUNTIME GENERATION in the manual for the package format, navigation and limits.
+
 ## Developing the package
 
 It lives in `terrain-generator/Packages/com.tredokiller.geoworld` of the Building Extractor repository, where the

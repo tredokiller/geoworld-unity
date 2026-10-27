@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
 using Object = UnityEngine.Object;
@@ -51,19 +50,19 @@ namespace GeoWorld.Editor
             GeoRuinFit.ClearCache();
             // thousands of copies of the library models: drawn with their reduced versions
             var reduced = settings.reducedModels && (settings.ruinLibrary || settings.homeLibrary)
-                ? GeoModelReduction.Ensure(settings.ruinLibrary, settings.homeLibrary) : null;
+                ? GeoGeneration.Target.ReducedModels(settings.ruinLibrary, settings.homeLibrary) : null;
             GeoModelDetail.Use(reduced);
             try
             {
                 foreach (var listed in sources)
                 {
                     if (progress != null && index++ % 250 == 0) progress(index / (float)Mathf.Max(1, total));
-                    if (!GeoGenerator.ValidBuilding(listed) || !bounds.Contains(listed.x, listed.z)) { skipped++; continue; }
+                    if (!GeoWorldBuild.ValidBuilding(listed) || !bounds.Contains(listed.x, listed.z)) { skipped++; continue; }
                     var source = listed;
                     var building = temp.AddComponent<GeoBuilding>();
                     try
                     {
-                        source = GeoGenerator.ForSettings(source, settings);
+                        source = GeoWorldBuild.ForSettings(source, settings);
                         GeoBuildingBuilder.Import(building, source, null);
                         GeoRuins.Assign(building, settings, street);
                         GeoHomes.Assign(building, settings, street);
@@ -152,7 +151,7 @@ namespace GeoWorld.Editor
                 if (homes.Count > 0) notes.Add(HomeNote(homes));
                 if (instanced > 0) notes.Add(instanced + " homes are instances of the library's models (an object each with the model's own meshes and a transform), not copies of their geometry. " +
                                              "They are kept as a list in the world's asset and made when the scene loads (a few per frame while playing), not saved in the scene.");
-                if (reduced && (ruins.Count > 0 || homes.Count > 0)) notes.Add("Ruin and home models are drawn with their reduced copies: " + GeoModelReduction.Summary(reduced));
+                if (reduced && (ruins.Count > 0 || homes.Count > 0)) notes.Add("Ruin and home models are drawn with their reduced copies: " + GeoModelDetail.Summary(reduced));
             }
             return count;
         }
@@ -420,7 +419,7 @@ namespace GeoWorld.Editor
             texture.SetPixels32(pixels);
             texture.Apply(false, false);
             save(texture);
-            var shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
+            var shader = GeoAssets.Shader("Universal Render Pipeline/Lit") ?? GeoAssets.Shader("Standard");
             var material = new Material(shader) { name = "City buildings", enableInstancing = true };
             if (material.HasProperty("_BaseMap")) material.SetTexture("_BaseMap", texture);
             material.mainTexture = texture;
@@ -433,7 +432,7 @@ namespace GeoWorld.Editor
 
         static Material GlassMaterial(Action<Object> save)
         {
-            var shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
+            var shader = GeoAssets.Shader("Universal Render Pipeline/Lit") ?? GeoAssets.Shader("Standard");
             var color = new Color(0.12f, 0.23f, 0.28f);
             var material = new Material(shader) { name = "City window glass", enableInstancing = true, color = color };
             if (material.HasProperty("_BaseColor")) material.SetColor("_BaseColor", color);

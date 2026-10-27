@@ -884,7 +884,7 @@ namespace GeoWorld.Editor
             if(GUILayout.Button("Rebuild buildings only",GUILayout.Height(30)))
                 try {GeoGenerator.RebuildBuildings(root);}catch(Exception e){Debug.LogException(e);}
             if(GUILayout.Button("Rebuild props and vegetation only",GUILayout.Height(30)))
-                try {GeoPropBuilder.Rebuild(root);}catch(Exception e){Debug.LogException(e);}
+                try {GeoPropRebuild.Rebuild(root);}catch(Exception e){Debug.LogException(e);}
             if(GUILayout.Button("Frame world"))GeoWorldWindow.Frame(root);
             EditorGUILayout.HelpBox("Select a Road or River child to edit its width or move its control points. Generated assets are saved under Assets/GeoWorld/Generated.",MessageType.None);
         }

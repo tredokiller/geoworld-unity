@@ -1,5 +1,7 @@
 using System.IO;
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
 using UnityEngine;
 
 namespace GeoWorld.Editor
@@ -33,6 +35,7 @@ namespace GeoWorld.Editor
         public static string For(LineFeature road) => IsMarked(road) ? Marked : Plain[GeoRoadTextures.VariantOf(road.id, road.wear)];
         public static string PlainFor(LineFeature road) => Plain[GeoRoadTextures.VariantOf(road.id, road.wear)];
 
+#if UNITY_EDITOR
         // Normal maps must be imported as normal maps; the colour as sRGB, repeating along the road and not across it.
         public static void Configure()
         {
@@ -53,5 +56,9 @@ namespace GeoWorld.Editor
             importer.anisoLevel = 8;
             importer.SaveAndReimport();
         }
+#else
+        public static void Configure() { }
+#endif
+
     }
 }
