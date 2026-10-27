@@ -59,6 +59,14 @@ namespace GeoWorld.Editor.Tests
             Assert.That(distance, Is.EqualTo(Mathf.Sqrt(130000f * 130000f + 5000f * 5000f + 100000f * 100000f)).Within(1));
         }
 
+        [Test] public void StableFarClip_ReachesTheAreaFromAnywhereOverIt()
+        {
+            var area = new Rect(-100000, -100000, 200000, 200000);
+            float far = GeoOverview.StableFarClip(area, -50);
+            foreach (var point in new[] { new Vector3(0, 3000, 0), new Vector3(90000, 7000, -90000), new Vector3(-100000, 19950, 100000) })
+                Assert.That(far, Is.GreaterThanOrEqualTo(GeoOverview.FarthestDistance(area, point, -50)), $"From {point}.");
+        }
+
         [Test] public void Package_ShipsTheOverviewMaterial()
         {
             var material = Resources.Load<Material>(GeoOverview.Resource);

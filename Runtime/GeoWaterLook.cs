@@ -11,14 +11,25 @@ namespace GeoWorld
     public static class GeoWaterLook
     {
         public const string Resource = "GeoWorld/Water";
+        // A project's own water material in a Resources folder at this path is used instead of the package's: the same water
+        // with the fog of the project's sky asset (GeoWaterCore.hlsl).
+        public const string ProjectResource = "GeoWorld/Water (project)";
         public const string Group = "Water bodies";
         static Material shared;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void ResetState() { shared = null; }
 
-        // The shared water material (null if the package's resource is missing: the tile keeps its own).
-        public static Material Material => shared ? shared : shared = Resources.Load<Material>(Resource);
+        // The shared water material: the project's, or the package's (null if both are missing: the tile keeps its own).
+        public static Material Material
+        {
+            get
+            {
+                if (!shared) shared = Resources.Load<Material>(ProjectResource);
+                if (!shared) shared = Resources.Load<Material>(Resource);
+                return shared;
+            }
+        }
 
         // Gives the water of a tile root (the meshes under its "Water bodies" group) the shared material. Returns how many renderers changed.
         public static int Apply(Transform root)

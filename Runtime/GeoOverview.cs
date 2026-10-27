@@ -168,7 +168,9 @@ namespace GeoWorld
         {
             if (!Drawn || !extendFarClip || camera.cameraType != CameraType.Game || (camera.cullingMask & (1 << gameObject.layer)) == 0) return;
             if (camera.TryGetComponent(out UniversalAdditionalCameraData extra) && extra.renderType == CameraRenderType.Overlay) return;
-            float far = Mathf.Min(FarthestDistance(data.Extent, camera.transform.position, lowest), maxFarClip);
+            // The same far clip in every frame: one that followed the farthest corner changed as the camera moved, and the water's
+            // colour from the depth under it jumped from frame to frame (flicker seen from high above, the more the farther).
+            float far = Mathf.Min(StableFarClip(data.Extent, lowest), maxFarClip);
             if (far <= camera.farClipPlane) return;
             if (!restoreFar.ContainsKey(camera)) restoreFar.Add(camera, camera.farClipPlane);
             camera.farClipPlane = far;
@@ -189,6 +191,13 @@ namespace GeoWorld
             float dy = point.y - height;
             return Mathf.Sqrt(dx * dx + dy * dy + dz * dz);
         }
+
+        // Highest a camera is expected to see the overview from, above its lowest point (metres).
+        public const float StableFarHeight = 20000;
+
+        // A far clip that reaches the whole area from anywhere over it, up to StableFarHeight above its lowest point.
+        public static float StableFarClip(Rect area, float lowest) =>
+            FarthestDistance(area, new Vector3(area.xMin, lowest + StableFarHeight, area.yMin), lowest);
 
         // The world's layer: its height grid, depth metres down, UV (0,0)-(1,1) over the world's area.
         public static Mesh NearMesh(GeoOverviewData data, float depth) =>

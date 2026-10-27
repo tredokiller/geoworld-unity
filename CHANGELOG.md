@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.10.1
+
+- The far clip of a camera that sees the overview is the same in every frame (`GeoOverview.StableFarClip`: the whole far area from anywhere over it, up to 20 km above its lowest point; at most Max Far Clip). It used to follow the far ring's farthest corner, which moved with the camera, and the water's colour from the depth under it jumped from frame to frame: water flickered while flying, the more the higher and farther.
+- Water for a project's own fog: the water shader's code is in `Shaders/GeoWaterCore.hlsl`, with `GEO_WATER_FOG(colour, positionWS, screenUV, fogFactor)` for the fog (the pipeline's fog without it). A sky asset that draws its fog as a full-screen pass before the transparent objects (Enviro) fogs the ground and not the water, which then stood out dark from far away and from high above; a project's own water shader defines the macro with that asset's fog for transparent surfaces, includes the file, and its material in a Resources folder at `GeoWorld/Water (project)` (`GeoWaterLook.ProjectResource`) is used instead of the package's.
+- Tests: the stable far clip reaches the whole far area.
+
 ## 1.10.0
 
 - The world from high above: an overview of a tiled world (GeoOverview on the world's object, its data in `<export> overview.asset` next to the main scene). The tiles stream around the camera's point on the ground, so from a few kilometres up (a drone at 5 km) only a small square of ground was there, and a 20 km world ended in an edge. Under the tiles the overview draws the whole world as one coarse satellite layer (every tile's imagery scaled down into one texture, 4096: 5 m a texel on 20 x 20 km, on the terrain's height every 62.5 m; nothing is downloaded), and around it a far ring of low-detail imagery (Far Ring 10: 200 x 200 km at about 50 m a texel, zoom 12, downloaded once from the tile URL and cached) that keeps the height of the world's edge for a cell and a half (1.6 km cells) and then sinks to the world's mean height. Both lie 2 m under the ground and are cut away where a tile is loaded, so the real terrain is never covered; while a camera that sees them renders, its far clip reaches the far ring's farthest corner (Max Far Clip 150 km) and is put back after. Shader GeoWorld/Overview (Resources/GeoWorld/Overview): the main light, the ambient and the fog, like the terrain.
