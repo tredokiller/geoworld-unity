@@ -87,6 +87,10 @@ namespace GeoWorld
         [Range(100, 200000)] public int maxProps = 60000;
         [Tooltip("In a merged city, bake trees, fences and street props into chunks of mesh too (one object per tree would stall the editor). Props from the prop catalog and photo references stay objects.")]
         public bool mergeProps = true;
+        // Last of the settings: a tile's fingerprint leaves it out (GeoTiles.TileSettingsJson), so changing it rebuilds no tile.
+        [Header("Overview (a tiled world)")]
+        [Tooltip("The whole world as one coarse satellite layer under its tiles and a far ring of low-detail imagery around it, seen from high above (GeoOverview).")]
+        public GeoOverviewSettings overview = new GeoOverviewSettings();
     }
 
     [DisallowMultipleComponent]

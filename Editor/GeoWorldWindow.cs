@@ -529,6 +529,21 @@ namespace GeoWorld.Editor
                 Section("Tiles and streaming");
                 tileSize = EditorGUILayout.Slider("Tile size (m)", tileSize, 250, 4000);
                 settings.loadRadius = GeoTileStreamerEditor.RadiusSlider(settings.loadRadius, tileSize, null);
+                Section("Overview: the world from high above");
+                var overview = settings.overview ??= new GeoOverviewSettings();
+                overview.enabled = EditorGUILayout.Toggle(new GUIContent("Overview and far ring",
+                    "The whole world as one coarse satellite layer under its tiles, and a far ring of low-detail imagery around it: from high above the ground goes on past the loaded tiles and past the world's edge."), overview.enabled);
+                using (new EditorGUI.DisabledScope(!overview.enabled))
+                {
+                    overview.farScale = EditorGUILayout.Slider(new GUIContent("Far ring (world sides)",
+                        "Side of the far imagery's area in sides of the world: 10 puts a 20 km world in the middle of 200 x 200 km. 1: no far ring."), overview.farScale, 1, 30);
+                    overview.farResolution = EditorGUILayout.IntPopup(new GUIContent("Far imagery size", "Texels along a side; 4096 over 200 km is about 50 m a texel."),
+                        overview.farResolution, new[] { new GUIContent("2048"), new GUIContent("4096"), new GUIContent("8192") }, new[] { 2048, 4096, 8192 });
+                    overview.nearResolution = EditorGUILayout.IntPopup(new GUIContent("World overview size", "Texels along a side of the world's own layer, made from the tiles' imagery (nothing is downloaded)."),
+                        overview.nearResolution, new[] { new GUIContent("2048"), new GUIContent("4096"), new GUIContent("8192") }, new[] { 2048, 4096, 8192 });
+                    EditorGUILayout.HelpBox("Baked after the tiles (and by Bake overview in the world's Inspector); the far ring's imagery comes from the tile URL below and is cached in Library. " +
+                        "Changing these rebuilds no tile.", MessageType.None);
+                }
             }
             Section("Terrain and roads");
             settings.heightResolution = EditorGUILayout.IntPopup(tiled ? "Heightmap resolution (a tile)" : "Heightmap resolution", settings.heightResolution, new[] { "257", "513", "1025" }, new[] { 257, 513, 1025 });

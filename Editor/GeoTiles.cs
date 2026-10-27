@@ -90,6 +90,15 @@ namespace GeoWorld.Editor
         // Metres beyond the margin that a tile's water reads rivers from (GeoTileJob.rivers): a river area up to a kilometre wide
         // takes its level from its line, wherever the line is.
         public const float RiverReach = 600;
+        // The settings as a tile's fingerprint takes them: without the overview (GenerationSettings' last field), which is not
+        // what a tile is built from. The JSON is then the same as before the overview had settings, so no tile is rebuilt for it.
+        public static string TileSettingsJson(GenerationSettings settings)
+        {
+            string json = JsonUtility.ToJson(settings);
+            int cut = json.LastIndexOf(",\"overview\":", StringComparison.Ordinal);
+            return cut >= 0 ? json.Substring(0, cut) + "}" : json;
+        }
+
         // bump when the generator draws tiles differently, so that "Rebuild changed tiles" rebuilds them
         internal const string Version = "geo-tiles-19"; // 19: the terrain material has GPU instancing on (the terrain was not drawn in a build), crossings with shared vertices; 18: rivers and their water areas one surface on the terrain grid (GeoWater), no ribbons; 17: lake shores go back to the ground without a wall and never leave the water in the air; 16: lakes carved with a bank and drawn on the terrain grid, one ground for exports that meet; 15: one grid for every export, tiles where exports meet built from all of them; 13: ground roads one mesh per chunk and material; 12: crossings likewise; 11: Auto building mode merges in tiles; 10: homes made from a list when the tile loads
 
@@ -263,6 +272,9 @@ namespace GeoWorld.Editor
                     (parts.Count > 1 ? "The exports share one grid; each tile is built once, and where exports meet from every export that reaches it. " : "") +
                     (separateScenes ? "Every tile is a scene of its own in " + folder + "/Tiles: open the tiles you need from this object's Inspector." : "") +
                     (notes.Count > 0 ? "\n" + string.Join("\n", notes.Distinct()) : "");
+                // the whole world seen from high above, and the far ring around it
+                if (separateScenes && settings.overview != null && settings.overview.enabled && (built > 0 || !world.GetComponent<GeoOverview>()))
+                    world.report += "\n" + BakeOverview(world);
                 // one copy of what the tiles share in the Addressables build, not one in every tile's bundle
                 if (separateScenes && world.addressableScenes && built > 0)
                 {
@@ -280,6 +292,16 @@ namespace GeoWorld.Editor
                 GeoGenerator.progressPrefix = ""; GeoGenerator.progressFrom = 0; GeoGenerator.progressSpan = 1;
                 EditorUtility.ClearProgressBar();
             }
+        }
+
+        // Bakes the world's overview (GeoOverviewBaker) and says what came of it, for the world's report.
+        public static string BakeOverview(GeoTiledWorld world, bool refreshFar = false)
+        {
+            var notes = new List<string>();
+            try { GeoOverviewBaker.Bake(world, notes, refreshFar); }
+            catch (OperationCanceledException) { notes.Add("Overview: cancelled; Bake overview in the world's Inspector makes it."); }
+            catch (Exception e) { notes.Add("Overview: not made (" + e.Message + ")."); Debug.LogException(e); }
+            return string.Join("\n", notes);
         }
 
         // What one export gives to a tile it shares with others.
@@ -811,7 +833,7 @@ namespace GeoWorld.Editor
                                string.Join(",", (copy.treePrefabs ?? new GameObject[0]).Select(p => Guid(p)));
             copy.ruinLibrary = null; copy.homeLibrary = null; copy.propCatalog = null; copy.treePrefabs = null;
             copy.loadRadius = 0; // how far the tiles stream around the camera does not change what a tile is
-            string text = string.Join("|", GeoTiles.Version, files, JsonUtility.ToJson(copy), libraries,
+            string text = string.Join("|", GeoTiles.Version, files, GeoTiles.TileSettingsJson(copy), libraries,
                 core.minX.ToString("R"), core.minZ.ToString("R"), tileSize.ToString("R"), baseY.ToString("R"), range.ToString("R"));
             using (var md5 = MD5.Create()) return BitConverter.ToString(md5.ComputeHash(Encoding.UTF8.GetBytes(text))).Replace("-", "");
         }
@@ -907,6 +929,28 @@ namespace GeoWorld.Editor
                 if (GUILayout.Button("Rebuild all tiles", GUILayout.Height(30))) Run(world, false);
             }
             EditorGUILayout.HelpBox("Changed tiles: those whose export files or settings changed since they were built. Select a tile's world object to rebuild it alone.", MessageType.None);
+            if (world.separateScenes)
+            {
+                GUILayout.Label("Overview", EditorStyles.boldLabel);
+                var overview = world.GetComponent<GeoOverview>();
+                EditorGUILayout.HelpBox(overview && overview.data ? Describe(overview.data)
+                    : "No overview: from high above only the tiles around the camera are seen, and the world ends at its edge.", MessageType.None);
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    if (GUILayout.Button(new GUIContent("Bake overview", "The whole world in one coarse satellite layer under the tiles (from the tiles' imagery; no tile is rebuilt) and the far ring around it " +
+                        "(Settings > Overview: Far Scale). The far ring is kept while its area, size and tile server are the same. Rebuilding tiles bakes it again."), GUILayout.Height(24)))
+                        Debug.Log("Geo World: " + GeoTiles.BakeOverview(world).Replace("\n", " "), world);
+                    if (GUILayout.Button(new GUIContent("Bake far ring again", "Makes the far ring's imagery anew (from the tile cache in Library, or the server for tiles not in it)."), GUILayout.Height(24)))
+                        Debug.Log("Geo World: " + GeoTiles.BakeOverview(world, true).Replace("\n", " "), world);
+                }
+            }
+        }
+
+        static string Describe(GeoOverviewData data)
+        {
+            string near = data.near ? $"World: {data.near.width} x {data.near.height} ({data.area.width / data.near.width:F1} m a texel)." : "World: none.";
+            string far = data.HasFar ? $" Far ring: {data.farArea.width / 1000:F0} x {data.farArea.height / 1000:F0} km, {data.far.width} x {data.far.height} ({data.farArea.width / data.far.width:F0} m a texel)." : " No far ring.";
+            return near + far;
         }
 
         static void Run(GeoTiledWorld world, bool skipUnchanged)

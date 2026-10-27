@@ -262,6 +262,25 @@ The terrain casts no shadows unless Terrain Casts Shadows is on (Advanced settin
 valleys at a low sun). A terrain that casts them is drawn again for every shadow cascade: in Kharkiv that was 3-6 ms
 of a frame and changed no pixel. Buildings and trees still cast their shadows on the ground. The terrain keeps pixel
 error 1: at 4 the coarser far terrain already covers parts of rivers and road edges.
+THE WORLD FROM HIGH ABOVE (OVERVIEW AND FAR RING)
+The tiles stream around the camera's point on the ground (Load radius, 2 km), so from a few kilometres up only a small
+square of ground is there, and a 20 km world ends in an edge. The overview (Advanced settings > Overview, on by default;
+GeoOverview on the world's object, its data in <export> overview.asset next to the main scene) draws under the tiles:
+ - the world: every tile's satellite imagery scaled down into one texture (World Overview Size, 4096: 5 m a texel on a
+   20 x 20 km world; made from the tiles, nothing is downloaded) on the terrain's height every 62.5 m (Cells Per Tile 16);
+ - the far ring: imagery of an area Far Ring times the world's side round it (10: 200 x 200 km), Far Imagery Size 4096
+   (about 50 m a texel, zoom 12, some 1 100 tiles downloaded once from the tile URL and cached like the tiles' own). It
+   keeps the height of the world's edge for a cell and a half (1.6 km cells) and then sinks to the world's mean height.
+Both lie 2 m (Depth Below Terrain) under the ground and are cut away where a tile is loaded, so the real terrain is
+never covered (the far ring 10 m more under the world's layer; a tile with no imagery is cut out of that layer and the
+far ring shows there); while a camera that sees them renders, its far clip reaches the far ring's farthest corner (at most Max
+Far Clip, 150 km; on OpenGL ES, without reversed Z, keep it within some 30-50 km). Fog hides the far edge: 90 km away
+from a 20 km world at Far Ring 10. It is baked after the tiles are generated or rebuilt, and by Bake overview in the
+Geo Tiled World's Inspector (a world made earlier: a minute or two the first time, for the far imagery). Baking it
+rebuilds no tile, and changing these settings rebuilds no tile either. The far imagery is kept from the last bake while
+its area, size and tile server are the same, so after rebuilding tiles the overview takes some 25 s; Bake far ring
+again makes it anew. A world of 20 x 20 km takes about 7 MB for the overview in a build (two crunched
+4096 textures) and some 22 MB of GPU memory once loaded (DXT1).
 SEVERAL EXPORTS (THE PARTS OF ONE AREA)
 A city too large for one export (Kharkiv in six parts, 20 km per side at most each) is exported as parts, all with the
 same fixed origin (the app's Origin setting), and generated as one world: Tools > Geo World > Generate one world from

@@ -4,6 +4,7 @@
     "Unity.InputSystem",
     "UniTask",
     "Unity.Addressables",
-    "Unity.ResourceManager"
+    "Unity.ResourceManager",
+    "Unity.RenderPipelines.Universal.Runtime"
   ]
 }
