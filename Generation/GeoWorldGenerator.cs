@@ -55,7 +55,7 @@ namespace GeoWorld
     public static class GeoWorldGenerator
     {
         // The package version this code is (a package says which version made it): keep with package.json.
-        public const string Version = "1.11.0";
+        public const string Version = "1.11.1";
         public const string PackageName = GeoPaths.PackageName;
         public static bool Busy { get; private set; }
 

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -93,14 +94,21 @@ namespace GeoWorld
             return c / outline.Length;
         }
 
-        // walls facing out and a roof facing up (a ray does not hit the back of a face)
-        static void Prism(GeoTileNavigation.Building b, List<Vector3> vertices, List<int> triangles)
+        // walls facing out and a roof facing up (a ray does not hit the back of a face). GeoPolygon works in a building's own metres
+        // (within 2 km of its middle): the outline is cleaned and cut into triangles there, and put back in world x, z. Returns false
+        // for an outline that is not one (it adds nothing then).
+        static bool Prism(GeoTileNavigation.Building b, List<Vector3> vertices, List<int> triangles)
         {
-            var outline = GeoPolygon.Clean(b.outline);
-            if (outline.Count < 3) return;
+            var middle = Centre(b.outline);
+            var local = new List<Vector2>(b.outline.Length);
+            foreach (var p in b.outline) local.Add(p - middle);
+            List<Vector2> outline; List<int> roof;
+            try { outline = GeoPolygon.Clean(local); roof = GeoPolygon.Triangulate(outline); }
+            catch (ArgumentException) { return false; }
+            if (outline.Count < 3) return false;
             float bottom = b.baseY - 1, top = b.baseY + b.height;
             int start = vertices.Count, n = outline.Count;
-            foreach (var p in outline) { vertices.Add(new Vector3(p.x, bottom, p.y)); vertices.Add(new Vector3(p.x, top, p.y)); }
+            foreach (var q in outline) { var p = q + middle; vertices.Add(new Vector3(p.x, bottom, p.y)); vertices.Add(new Vector3(p.x, top, p.y)); }
             // the outline's turn: outward is to the right of each edge going counter-clockwise (x east, z north), to the left else
             float turn = GeoPolygon.Area(outline) >= 0 ? 1 : -1;
             void Face(int a, int c, int d, Vector3 facing)
@@ -115,8 +123,8 @@ namespace GeoWorld
                 var outward = new Vector3(edge.y, 0, -edge.x) * turn;
                 Face(a, a + 1, c + 1, outward); Face(a, c + 1, c, outward);
             }
-            var roof = GeoPolygon.Triangulate(outline);
             for (int i = 0; i + 2 < roof.Count; i += 3) Face(start + roof[i] * 2 + 1, start + roof[i + 1] * 2 + 1, start + roof[i + 2] * 2 + 1, Vector3.up);
+            return true;
         }
     }
 }

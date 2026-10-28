@@ -176,6 +176,29 @@ namespace GeoWorld.Editor.Tests
             Assert.That(bare.Root.GetComponentsInChildren<GeoNavigationTag>(true), Is.Empty);
         }
 
+        [Test] public void BuildingColliders_FarFromTheOrigin()
+        {
+            // a tile 5 km out: its outlines are world metres, beyond the 2 km GeoPolygon takes in a building's own metres (a world of
+            // 20 x 20 km failed on every tile more than 2 km from its middle); an outline that is not one is left out, not the tile
+            var root = new GameObject("Far tile"); owned.Add(root);
+            var navigation = new GeoTileNavigation { buildings = new[]
+            {
+                new GeoTileNavigation.Building { id = "far", baseY = 10, height = 12,
+                    outline = new[] { new Vector2(5000, 3000), new Vector2(5020, 3000), new Vector2(5020, 3010), new Vector2(5000, 3010) } },
+                new GeoTileNavigation.Building { id = "no area", baseY = 10, height = 5,
+                    outline = new[] { new Vector2(5100, 3000), new Vector2(5100, 3000), new Vector2(5100, 3000) } },
+            } };
+            var created = new List<Object>();
+            Assert.DoesNotThrow(() => GeoNavigation.BuildingColliders(root.transform, navigation, created));
+            owned.AddRange(created);
+            var colliders = root.GetComponentsInChildren<MeshCollider>();
+            Assert.That(colliders.Length, Is.EqualTo(1));
+            Assert.That(colliders[0].sharedMesh.bounds.center.x, Is.EqualTo(5010).Within(0.01f), "put back in world metres");
+            Physics.SyncTransforms();
+            Assert.That(root.scene.GetPhysicsScene().Raycast(new Vector3(5010, 100, 3005), Vector3.down, out var hit, 500), Is.True);
+            Assert.That(hit.point.y, Is.EqualTo(22).Within(0.01f), "the roof at the building's height");
+        }
+
         [Test] public void Unload_DestroysWhatTheTileMade()
         {
             var package = Make(Temp("unload"));

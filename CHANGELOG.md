@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.11.1
+
+- Fixed: loading a tile of a world package failed with "Footprint coordinates must be finite local metres within 2 km" (GeoPolygon.Clean, from the buildings' colliders) on every tile more than 2 km from the world's middle. The buildings' outlines are world metres, and the outline is cleaned and cut into triangles in a building's own metres; they are now taken there and put back. A building whose outline is not one (no area) is left out of the colliders instead of failing the tile.
+- Test: building colliders of a tile 5 km out, with an outline that has no area.
+
 ## 1.11.0
 
 - Worlds are generated without the editor, in a built player (runtime generation). `GeoWorldGenerator.GenerateAsync(request, progress, cancellation)` takes an area (south, west, north, east in degrees, up to 100 km² and 20 km a side), runs the Building Extractor app that comes with the build (a process of its own, with its own Python, progress as it goes, killed on cancel), then generates every tile with the same code as the editor's tiled worlds and writes a world package: a folder with `world.json` (format version, origin lat/lon of the export's local ENU on WGS84, bounds, tiles, terrain statistics: relief, mean slope, forest, built-up, water and open ground, buildings, roads; the SHA-256 of the inputs and of the content) and one `tiles/tile_x_z.gwt` a tile (meshes, textures, materials, terrain data, the home sets, the objects and their components, and every building's outline for navigation). The same export with the same settings gives the same bytes. `GeoWorldPackage.Load(folder)`, `LoadTileAsync(index, parent, options, cancellation)` (read and unpacked on a worker thread, made a few milliseconds of the main thread a frame) and the handle's `Unload()`; `GeoWorldPackageStreamer` streams a package around the camera.
