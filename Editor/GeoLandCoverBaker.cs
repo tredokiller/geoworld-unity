@@ -41,6 +41,7 @@ namespace GeoWorld.Editor
                 var classes = (string[])GeoLandCover.Names.Clone();
                 var counts = new long[GeoLandCover.ClassCount];
                 var paths = new HashSet<string>();
+                var changed = new List<GeoLandCoverData>();
                 int written = 0;
                 AssetDatabase.StartAssetEditing();
                 try
@@ -60,6 +61,7 @@ namespace GeoWorld.Editor
                         {
                             data.Set(tile.index, area, resolution, cells, classes);
                             EditorUtility.SetDirty(data);
+                            changed.Add(data);
                         }
                         else
                         {
@@ -71,11 +73,13 @@ namespace GeoWorld.Editor
                     }
                 }
                 finally { AssetDatabase.StopAssetEditing(); }
-                AssetDatabase.SaveAssets();
+                // its own assets only: after Play mode a project's assets can be changed in memory (a sky asset keeps the
+                // weather it was given while playing), and AssetDatabase.SaveAssets would write them all to disk
+                foreach (var data in changed) AssetDatabase.SaveAssetIfDirty(data);
                 int removed = RemoveOthers(folder, paths);
                 var tiles = world.tiles.Select(t => AssetDatabase.LoadAssetAtPath<GeoLandCoverData>(AssetPath(world, t.index))).Where(d => d).ToList();
                 var cover = Attach(world, tiles, resolution, Summary(tiles.Count, resolution, world.tileSize / resolution, counts));
-                notes.Add("Land cover: " + cover.report + (written > 0 ? $" {written} tiles written" : " No tile changed") +
+                notes.Add("Land cover: " + cover.report + (written == 1 ? " 1 tile written" : written > 0 ? $" {written} tiles written" : " No tile changed") +
                           (removed > 0 ? $", the land cover of {removed} tiles no longer in the world removed." : "."));
                 return cover;
             }

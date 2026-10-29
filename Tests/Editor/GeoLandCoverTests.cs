@@ -176,6 +176,19 @@ namespace GeoWorld.Editor.Tests
             Assert.That(fractions[(int)GeoLandClass.Cropland], Is.EqualTo(1).Within(0.001f));
 
             Assert.That(GeoTiles.BakeLandCover(world), Does.Contain("No tile changed"), "Baking again writes nothing.");
+
+            // a bake saves its own assets and no other: after Play mode, assets changed in memory must stay as they are on disk
+            var other = ScriptableObject.CreateInstance<GeoLandCoverData>();
+            AssetDatabase.CreateAsset(other, folder + "/Other.asset");
+            other.resolution = 7;
+            EditorUtility.SetDirty(other);
+            var tile = cover.tiles[0];
+            tile.cells[0] = (byte)GeoLandClass.Water;
+            EditorUtility.SetDirty(tile);
+            Assert.That(GeoTiles.BakeLandCover(world), Does.Contain("1 tile written"));
+            Assert.That(EditorUtility.IsDirty(other), Is.True, "Another changed asset is left unsaved.");
+            Assert.That(EditorUtility.IsDirty(tile), Is.False, "The tile's land cover is saved.");
+            Assert.That(tile.cells[0], Is.Not.EqualTo((byte)GeoLandClass.Water));
         }
     }
 }

@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.13.1
+
+- Bake land cover saves only its own assets (`AssetDatabase.SaveAssetIfDirty`) instead of every asset changed in memory: after Play mode, assets a game changed while playing (a sky asset keeps the weather and the clouds it was given) were written to disk by a bake from the Geo Tiled World's Inspector.
+- Test: a bake leaves another changed asset unsaved.
+
 ## 1.13.0
 
 - Land cover: a tiled world knows what its ground is, for a game to ask anywhere (`GeoLandCover` on the world's object). The export's ground map (materials.png: ESA WorldCover 2021 with OpenStreetMap's land use, woods, orchards, water, roads, railways and building footprints painted over it), which only painted the terrain while generating, is baked onto the tiles' grid at 10 m: one `GeoLandCoverData` a tile in `<world folder>/Land cover`, a byte a cell and the class of each byte by name (10 KB for a 1 km tile, 4 MB for 20 x 20 km, loaded with the main scene). `GeoLandCover.TrySample(position, out GeoLandClass value)` gives the class at a point and `TryGetFractions(position, radius, fractions)` the share of each class among the cells within a radius, across the tiles' edges and whether the tiles there are loaded or not (`Share` sums some of them). `GeoLandClass` has the app's ids (materials.py): grass, cropland, forest, scrub, bare, sand, rock, wetland, water, urban, asphalt, paving, gravel, dirt road, path, rail, building, snow, orchard. A cell takes the most common class of 4 x 4 points in it (a 4 m track across a field leaves it a field), and where exports overlap the export that builds the ground there says what it is, as for the terrain.
