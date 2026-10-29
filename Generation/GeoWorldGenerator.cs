@@ -32,6 +32,10 @@ namespace GeoWorld
         public bool radar = true;
         [Tooltip("Extract again even when the same area was extracted before under this name.")]
         public bool freshExtraction;
+        [Tooltip("Download the map tiles of the background around the package (GeoWorldBackground) into the cache all packages share, before the package is reported done: a zone next to an earlier one downloads only what that one did not. Not part of the package.")]
+        public bool background = true;
+        [Tooltip("The background's rings (null: GeoBackgroundSettings' defaults); the same settings for GeoWorldBackground.ShowAsync.")]
+        public GeoBackgroundSettings backgroundSettings;
 
         public double WidthKm => (east - west) * 111.32 * Math.Cos((south + north) / 2 * Math.PI / 180);
         public double HeightKm => (north - south) * 111.32;
@@ -39,7 +43,7 @@ namespace GeoWorld
 
     public struct GeoWorldProgress
     {
-        public enum Stage { Extracting, Preparing, Tiles, Writing, Done }
+        public enum Stage { Extracting, Preparing, Tiles, Writing, Done, Background }
         public Stage stage;
         public float value;     // 0-1 for the whole request
         public string message;
@@ -55,7 +59,7 @@ namespace GeoWorld
     public static class GeoWorldGenerator
     {
         // The package version this code is (a package says which version made it): keep with package.json.
-        public const string Version = "1.11.1";
+        public const string Version = "1.12.0";
         public const string PackageName = GeoPaths.PackageName;
         public static bool Busy { get; private set; }
 
@@ -66,7 +70,12 @@ namespace GeoWorld
             get => home ??= Application.isEditor
                 ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "GeoWorld")
                 : Path.Combine(Application.persistentDataPath, "GeoWorld");
-            set => home = value;
+            set
+            {
+                home = value;
+                // a player's map tiles (satellite imagery, the background) are kept with its other things
+                if (!Application.isEditor && !string.IsNullOrEmpty(value)) GeoTileCache.Root = Path.Combine(value, "cache", "satellite");
+            }
         }
         static string home;
 
@@ -284,6 +293,21 @@ namespace GeoWorld
                 manifest.created = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture);
                 File.WriteAllText(Path.Combine(staging, GeoWorldPackage.ManifestFile), JsonUtility.ToJson(manifest, true));
                 Memory();
+                // the background's map tiles into the shared cache (not into the package: its contentHash stays as it is)
+                int backgroundTiles = 0, backgroundDownloaded = 0; double backgroundSeconds = 0;
+                if (request.background && !now)
+                {
+                    var backgroundClock = Stopwatch.StartNew();
+                    try
+                    {
+                        (backgroundTiles, backgroundDownloaded) = await GeoWorldBackground.PrefetchAsync(new[] { manifest }, request.backgroundSettings,
+                            new GeoProgress<GeoBackgroundProgress>(b => Report(GeoWorldProgress.Stage.Background, 0.98f + 0.019f * Mathf.Clamp01(b.value * 2), $"Background: map tiles {b.done} / {b.total}")),
+                            cancellation);
+                    }
+                    catch (OperationCanceledException) { throw; }
+                    catch (Exception e) { Debug.LogWarning("Geo World: the background's map tiles were not downloaded (" + e.Message + "); GeoWorldBackground downloads them when it shows the package."); }
+                    backgroundSeconds = backgroundClock.Elapsed.TotalSeconds;
+                }
                 // how it went (not part of the package's content)
                 var report = new GeoWorldGenerationReport
                 {
@@ -291,6 +315,7 @@ namespace GeoWorld
                     secondsPerTile = tileSeconds.Count > 0 ? tileSeconds.Average() : 0, slowestTileSeconds = tileSeconds.Count > 0 ? tileSeconds.Max() : 0,
                     packageBytes = tiles.Sum(t => t.bytes), peakManagedBytes = peakManaged, peakWorkingSetBytes = peakProcess,
                     processPeakWorkingSetBytes = ProcessPeak(out long peakPrivate), processPeakPrivateBytes = peakPrivate,
+                    backgroundTiles = backgroundTiles, backgroundDownloaded = backgroundDownloaded, backgroundSeconds = backgroundSeconds,
                     platform = Application.platform.ToString(), unity = Application.unityVersion,
                     stages = stages.OrderByDescending(p => p.Value).Select(p => $"{p.Key}: {p.Value:F1} s").ToArray()
                 };
@@ -470,7 +495,9 @@ namespace GeoWorld
     [Serializable]
     public sealed class GeoWorldGenerationReport
     {
-        public double extractSeconds, generateSeconds, secondsPerTile, slowestTileSeconds;
+        public double extractSeconds, generateSeconds, secondsPerTile, slowestTileSeconds, backgroundSeconds;
+        [Tooltip("Map tiles of the background the cache has for the package, and how many of them this generation downloaded.")]
+        public int backgroundTiles, backgroundDownloaded;
         public int tiles;
         // peakWorkingSetBytes: the largest working set seen while generating; processPeak*: the process's own peaks since it started
         public long packageBytes, peakManagedBytes, peakWorkingSetBytes, processPeakWorkingSetBytes, processPeakPrivateBytes;

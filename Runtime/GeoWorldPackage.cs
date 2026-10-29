@@ -161,6 +161,7 @@ namespace GeoWorld
             builder.Activate();
             Terrain.SetConnectivityDirty();
             var handle = new GeoWorldTileHandle(index, root, data.header, data.navigation, created, builder.missing);
+            GeoLoadedTiles.Add(handle);
             if (builder.missing.Count > 0)
                 UnityEngine.Debug.LogWarning($"Geo World: tile {index.x}, {index.y} refers to {builder.missing.Count} assets that are not in GeoRuntimeAssets " +
                     "(prepare the runtime assets again with the package version that made the world): " + string.Join(", ", builder.missing));
@@ -246,6 +247,7 @@ namespace GeoWorld
 
         public void Unload()
         {
+            GeoLoadedTiles.Remove(this);
             if (Root) { if (Application.isPlaying) Object.Destroy(Root); else Object.DestroyImmediate(Root); }
             Root = null;
             foreach (var o in created) if (o) { if (Application.isPlaying) Object.Destroy(o); else Object.DestroyImmediate(o); }
@@ -254,6 +256,42 @@ namespace GeoWorld
         }
 
         public void Dispose() => Unload();
+    }
+
+    // The tiles of world packages loaded now (by LoadTile, LoadTileAsync or a game's own streaming through them), with the ground each
+    // covers in the scene (its area, moved with the tile's root): what the background around packages cuts itself away under.
+    public static class GeoLoadedTiles
+    {
+        static readonly Dictionary<GeoWorldTileHandle, Rect> tiles = new Dictionary<GeoWorldTileHandle, Rect>();
+
+        // Changes whenever a tile comes or goes.
+        public static int Version { get; private set; }
+        public static IEnumerable<Rect> Areas => tiles.Values;
+        public static int Count => tiles.Count;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetState() { tiles.Clear(); Version++; }
+
+        internal static void Add(GeoWorldTileHandle handle)
+        {
+            if (handle?.Header == null || !handle.Root) return;
+            var at = handle.Root.transform.position;
+            var h = handle.Header;
+            tiles[handle] = Rect.MinMaxRect(h.minX + at.x, h.minZ + at.z, h.maxX + at.x, h.maxZ + at.z);
+            Version++;
+        }
+
+        internal static void Remove(GeoWorldTileHandle handle)
+        {
+            if (handle != null && tiles.Remove(handle)) Version++;
+        }
+
+        // Is the point (scene x, z) on a loaded tile?
+        public static bool Covers(float x, float z)
+        {
+            foreach (var r in tiles.Values) if (x >= r.xMin && x < r.xMax && z >= r.yMin && z < r.yMax) return true;
+            return false;
+        }
     }
 
     // world.json

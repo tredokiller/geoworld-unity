@@ -4,7 +4,8 @@
     "GeoWorld.Runtime",
     "GeoWorld.Generation",
     "GeoWorld.Editor",
-    "GeoWorld.Tests.Support"
+    "GeoWorld.Tests.Support",
+    "UniTask"
   ],
   "overrideReferences": true,
   "precompiledReferences": [

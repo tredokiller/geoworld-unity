@@ -468,6 +468,23 @@ command line: -geoDemoArea S,W,N,E -geoDemoName n [-geoDemoNoRadar] -geoDemoRepo
 In the editor: Make a world package from an export... (or batch: -executeMethod GeoWorld.Editor.GeoRuntimeSetup.BatchPackage -geoExport
 <folder> -geoOut <package folder>) makes the same package from an export without a player.
 
+THE BACKGROUND AROUND WORLD PACKAGES (A PLAYER)
+A package ends at its edge. GeoWorldBackground draws the ground around the packages of a scene out to the horizon:
+  var background = gameObject.AddComponent<GeoWorldBackground>();
+  await background.ShowAsync(new[] { package }, progress, cancellationToken);   // background.Clear() removes it
+Rings of map tiles (GeoBackgroundSettings.levels: zoom 15 to 3 km beyond the packages, 13 to 20 km, 11 to 100 km by default) lie on the
+ground's elevation (AWS Terrain Tiles in Terrarium encoding, settings.elevation; empty: flat at the scene's zero), falling away with the
+Earth's curvature, 2 m below the terrain and each coarser ring 6 m deeper; a coarser tile is left out where sharper ones cover it whole.
+They are cut away under every loaded tile of a package (GeoLoadedTiles: LoadTile and LoadTileAsync register their tiles, whoever
+streams them), and the far clip of the cameras that see them reaches the farthest corner while they render (at most 150 km).
+Nothing of it is in a package: the map tiles are kept in the cache that the satellite imagery of generations uses too (GeoTileCache:
+the editor's Library/GeoWorld/SatelliteTiles, a player's GeoWorldGenerator.Home/cache/satellite, one file a tile). A zone next to an
+earlier one downloads only what that one did not, and one background is made for all the packages given to ShowAsync, with no tile
+twice; a package's contentHash does not change, and every computer (a game's clients too) makes its own from the network and its
+cache. GeoWorldGenerator downloads a new package's background tiles before it reports the package done (GeoWorldRequest.background);
+GeoWorldBackground.PrefetchAsync does it for any packages without making anything. The scene's origin is the first package's; a package
+whose origin is another lies at background.PackageOffset(package). Imagery: the packages' satellite tile URL (check its terms).
+
 SATELLITE IMAGERY ON THE TERRAIN
 Satellite imagery is the default way of generating (the made-up riverside sample keeps the blended ground).
 Texture Size Auto, the default, sizes the texture to the area: the power of two nearest to 0.4 m a texel, the

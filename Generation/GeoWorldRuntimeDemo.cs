@@ -25,6 +25,9 @@ namespace GeoWorld
     {
         public GeoWorldPackageStreamer streamer;
         public GeoPreviewCamera view;
+        public GeoWorldBackground background;
+        GeoWorldPackage shown;
+        double backgroundSeconds;
 
         string south = "48.9790", west = "37.7980", north = "48.9970", east = "37.8260", areaName = "demo";
         bool radar = true;
@@ -44,6 +47,7 @@ namespace GeoWorld
         {
             // a generation goes on while the window is in the background (the extraction takes minutes)
             Application.runInBackground = true;
+            if (!background) background = FindAnyObjectByType<GeoWorldBackground>() ?? gameObject.AddComponent<GeoWorldBackground>();
             // -geoDemoHome <folder>: exports, the app's cache and packages somewhere else (a cache filled before)
             if (Arg("-geoDemoHome") != null) GeoWorldGenerator.Home = Arg("-geoDemoHome");
             if (!streamer) streamer = FindAnyObjectByType<GeoWorldPackageStreamer>() ?? gameObject.AddComponent<GeoWorldPackageStreamer>();
@@ -133,7 +137,25 @@ namespace GeoWorld
                 view.Apply();
             }
             status = $"Showing {package.Manifest.name}: {package.Tiles.Count} tiles, {package.Manifest.stats.buildings} buildings, relief {package.Manifest.stats.relief:F0} m.";
+            shown = package;
+            ShowBackground(package).Forget();
         }
+
+        // the ground around the package out to the horizon (from the tiles the generation put in the shared cache)
+        async UniTaskVoid ShowBackground(GeoWorldPackage package)
+        {
+            var clock = Stopwatch.StartNew();
+            try
+            {
+                await background.ShowAsync(new[] { package }, new GeoProgress<GeoBackgroundProgress>(p => backgroundStatus = p.ToString()));
+                backgroundSeconds = clock.Elapsed.TotalSeconds;
+                backgroundStatus = $"Background: {background.CellCount} map tiles in {backgroundSeconds:F1} s";
+            }
+            catch (OperationCanceledException) { }
+            catch (Exception e) { backgroundStatus = "Background failed: " + e.Message; Debug.LogException(e); }
+        }
+
+        string backgroundStatus = "";
 
         async UniTaskVoid Automatic(string export, string packageFolder)
         {
@@ -181,10 +203,23 @@ namespace GeoWorld
                 GeoProcessMemory.Read(out result.workingSetBytes, out result.peakWorkingSetBytes, out result.privateBytes, out result.peakPrivateBytes);
                 result.buildingColliders = streamer.Loaded.Values.Sum(h => h.Root.transform.Find(GeoNavigation.Group) is Transform t ? t.childCount : 0);
                 result.missing = streamer.Loaded.Values.SelectMany(h => h.Missing).Distinct().ToArray();
+                // the background: made after the tiles, from the shared cache
+                var waitBackground = Stopwatch.StartNew();
+                while ((!background.Shown || backgroundSeconds == 0) && waitBackground.Elapsed.TotalSeconds < 180 && !backgroundStatus.StartsWith("Background failed")) await UniTask.Yield();
+                result.backgroundCells = background.CellCount; result.backgroundSeconds = backgroundSeconds; result.backgroundStatus = backgroundStatus;
+                result.backgroundExtentKm = Mathf.Max(background.Extent.width, background.Extent.height) / 1000f;
                 if (shot != null)
                 {
                     ScreenCapture.CaptureScreenshot(shot);
                     await UniTask.DelayFrame(3);
+                    // from a drone's height: the world's edge, and the background to the horizon
+                    if (view)
+                    {
+                        float keep = view.distance, pitch = view.pitch;
+                        view.distance = 7000; view.pitch = 25; view.Apply(); await UniTask.Delay(1500);
+                        ScreenCapture.CaptureScreenshot(Path.ChangeExtension(shot, null) + "_high.png"); await UniTask.DelayFrame(3);
+                        view.distance = keep; view.pitch = pitch; view.Apply();
+                    }
                     if (view) { view.distance *= 0.25f; view.pitch = 35; view.Apply(); await UniTask.Delay(1500); ScreenCapture.CaptureScreenshot(Path.ChangeExtension(shot, null) + "_close.png"); await UniTask.DelayFrame(3); }
                 }
                 result.ok = true;
@@ -199,6 +234,10 @@ namespace GeoWorld
         sealed class DemoReport
         {
             public bool ok, verified, secondProcess;
+            public int backgroundCells;
+            public double backgroundSeconds;
+            public float backgroundExtentKm;
+            public string backgroundStatus;
             public string error, args, package, contentHash;
             public string[] problems, missing;
             public int tiles, loadedTiles, buildingColliders;
@@ -261,6 +300,7 @@ namespace GeoWorld
             GUILayout.Label($"{fps:F0} fps ({frameMs:F1} ms, worst {worstMs:F0} ms) | tiles loaded {streamer.Loaded.Count}" + (streamer.Busy ? " (loading)" : "") +
                             $" | memory {Profiler.GetTotalAllocatedMemoryLong() / 1048576} MB");
             if (GUILayout.Button("Reset worst frame")) worstMs = 0;
+            if (!string.IsNullOrEmpty(backgroundStatus)) GUILayout.Label(backgroundStatus, GUILayout.MaxWidth(410));
             GUILayout.EndArea();
         }
 

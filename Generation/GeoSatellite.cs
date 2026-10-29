@@ -214,16 +214,10 @@ namespace GeoWorld.Editor
         }
 
         // Where downloaded tiles are kept: the project's Library in the editor; a player sets a folder of its own (GeoWorldGenerator).
-        public static string CacheRoot = Path.Combine("Library", "GeoWorld", "SatelliteTiles");
+        public static string CacheRoot { get => GeoTileCache.Root; set => GeoTileCache.Root = value; }
 
-        public static string CacheFolder(string template)
-        {
-            using (var md5 = MD5.Create())
-            {
-                var hash = md5.ComputeHash(Encoding.UTF8.GetBytes(template));
-                return Path.Combine(CacheRoot, BitConverter.ToString(hash, 0, 6).Replace("-", "").ToLowerInvariant());
-            }
-        }
+        // (the cache the background around packages shares: GeoTileCache)
+        public static string CacheFolder(string template) => GeoTileCache.Folder(template);
 
         // Tile bytes in row order of the range (null where a tile could not be had), from the cache or the server.
         static byte[][] Download(string template, int zoom, RectInt range, Action<string, float> progress, out int failed)
