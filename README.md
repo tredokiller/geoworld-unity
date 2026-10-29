@@ -35,6 +35,23 @@ trees are ready and retains its frame spacing. The external assets use Geo World
 required. Regenerate old tiles to produce these assets. Trees are restored in Play mode; stripped tile scenes do not
 show their external trees in Edit mode.
 
+## Land cover
+
+A tiled world knows what its ground is (forest, orchard, cropland, grass, built-up ground, water...) from its export's
+ground map, ESA WorldCover 2021 with OpenStreetMap's land use, roads and buildings over it, on a grid of 10 m. A game
+asks it anywhere, whether the tile there is loaded or not and across the tiles' edges:
+
+```csharp
+if (GeoLandCover.TrySample(position, out GeoLandClass ground) && ground == GeoLandClass.Orchard) { /* ... */ }
+
+var shares = new float[GeoLandCover.ClassCount];
+if (GeoLandCover.TryGetFractions(position, 120, shares))
+    treeCover = GeoLandCover.Share(shares, GeoLandClass.Forest, GeoLandClass.Orchard);
+```
+
+Generating tiles bakes it (one small asset a tile in `<world folder>/Land cover`, `GeoLandCover` on the world's object);
+for a world made earlier, press **Bake land cover** in the Geo Tiled World's Inspector. No tile is rebuilt.
+
 ## Install in a project
 
 Package Manager > **+** > **Add package from git URL...** and enter the version you want:

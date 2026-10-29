@@ -281,6 +281,21 @@ rebuilds no tile, and changing these settings rebuilds no tile either. The far i
 its area, size and tile server are the same, so after rebuilding tiles the overview takes some 25 s; Bake far ring
 again makes it anew. A world of 20 x 20 km takes about 7 MB for the overview in a build (two crunched
 4096 textures) and some 22 MB of GPU memory once loaded (DXT1).
+LAND COVER (WHAT THE GROUND IS, FOR A GAME)
+A tiled world carries what its ground is, for a game to ask anywhere: GeoLandCover on the world's object, with a
+GeoLandCoverData a tile in <world folder>/Land cover (a byte a cell of 10 m: 100 x 100 on 1 km tiles, 10 KB a tile,
+4 MB for 20 x 20 km, all of it loaded with the main scene, so a point is answered whether its tile is loaded or not).
+The classes are those of the export's ground map (materials.png: ESA WorldCover 2021 at 10 m with OpenStreetMap's land
+use, woods, orchards, water, roads, railways and building footprints painted over it; GeoLandClass has the app's ids):
+grass, cropland, forest, scrub, bare, sand, rock, wetland, water, urban, asphalt, paving, gravel, dirt road, path, rail,
+building, snow, orchard. A cell takes the most common class of 4 x 4 points in it, so a field track leaves the field a
+field; where exports overlap, the export that builds the ground there says what it is.
+ - GeoLandCover.TrySample(position, out GeoLandClass value): the class at a point (false off the world's tiles);
+ - GeoLandCover.TryGetFractions(position, radius, fractions): the share of each class among the cells within the
+   radius (fractions[(int)GeoLandClass.Forest]), across the tiles' edges; GeoLandCover.Share sums some of them.
+It is baked after the tiles are generated or rebuilt, and by Bake land cover in the Geo Tiled World's Inspector (a world
+made earlier: a few seconds, from the exports; no tile is rebuilt or opened). A tile whose land cover did not change
+keeps its asset as it is. World packages (runtime generation) carry no land cover yet.
 SEVERAL EXPORTS (THE PARTS OF ONE AREA)
 A city too large for one export (Kharkiv in six parts, 20 km per side at most each) is exported as parts, all with the
 same fixed origin (the app's Origin setting), and generated as one world: Tools > Geo World > Generate one world from

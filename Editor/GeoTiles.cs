@@ -205,6 +205,9 @@ namespace GeoWorld.Editor
                 // the whole world seen from high above, and the far ring around it
                 if (separateScenes && settings.overview != null && settings.overview.enabled && (built > 0 || !world.GetComponent<GeoOverview>()))
                     world.report += "\n" + BakeOverview(world);
+                // what the ground is, for a game to ask anywhere (GeoLandCover): the exports' ground maps on the tiles' grid
+                if (built > 0 || !world.GetComponent<GeoLandCover>())
+                    world.report += "\n" + BakeLandCover(world);
                 // one copy of what the tiles share in the Addressables build, not one in every tile's bundle
                 if (separateScenes && world.addressableScenes && built > 0)
                 {
@@ -231,6 +234,16 @@ namespace GeoWorld.Editor
             try { GeoOverviewBaker.Bake(world, notes, refreshFar); }
             catch (OperationCanceledException) { notes.Add("Overview: cancelled; Bake overview in the world's Inspector makes it."); }
             catch (Exception e) { notes.Add("Overview: not made (" + e.Message + ")."); Debug.LogException(e); }
+            return string.Join("\n", notes);
+        }
+
+        // Bakes the world's land cover (GeoLandCoverBaker) and says what came of it, for the world's report.
+        public static string BakeLandCover(GeoTiledWorld world)
+        {
+            var notes = new List<string>();
+            try { GeoLandCoverBaker.Bake(world, notes); }
+            catch (OperationCanceledException) { notes.Add("Land cover: cancelled; Bake land cover in the world's Inspector makes it."); }
+            catch (Exception e) { notes.Add("Land cover: not made (" + e.Message + ")."); Debug.LogException(e); }
             return string.Join("\n", notes);
         }
 
@@ -590,6 +603,13 @@ namespace GeoWorld.Editor
                         Debug.Log("Geo World: " + GeoTiles.BakeOverview(world, true).Replace("\n", " "), world);
                 }
             }
+            GUILayout.Label("Land cover", EditorStyles.boldLabel);
+            var cover = world.GetComponent<GeoLandCover>();
+            EditorGUILayout.HelpBox(cover && cover.tiles.Count > 0 ? cover.report
+                : "No land cover: a game cannot ask what the ground is at a point (GeoLandCover.TrySample: forest, orchard, cropland, grass, built-up ground, water...).", MessageType.None);
+            if (GUILayout.Button(new GUIContent("Bake land cover", "What the ground is on a grid of 10 m, from the exports' ground maps (ESA WorldCover with OpenStreetMap's land use, water, roads " +
+                "and buildings over it), for the game to ask anywhere (GeoLandCover on this object). No tile is rebuilt; generating tiles bakes it again."), GUILayout.Height(24)))
+                Debug.Log("Geo World: " + GeoTiles.BakeLandCover(world).Replace("\n", " "), world);
         }
 
         static string Describe(GeoOverviewData data)
