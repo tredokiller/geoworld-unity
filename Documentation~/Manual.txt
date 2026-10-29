@@ -296,6 +296,13 @@ field; where exports overlap, the export that builds the ground there says what 
 It is baked after the tiles are generated or rebuilt, and by Bake land cover in the Geo Tiled World's Inspector (a world
 made earlier: a few seconds, from the exports; no tile is rebuilt or opened). A tile whose land cover did not change
 keeps its asset as it is. World packages (runtime generation) carry no land cover yet.
+Tree heights (GeoLandCover > Tree Heights, on by default): the generator plants its trees 5-10 m tall (a mapped tree
+without a height 7 m). When a tile's trees load in Play mode, before Nature Renderer sees them, each such tree takes a
+height by the land cover around it: a wood 15-24 m (forest on 45 % of the ground within 50 m), rows, shelterbelts and
+trees among fields 8-14 m, orchards 4-7 m, villages and towns 6-12 m (built-up ground under it or on a tenth of the
+ground within 60 m), with the tree prefab whose own height is nearest (scale within half and twice the prefab's, the
+width in proportion). A tree with a height from the map (outside 5-10 m) keeps it. The same tile always gets the same
+trees; nothing is baked. It runs once a tile, on the main thread while its trees load (GeoTreeHeights.SizedMilliseconds).
 SEVERAL EXPORTS (THE PARTS OF ONE AREA)
 A city too large for one export (Kharkiv in six parts, 20 km per side at most each) is exported as parts, all with the
 same fixed origin (the app's Origin setting), and generated as one world: Tools > Geo World > Generate one world from

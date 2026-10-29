@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.14.0
+
+- Trees as tall as what they stand in (`GeoTreeHeights`, Tree Heights on the world's `GeoLandCover`): the generator plants its trees 5 to 10 m tall and a mapped tree without a height at 7 m, a young wood everywhere (in Kharkiv's tiles almost every tree was 7-8 m, where a mature forest is 18-25 m). When a tile's trees load in Play mode (`GeoTerrainTreeLoader`), before Nature Renderer sees them, a tree with a generated height takes one by the land cover around it: a wood 15-24 m (forest on 45 % or more of the ground within 50 m), tree rows, shelterbelts and trees among fields 8-14 m, orchards 4-7 m, single trees in villages and towns 6-12 m (built-up ground under it or on a tenth of the ground within 60 m). It takes the tree prefab whose own height is nearest (one of those within a third of the best fit, by a hash), so that its scale stays within half and twice the prefab's, and its width keeps its proportion; heights and prefabs come from a hash of the tree's place, so a tile looks the same every time it loads. A tree whose height is outside the generated range had it from the map and keeps it. Nothing is baked or rebuilt: worlds made earlier get it once their land cover is baked (1.13). It runs once a tile, on the main thread while the tile's trees load (`GeoTreeHeights.SizedMilliseconds` says how long); Nature Renderer starts after it as before. Off: Tree Heights > Enabled.
+- `GeoLandCover.At(x, z)`: the world whose land cover has the tile under a point. `GeoTerrainTreeLoader.Sized`: how many of a tile's trees were sized; `GeoTreeHeights.SizedTrees` and `SizedMilliseconds` for all tiles since Play mode started.
+- A tree prefab's height is measured in one place for the generator and the runtime (`GeoTreeHeights.PrefabHeight`; `GeoTerrainTrees.Height` calls it).
+- Tests: the trees of a wood, a shelterbelt, an orchard, a village and the meadow next to it take their ranges, a mapped height and a tree off the land cover are kept, scales within half and twice the prefab, widths in proportion, the same heights twice; a prefab's height.
+
 ## 1.13.1
 
 - Bake land cover saves only its own assets (`AssetDatabase.SaveAssetIfDirty`) instead of every asset changed in memory: after Play mode, assets a game changed while playing (a sky asset keeps the weather and the clouds it was given) were written to disk by a bake from the Geo Tiled World's Inspector.

@@ -14,6 +14,8 @@ namespace GeoWorld
         [Min(1)] public int batchSize = 2048;
         [Min(1)] public int framesBetweenTerrains = 2;
         public bool Ready { get; private set; }
+        // Trees that took their height from the world's land cover when they loaded (GeoTreeHeights).
+        public int Sized { get; private set; }
         Terrain terrain;
         TerrainData source, runtime;
         TerrainCollider terrainCollider;
@@ -67,6 +69,8 @@ namespace GeoWorld
                         if ((i + 1) % Mathf.Max(1, batchSize) == 0)
                             await UniTask.Yield(PlayerLoopTiming.Update, token);
                     }
+                    // as tall as what they stand in, before Nature Renderer sees them: it starts once the trees are in
+                    Size(trees);
                     while (Time.frameCount - lastAppliedFrame < Mathf.Max(1, framesBetweenTerrains))
                         await UniTask.Yield(PlayerLoopTiming.Update, token);
                     token.ThrowIfCancellationRequested();
@@ -110,6 +114,17 @@ namespace GeoWorld
                 // (it would otherwise never start on this terrain), and the loader does not try again until the tile loads anew
                 if (this) restored = Ready = true;
             }
+        }
+
+        // The trees' heights by the land cover of the world the tile is in (GeoLandCover.treeHeights); none without one.
+        void Size(TreeInstance[] trees)
+        {
+            if (trees.Length == 0) return;
+            var data = terrain.terrainData;
+            Vector3 origin = terrain.transform.position, size = data.size;
+            var cover = GeoLandCover.At(origin.x + size.x * 0.5f, origin.z + size.z * 0.5f);
+            if (!cover || cover.treeHeights == null || !cover.treeHeights.enabled) return;
+            Sized = cover.treeHeights.Apply(cover, trees, origin, size, GeoTreeHeights.PrototypeHeights(data.treePrototypes));
         }
 
         void OnDisable()

@@ -52,6 +52,10 @@ if (GeoLandCover.TryGetFractions(position, 120, shares))
 Generating tiles bakes it (one small asset a tile in `<world folder>/Land cover`, `GeoLandCover` on the world's object);
 for a world made earlier, press **Bake land cover** in the Geo Tiled World's Inspector. No tile is rebuilt.
 
+With land cover the tiles' trees are as tall as what they stand in when they load (Tree Heights on `GeoLandCover`):
+woods 15-24 m, shelterbelts and tree rows 8-14 m, orchards 4-7 m, villages 6-12 m, each tree on the prefab whose own
+height is nearest.
+
 ## Install in a project
 
 Package Manager > **+** > **Add package from git URL...** and enter the version you want:

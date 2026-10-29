@@ -33,6 +33,8 @@ namespace GeoWorld
         [Tooltip("Side of a cell in metres: a tile's side over its cells.")]
         public float cellSize = 10;
         public List<GeoLandCoverData> tiles = new List<GeoLandCoverData>();
+        [Tooltip("How tall the tiles' trees are by the land cover (GeoTreeHeights): they are sized when a tile loads in Play mode, before Nature Renderer draws them.")]
+        public GeoTreeHeights treeHeights = new GeoTreeHeights();
         [HideInInspector] public string report;
 
         // Points within radius are counted on a coarser step beyond this many cells along a side (a radius of more than 5 km).
@@ -68,6 +70,13 @@ namespace GeoWorld
                 if (cover && cover.Covers(world.x, world.z) && cover.Fractions(world.x, world.z, radius, fractions)) return true;
             if (fractions != null) Array.Clear(fractions, 0, fractions.Length);
             return false;
+        }
+
+        // The world whose land cover has the tile under a point; null where none has.
+        public static GeoLandCover At(float x, float z)
+        {
+            foreach (var cover in active) if (cover && cover.Covers(x, z)) return cover;
+            return null;
         }
 
         // The sum of some classes' shares (fractions as TryGetFractions fills them).

@@ -165,27 +165,9 @@ namespace GeoWorld.Editor
             return usable.ToArray();
         }
 
-        // A prefab's height above its pivot, from its first level of detail (or all its meshes).
-        public static float Height(GameObject prefab)
-        {
-            var lods = prefab.GetComponent<LODGroup>() ? prefab.GetComponent<LODGroup>().GetLODs() : null;
-            var renderers = lods != null && lods.Length > 0 ? lods[0].renderers : prefab.GetComponentsInChildren<Renderer>(true);
-            var toRoot = prefab.transform.worldToLocalMatrix;
-            float top = 0;
-            foreach (var renderer in renderers)
-            {
-                var filter = renderer ? renderer.GetComponent<MeshFilter>() : null;
-                if (!filter || !filter.sharedMesh) continue;
-                var box = filter.sharedMesh.bounds;
-                var matrix = toRoot * renderer.transform.localToWorldMatrix;
-                for (int c = 0; c < 8; c++)
-                {
-                    var corner = box.center + Vector3.Scale(box.extents, new Vector3((c & 1) == 0 ? -1 : 1, (c & 2) == 0 ? -1 : 1, (c & 4) == 0 ? -1 : 1));
-                    top = Mathf.Max(top, matrix.MultiplyPoint3x4(corner).y);
-                }
-            }
-            return top > 0.1f ? top : 1;
-        }
+        // A prefab's height above its pivot, from its first level of detail (or all its meshes): the runtime's, which sizes the
+        // tiles' trees by the same measure when they load (GeoTreeHeights).
+        public static float Height(GameObject prefab) => GeoTreeHeights.PrefabHeight(prefab);
 
         delegate bool TreeLook(PropPlacement p, out int prototype, out float width, out float height, out float yaw);
 
