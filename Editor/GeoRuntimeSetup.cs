@@ -5,6 +5,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
+using UnityEditor.Compilation;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -75,19 +76,42 @@ namespace GeoWorld.Editor
                     registry.entries.Add(new GeoRuntimeAssets.Entry { key = guid + ":" + id, path = path, asset = o });
                 }
             }
-            registry.shaders = new[] { "Universal Render Pipeline/Lit", "Universal Render Pipeline/Simple Lit", "Universal Render Pipeline/Terrain/Lit", "GeoWorld/Road", "GeoWorld/Water" }
-                .Select(Shader.Find).Where(s => s).ToList();
+            registry.shaders = Shaders.Select(Shader.Find).Where(s => s).ToList();
             registry.templates = Templates();
             EditorUtility.SetDirty(registry);
             AssetDatabase.SaveAssets();
             return registry;
         }
 
-        // What a package can refer to: meshes, materials, textures, prefabs (their root), the library assets and text stamps.
-        static bool Kept(Object o) =>
-            o is Mesh || o is Material || o is Texture || o is Shader || o is TextAsset || o is TerrainLayer ||
-            (o is ScriptableObject && !(o is UnityEditor.Editor) && !(o is EditorWindow)) ||
-            (o is GameObject go && go.transform.parent == null);
+        // The shaders a player draws worlds with. Unity makes the normal map of an instanced terrain (as the tiles' are) with its
+        // built-in GenerateNormalmap, which a build leaves out when none of its scenes has a terrain: the terrains a player loads
+        // would have no normal map, and Terrain/Lit would light them as if they faced away from the sun (dark grey).
+        internal static readonly string[] Shaders =
+        {
+            "Universal Render Pipeline/Lit", "Universal Render Pipeline/Simple Lit", "Universal Render Pipeline/Terrain/Lit", "GeoWorld/Road", "GeoWorld/Water",
+            "Hidden/TerrainEngine/GenerateNormalmap",
+        };
+
+        // What a package can refer to: meshes, materials, textures, prefabs (their root), the library assets and text stamps. Not
+        // an object of a type a player has no script for (URP keeps an editor-only AssetVersion under every material: a player
+        // would log a missing script and a layout error for each one when it loads the registry).
+        internal static bool Kept(Object o) =>
+            (o.hideFlags & HideFlags.DontSaveInBuild) == 0 && InPlayer(o.GetType()) &&
+            (o is Mesh || o is Material || o is Texture || o is Shader || o is TextAsset || o is TerrainLayer ||
+             (o is ScriptableObject && !(o is UnityEditor.Editor) && !(o is EditorWindow)) ||
+             (o is GameObject go && go.transform.parent == null));
+
+        static HashSet<string> editorAssemblies;
+
+        // A type a player build has: not one of the editor's own modules or of a script assembly only the editor compiles.
+        internal static bool InPlayer(Type type)
+        {
+            string name = type.Assembly.GetName().Name;
+            if (name.StartsWith("UnityEditor", StringComparison.Ordinal)) return false;
+            editorAssemblies ??= new HashSet<string>(CompilationPipeline.GetAssemblies(AssembliesType.Editor)
+                .Where(a => (a.flags & AssemblyFlags.EditorAssembly) != 0).Select(a => a.name));
+            return !editorAssemblies.Contains(name);
+        }
 
         // One material for each shader and keyword set the generator makes (instancing on, as it makes them): a build keeps the
         // shader variants of the materials it holds (Graphics settings strip the rest, instancing variants included).

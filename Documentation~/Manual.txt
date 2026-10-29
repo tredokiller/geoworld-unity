@@ -414,7 +414,10 @@ Setting up a project: Tools > Geo World > Runtime generation > Prepare runtime a
 Assets/GeoWorld/Resources/GeoWorldRuntimeAssets.asset (GeoRuntimeAssets): the package's library (home and ruin models, their reduced
 copies, the tree prefabs, road and ground pictures, building styles, the water material), the shaders, and template materials, one
 per shader and keyword set the generator makes, so that a build keeps those shader variants (a build strips the variants no
-material in it uses, and the generated materials are made in the player). A package refers to library assets by key (their GUID and
+material in it uses, and the generated materials are made in the player). The shaders include Unity's
+Hidden/TerrainEngine/GenerateNormalmap, which makes the normal map of an instanced terrain: a build leaves it out when none of its
+scenes has a terrain, and the package's terrains, made in the player, were then dark. Objects only the editor has a script for
+(URP's AssetVersion under every material) are left out. A package refers to library assets by key (their GUID and
 local file id) and never carries them. Prepare again after updating the package. A standalone player build of the project then gets
 the Building Extractor app (Extractor~, with its own Python on Windows, about 30 MB) in <name>_Data/StreamingAssets/GeoWorld/Extractor
 (GeoRuntimeBuild, after the build; folders ending in ~ are never part of a build). A folder GeoWorldExtractor next to the executable

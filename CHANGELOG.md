@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.12.1
+
+- Fixed: the terrains of world packages were dark in a player (cold grey, about 0.83 of the background's brightness), lit as if they faced away from the sun. Unity makes the normal map of an instanced terrain with its built-in `Hidden/TerrainEngine/GenerateNormalmap`, which a build leaves out when none of its scenes has a terrain, and a package's terrains are made in the player: `Terrain.normalmapTexture` stayed empty. Prepare runtime assets now puts the shader in the registry (in Resources), so every player that loads packages has it. Prepare runtime assets again after updating.
+- Fixed: a player logged 77 pairs of errors ("The referenced script (Unknown) on this Behaviour is missing!", "different serialization layout") when it loaded the registry (`GeoWorldPackage.WarmUp`). Prepare runtime assets took in the `AssetVersion` object URP keeps under every material, whose script only the editor has. It now leaves out every object of an editor-only assembly or one not saved in builds.
+- The runtime demo reports the loaded terrains without a normal map.
+- Tests: the registry leaves out the object under a material and keeps no object of an editor assembly; the terrain's normal-map shader is among the shaders.
+
 ## 1.12.0
 
 - The ground around world packages out to the horizon (`GeoWorldBackground`): a world made in a player ended at its package's edge, which a camera a few hundred metres up saw at once. The background is map tiles in rings of falling detail around the packages (by default zoom 15 to 3 km beyond them, 13 to 20 km, 11 to 100 km: about 3, 13 and 50 m a pixel), on the ground's elevation (AWS Terrain Tiles, Terrarium encoding, three zooms coarser than the imagery), falling away with the Earth's curvature, a little below the terrain, with each coarser ring deeper and left out where a sharper ring covers it. It is cut away under every loaded tile of a package (`GeoLoadedTiles`: whoever loads tiles, LoadTile and LoadTileAsync register them), and the far clip of the cameras that see it reaches its farthest corner while they render (at most 150 km), as the overview of a tiled world (1.10).

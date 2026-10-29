@@ -203,6 +203,10 @@ namespace GeoWorld
                 GeoProcessMemory.Read(out result.workingSetBytes, out result.peakWorkingSetBytes, out result.privateBytes, out result.peakPrivateBytes);
                 result.buildingColliders = streamer.Loaded.Values.Sum(h => h.Root.transform.Find(GeoNavigation.Group) is Transform t ? t.childCount : 0);
                 result.missing = streamer.Loaded.Values.SelectMany(h => h.Missing).Distinct().ToArray();
+                // an instanced terrain is lit by its normal map, which Unity makes with a shader the build must keep
+                var terrains = streamer.Loaded.Values.SelectMany(h => h.Root.GetComponentsInChildren<Terrain>()).ToList();
+                result.terrains = terrains.Count;
+                result.terrainsWithoutNormalMap = terrains.Count(t => t.drawInstanced && !t.normalmapTexture);
                 // the background: made after the tiles, from the shared cache
                 var waitBackground = Stopwatch.StartNew();
                 while ((!background.Shown || backgroundSeconds == 0) && waitBackground.Elapsed.TotalSeconds < 180 && !backgroundStatus.StartsWith("Background failed")) await UniTask.Yield();
@@ -240,7 +244,7 @@ namespace GeoWorld
             public string backgroundStatus;
             public string error, args, package, contentHash;
             public string[] problems, missing;
-            public int tiles, loadedTiles, buildingColliders;
+            public int tiles, loadedTiles, buildingColliders, terrains, terrainsWithoutNormalMap;
             public GeoWorldGenerationReport generation;
             public double loadAllSeconds, warmUpMs;
             public double[] tileLoadSeconds;
