@@ -104,7 +104,47 @@ namespace GeoWorld.Editor
                 if (single.Count > 0)
                     notes.Add("Tree prefab " + prefab.name + ": turn on Enable GPU Instancing on " + string.Join(", ", single) +
                               ", or a player build leaves out the shader variants Nature Renderer draws them with (they show in the editor, not in the player).");
+                string lods = CheckLods(prefab, GeoNatureRendererSettings.DefaultTreeDistance);
+                if (lods != null) notes.Add(lods);
             }
+        }
+
+        // The share of the screen height under which a tree may turn into its last level of detail (a cross card or a
+        // billboard); higher, the cards are seen close to the camera, which from the air is all the time.
+        public const float MaxCardHeight = 0.1f;
+        // The field of view the tree distance is checked at (degrees): a drone camera's.
+        public const float CheckedFieldOfView = 60;
+
+        // A note when a tree prefab's levels of detail do not suit trees seen from the air: its last level comes while the tree
+        // still takes more than MaxCardHeight of the screen, or the tree is culled nearer than treeDistance (Nature Renderer's
+        // tree distance then is not the edge of the forest, and it differs by species and field of view). Null when it suits.
+        public static string CheckLods(GameObject prefab, float treeDistance)
+        {
+            var group = prefab ? prefab.GetComponent<LODGroup>() : null;
+            if (!group) return null;
+            var lods = group.GetLODs();
+            if (lods.Length == 0) return null;
+            var problems = new List<string>();
+            if (lods.Length > 1 && lods[lods.Length - 2].screenRelativeTransitionHeight > MaxCardHeight)
+                problems.Add($"its last level of detail starts at {lods[lods.Length - 2].screenRelativeTransitionHeight:0.###} of the screen height (cards close to the camera; at most {MaxCardHeight:0.##})");
+            float cullDistance = CullDistance(group, lods[lods.Length - 1].screenRelativeTransitionHeight, CheckedFieldOfView);
+            if (cullDistance < treeDistance)
+                problems.Add($"it is culled at {cullDistance:0} m at {CheckedFieldOfView:0} degrees, before the tree distance of {treeDistance:0} m " +
+                             $"(a last level of detail down to {CullHeight(group, treeDistance, CheckedFieldOfView):0.####} of the screen height reaches it)");
+            return problems.Count > 0 ? "Tree prefab " + prefab.name + ": " + string.Join("; ", problems) + "." : null;
+        }
+
+        // Where a LOD Group at its prefab's scale takes height of the screen height, and the height it takes at a distance.
+        public static float CullDistance(LODGroup group, float height, float fieldOfView) =>
+            height > 0 ? Size(group) / (2 * Mathf.Tan(fieldOfView * 0.5f * Mathf.Deg2Rad) * height) : float.PositiveInfinity;
+
+        public static float CullHeight(LODGroup group, float distance, float fieldOfView) =>
+            Size(group) / (2 * Mathf.Tan(fieldOfView * 0.5f * Mathf.Deg2Rad) * distance);
+
+        static float Size(LODGroup group)
+        {
+            var scale = group.transform.lossyScale;
+            return group.size * Mathf.Max(Mathf.Abs(scale.x), Mathf.Abs(scale.y), Mathf.Abs(scale.z));
         }
 
         // A terrain's Nature Renderer, when its trees are drawn by Geo World again.
@@ -156,13 +196,26 @@ namespace GeoWorld.Editor
         {
             string path = Folder + "/" + source.name + " (Nature Renderer).mat";
             var material = AssetDatabase.LoadAssetAtPath<Material>(path);
-            if (material) return material;
+            if (material) { Fade(material); return material; }
             material = new Material(shader) { name = source.name + " (Nature Renderer)", enableInstancing = true };
             material.SetColor("_BaseColor", source.HasProperty("_BaseColor") ? source.GetColor("_BaseColor") : source.color);
             if (source.HasProperty("_Smoothness")) material.SetFloat("_Smoothness", source.GetFloat("_Smoothness"));
+            Fade(material);
             AssetDatabase.CreateAsset(material, path);
             return material;
         }
+
+        // Nature Renderer fades the tree out at its far edge (it writes _ScaleFade for every draw); a renderer that is not Nature
+        // Renderer's fades it from the default tree distance less the fade (GeoNatureRendererSettings).
+        static void Fade(Material material)
+        {
+            if (!material.HasProperty("_ScaleFade") || material.GetFloat("_NatureRendererDistanceControl") > 0.5f) return;
+            material.SetFloat("_NatureRendererDistanceControl", 1);
+            material.SetVector("_ScaleFade", new Vector4(GeoNatureRendererSettings.DefaultTreeDistance - FadeLength, FadeLength, 0, 0));
+            EditorUtility.SetDirty(material);
+        }
+
+        const float FadeLength = 400;
 
         // The tree shader including the given file, at path (rewritten when the include moved).
         public static Shader WriteShader(string path, string include)
@@ -195,6 +248,10 @@ Shader ""GeoWorld/Tree (Nature Renderer)""
     {
         _BaseColor(""Colour"", Color) = (1, 1, 1, 1)
         _Smoothness(""Smoothness"", Range(0, 1)) = 0.05
+        // Nature Renderer's far fade: with control 1 it writes _ScaleFade = (R - length, length) for every draw (R: its tree
+        // distance for the prefab); a renderer that is not Nature Renderer's takes the material's
+        _ScaleFade(""Far fade (start, length)"", Vector) = (1200, 400, 0, 0)
+        [Toggle] _NatureRendererDistanceControl(""Nature Renderer controls the fade"", Float) = 1
     }
     SubShader
     {
@@ -205,7 +262,18 @@ Shader ""GeoWorld/Tree (Nature Renderer)""
         CBUFFER_START(UnityPerMaterial)
             half4 _BaseColor;
             half _Smoothness;
+            float4 _ScaleFade;
+            float _NatureRendererDistanceControl;
         CBUFFER_END
+
+        // The tree shrinks to its pivot over the last _ScaleFade.y metres before _ScaleFade.x + _ScaleFade.y from the camera,
+        // where Nature Renderer culls it: the forest sinks away at its far edge instead of ending in a line.
+        float3 FarFade(float3 positionOS)
+        {
+            if (_ScaleFade.y <= 0) return positionOS;
+            float distanceToPivot = distance(GetAbsolutePositionWS(UNITY_MATRIX_M._m03_m13_m23), _WorldSpaceCameraPos);
+            return positionOS * (1.0 - saturate((distanceToPivot - _ScaleFade.x) / _ScaleFade.y));
+        }
         ENDHLSL
 
         Pass
@@ -231,7 +299,7 @@ Shader ""GeoWorld/Tree (Nature Renderer)""
             {
                 Varyings output;
                 UNITY_SETUP_INSTANCE_ID(input);
-                output.positionWS = TransformObjectToWorld(input.positionOS.xyz);
+                output.positionWS = TransformObjectToWorld(FarFade(input.positionOS.xyz));
                 output.normalWS = TransformObjectToWorldNormal(input.normalOS);
                 output.positionCS = TransformWorldToHClip(output.positionWS);
                 output.screen = ComputeScreenPos(output.positionCS);
@@ -278,7 +346,7 @@ Shader ""GeoWorld/Tree (Nature Renderer)""
             float4 Vertex(Attributes input) : SV_POSITION
             {
                 UNITY_SETUP_INSTANCE_ID(input);
-                float3 positionWS = TransformObjectToWorld(input.positionOS.xyz);
+                float3 positionWS = TransformObjectToWorld(FarFade(input.positionOS.xyz));
                 float3 normalWS = TransformObjectToWorldNormal(input.normalOS);
             #if defined(_CASTING_PUNCTUAL_LIGHT_SHADOW)
                 float3 direction = normalize(_LightPosition - positionWS);
@@ -317,7 +385,7 @@ Shader ""GeoWorld/Tree (Nature Renderer)""
             float4 Vertex(Attributes input) : SV_POSITION
             {
                 UNITY_SETUP_INSTANCE_ID(input);
-                return TransformObjectToHClip(input.positionOS.xyz);
+                return TransformObjectToHClip(FarFade(input.positionOS.xyz));
             }
 
             half Fragment() : SV_Target { return 0; }
@@ -344,7 +412,7 @@ Shader ""GeoWorld/Tree (Nature Renderer)""
             {
                 Varyings output;
                 UNITY_SETUP_INSTANCE_ID(input);
-                output.positionCS = TransformObjectToHClip(input.positionOS.xyz);
+                output.positionCS = TransformObjectToHClip(FarFade(input.positionOS.xyz));
                 output.normalWS = TransformObjectToWorldNormal(input.normalOS);
                 return output;
             }

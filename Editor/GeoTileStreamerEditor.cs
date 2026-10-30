@@ -22,6 +22,18 @@ namespace GeoWorld.Editor
             DrawPropertiesExcluding(serializedObject, "m_Script", "loadRadius", "unloadRadius");
             serializedObject.ApplyModifiedProperties();
             EditorGUILayout.LabelField("Unloaded beyond", (streamer.UnloadDistance / 1000).ToString("0.0#") + " km", EditorStyles.miniLabel);
+            string pixelError = PixelErrorNote(streamer);
+            if (pixelError != null) EditorGUILayout.HelpBox(pixelError, MessageType.Warning);
+        }
+
+        // A warning when the project's Quality settings give the tiles' terrains a coarse pixel error and the streamer does not
+        // set its own: distant terrain is then drawn metres off the roads, water and trees on it. Null when all is well.
+        public static string PixelErrorNote(GeoTileStreamer streamer)
+        {
+            if (streamer.terrainPixelError > 0 || (QualitySettings.terrainQualityOverrides & TerrainQualityOverrides.PixelError) == 0 ||
+                QualitySettings.terrainPixelError <= 8) return null;
+            return $"The Quality settings give every terrain a pixel error of {QualitySettings.terrainPixelError:0} (the tiles are built with 1): distant terrain is drawn " +
+                   "metres off the roads, water and trees standing on it. Set Terrain Pixel Error here (4-8) or lower it in the Quality settings.";
         }
 
         // A slider of the load radius in kilometres, 1 to 10 in steps of 0.5 km (radius in metres), and below it the tiles of

@@ -603,6 +603,20 @@ namespace GeoWorld.Editor
                         Debug.Log("Geo World: " + GeoTiles.BakeOverview(world, true).Replace("\n", " "), world);
                 }
             }
+            if (GeoNatureRendererTrees.Installed)
+            {
+                GUILayout.Label("Nature Renderer", EditorStyles.boldLabel);
+                var settings = world.GetComponent<GeoNatureRendererSettings>();
+                if (settings)
+                    EditorGUILayout.HelpBox($"Nature Renderer's settings for the air (GeoNatureRendererSettings): trees to {settings.TreeDistance:0} m with shadows to {settings.treeShadowDistance:0} m, " +
+                                            $"grass to {settings.detailRenderDistance:0} m.", MessageType.None);
+                else if (GUILayout.Button(new GUIContent("Add Nature Renderer settings", "Nature Renderer's settings for a drone over the tiles (GeoNatureRendererSettings): grass that does not thin in front of the camera, " +
+                         "tree distance from the load radius, short tree shadows, a larger streaming budget. Not needed when the game adds its own Nature Renderer settings."), GUILayout.Height(24)))
+                    Undo.AddComponent<GeoNatureRendererSettings>(world.gameObject);
+                var streamer = Object.FindObjectsByType<GeoTileStreamer>(FindObjectsSortMode.None).FirstOrDefault(s => s.world == world);
+                string pixelError = streamer ? GeoTileStreamerEditor.PixelErrorNote(streamer) : null;
+                if (pixelError != null) EditorGUILayout.HelpBox(pixelError, MessageType.Warning);
+            }
             GUILayout.Label("Land cover", EditorStyles.boldLabel);
             var cover = world.GetComponent<GeoLandCover>();
             EditorGUILayout.HelpBox(cover && cover.tiles.Count > 0 ? cover.report

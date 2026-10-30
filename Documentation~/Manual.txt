@@ -262,6 +262,14 @@ The terrain casts no shadows unless Terrain Casts Shadows is on (Advanced settin
 valleys at a low sun). A terrain that casts them is drawn again for every shadow cascade: in Kharkiv that was 3-6 ms
 of a frame and changed no pixel. Buildings and trees still cast their shadows on the ground. The terrain keeps pixel
 error 1: at 4 the coarser far terrain already covers parts of rivers and road edges.
+NATURE RENDERER FROM THE AIR
+GeoNatureRendererSettings (Geo Tiled World's Inspector > Add Nature Renderer settings) gives Nature Renderer settings for a
+drone: grass to 150 m without thinning in front of the camera, trees to the load radius less 400 m with 70 m of shadows,
+16384 instances a frame. A game that sets its own Nature Renderer settings does not need it. GeoNatureRenderer.Ensure and
+SwapGrass let a game give a tile other grass and rebuild only Nature Renderer's grass (not every tree of the tile).
+Geo World's tree shader fades trees out over the last 400 m before Nature Renderer's tree distance. Generating with tree
+prefabs notes those whose cards come above 0.1 of the screen height or that are culled before the tree distance. The tile
+streamer's Terrain Pixel Error overrides the Quality settings (their 20 drew distant terrain metres off roads and trees).
 THE WORLD FROM HIGH ABOVE (OVERVIEW AND FAR RING)
 The tiles stream around the camera's point on the ground (Load radius, 2 km), so from a few kilometres up only a small
 square of ground is there, and a 20 km world ends in an edge. The overview (Advanced settings > Overview, on by default;

@@ -25,6 +25,10 @@ namespace GeoWorld
         [Tooltip("Metres beyond which loaded tiles are unloaded; at least the load radius and UnloadMargin.")]
         [Min(100)] public float unloadRadius = DefaultRadius + UnloadMargin;
         [Range(1, 8)] public int loadsAtOnce = 2;
+        [Tooltip("Pixel error of the loaded tiles' terrains (0: the project's Quality settings, which override what the tiles are built with, " +
+                 "1). Unity's default 5 and the 20 many projects have draw distant terrain metres off the roads, water and trees standing on it; " +
+                 "4-8 keeps it close for a fraction of a millisecond.")]
+        [Range(0, 50)] public float terrainPixelError;
         [Range(0, 30)] public int framesBetweenTiles = 3;
 
         sealed class Loaded
@@ -173,6 +177,7 @@ namespace GeoWorld
                 {
                     loaded[key] = item;
                     retryAfter.Remove(key);
+                    ApplyPixelError(item.scene);
                     Terrain.SetConnectivityDirty();
                 }
             }
@@ -188,6 +193,18 @@ namespace GeoWorld
                 Debug.LogException(exception, this);
             }
             finally { loading.Remove(key); }
+        }
+
+        // The tile's terrains with the streamer's pixel error, whatever the Quality settings say; none set: left to them.
+        void ApplyPixelError(Scene scene)
+        {
+            if (terrainPixelError <= 0 || !scene.IsValid() || !scene.isLoaded) return;
+            foreach (var root in scene.GetRootGameObjects())
+                foreach (var terrain in root.GetComponentsInChildren<Terrain>(true))
+                {
+                    terrain.ignoreQualitySettings = true;
+                    terrain.heightmapPixelError = terrainPixelError;
+                }
         }
 
         async UniTask UnloadAsync(string key, Loaded item)
