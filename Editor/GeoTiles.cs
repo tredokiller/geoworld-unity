@@ -96,6 +96,8 @@ namespace GeoWorld.Editor
                 GeoHeightBlend blend = null;
                 if (parts.Count > 1) { blend = new GeoHeightBlend(plan, parts, terrains); blend.Align(); }
                 var lakeLevels = new Dictionary<string, float>();
+                // the rivers of the exports, levelled in turn: a later export keeps an earlier one's levels where they overlap
+                var riverLevels = new GeoRiverLevels();
                 Scene master = default;
                 GeoTiledWorld world;
                 if (separateScenes)
@@ -128,15 +130,21 @@ namespace GeoWorld.Editor
                 var notes = new List<string>();
                 var pending = new Dictionary<Vector2Int, List<Fragment>>(); // tiles where exports meet: what each export gives, built when all have
                 bool view = false;
+                // an export with no tile to build is still read when a later one has some: the lakes and rivers it levels first
+                // are kept by the later ones (lakeLevels, riverLevels), as when every tile is built
+                int lastNeeded = -1;
+                for (int p = 0; p < parts.Count; p++)
+                    if (order.Any(index => plan.tiles[index].Contains(p) && (only == null || only.Contains(index)))) lastNeeded = p;
                 for (int p = 0; p < parts.Count; p++)
                 {
                     var mine = order.Where(index => plan.tiles[index].Contains(p) && (only == null || only.Contains(index))).ToList();
-                    if (mine.Count == 0) continue;
+                    if (mine.Count == 0 && p > lastNeeded) continue;
                     GeoGenerator.progressPrefix = parts.Count > 1 ? $"Export {p + 1} / {parts.Count}: " : ""; GeoGenerator.progressFrom = 0; GeoGenerator.progressSpan = 0.02f;
                     Bar("Reading the export and working out roads and lakes", 0);
-                    var source = GeoTileSource.Prepare(parts[p].environmentPath, parts[p].buildingsPath, settings, tileSize, Vector2.zero, single, blend, p, lakeLevels);
+                    var source = GeoTileSource.Prepare(parts[p].environmentPath, parts[p].buildingsPath, settings, tileSize, Vector2.zero, single, blend, p, lakeLevels, riverLevels);
                     worldBase = Mathf.Min(worldBase, source.baseY); worldTop = Mathf.Max(worldTop, source.baseY + source.range);
                     notes.AddRange(source.notes);
+                    if (mine.Count == 0) continue;
                     if (separateScenes && !view && !Object.FindObjectsByType<Camera>(FindObjectsSortMode.None).Any(c => c.gameObject.scene == master)) SetupView(source, plan.Outer());
                     view = true;
                     foreach (var index in mine)

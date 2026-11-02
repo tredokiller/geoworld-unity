@@ -358,6 +358,18 @@ at the lake's level inside it and goes back to its own over 40 m; the river's li
 covers are the lake's, and the river surface meets the lake's at the lake's level. A stream narrower than a cell and a half
 is drawn and carved 1.5 cells wide, so it is a line of water and not ground a few millimetres over it. The river surface is
 "Water | rivers" under Water bodies; the River objects only keep the paths for editing.
+Levels (GeoRiverLevels, 1.16): the water never meets other water at another level. Lines that continue each other are one
+chain that never rises downstream: a stream (narrower than 16 m) is the lowest level so far, never above the elevation data
+(a bump is cut through, and where it would be cut more than 4 m the stream is left dry there, as under a culvert), a river
+the nearest profile that never rises, at most 1 m above the data; nowhere steeper than 5 %. Where a chain runs through other
+water (a lake, or a wider river: a stream's mouth inside it, a side channel where it leaves it, a ditch across a canal) it is
+that water's level there, comes down to it before (or is backed up to it) and is never higher after; an end that only comes
+near other water meets it the same way. Where that would stand it more than 1 m over its data, cut it more than 4 m into it
+or make it rise downstream, it stops 4 m short of that water, with ground between them; below a dam (an outlet that falls
+away by more than 0.5 m) the water starts again 4 m beyond. A lake takes the level of the chain that leaves it; a lake a
+river only touches takes the river's level. The exports of a world level in turn, and a later one keeps an earlier one's
+levels on its ground. The export's note in the generation report says what was levelled and where water still meets water
+at another level (none should).
 Before (1.8.2 and earlier) a river was a ribbon of its own and its area a flat lake: the two crossed (the lake flat at one level
 for the whole area, the river falling along it), two rivers' ribbons lay over each other where they met, the inner side of a
 wide river's ribbon folded over itself at every bend of its line, and a river's line raised the bed of a lake it crossed into a

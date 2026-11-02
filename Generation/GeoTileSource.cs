@@ -94,9 +94,10 @@ namespace GeoWorld.Editor
         // origin: the south-west corner of tile (0, 0); null: the corner of the coordinates (0, 0), the same for every export
         // (see GeoTilePlan). env: the export when it has been read already.
         // blend, part: the ground of an export that meets others (GeoHeightBlend); lakeLevels: the level of each lake by its id,
-        // so that a lake in two exports has one level.
+        // so that a lake in two exports has one level; riverLevels: the rivers levelled by earlier exports (GeoRiverLevels), so
+        // that a river in two exports has one level.
         public static GeoTileSource Prepare(string environmentPath, string buildingsPath, GenerationSettings settings, float tileSize, Vector2? origin, EnvironmentData env = null,
-            GeoHeightBlend blend = null, int part = 0, Dictionary<string, float> lakeLevels = null)
+            GeoHeightBlend blend = null, int part = 0, Dictionary<string, float> lakeLevels = null, GeoRiverLevels riverLevels = null)
         {
             var s = new GeoTileSource { environmentPath = environmentPath, buildingsPath = buildingsPath, settings = settings, tileSize = tileSize };
             s.env = env ?? GeoData.ReadEnvironment(environmentPath);
@@ -118,8 +119,17 @@ namespace GeoWorld.Editor
                     if (string.IsNullOrEmpty(id)) continue;
                     if (lakeLevels.TryGetValue(id, out var level)) s.waterLevels[i] = level; else lakeLevels[id] = s.waterLevels[i];
                 }
-            // a river through a lake is at the lake's level (on the whole river, so every tile has the same)
-            GeoWater.SettleRivers(s.paths, s.env.water, s.waterLevels);
+            // the rivers' levels never rise downstream and meet the rivers they flow into and the lakes they flow through or touch
+            // at one level (on the whole export, so every tile has the same; an earlier export's where they overlap, on its ground)
+            var leveller = riverLevels ?? new GeoRiverLevels();
+            var own = s.env.bounds;
+            leveller.Level(s.paths, s.env.water, s.waterLevels, settings.pathStep, lakeLevels, own != null ? Rect.MinMaxRect(own.minX, own.minZ, own.maxX, own.maxZ) : (Rect?)null);
+            if (leveller.Chains > 0)
+                s.notes.Add($"Rivers levelled: {leveller.Chains} chains, {leveller.RiseRemoved:F1} m of rises downstream removed, " +
+                            $"{leveller.Tributaries} streams brought to their rivers, {leveller.LakesLevelled} lakes at a river's level, " +
+                            $"{leveller.Gaps} stretches ({leveller.GapMetres:F0} m) left dry (under bumps, at {leveller.Short} ends that would meet water with a step, " +
+                            $"below {leveller.Dams} dams), largest change {leveller.LargestChange:F2} m" +
+                            (leveller.Unmet > 0 ? $"; {leveller.Unmet} places where water still meets water at another level (worst {leveller.WorstUnmet:F2} m)." : "."));
             // room below for river beds and lakes, as a single world has (for exports that meet: below the lowest of them)
             s.baseY = (blend != null ? blend.Low : heights?.min ?? 0) - 8 - (settings.carveRivers ? settings.riverDepth + 1 : 0);
             s.range = Mathf.Max(32, (blend != null ? blend.High : heights?.max ?? 0) - s.baseY + 8);

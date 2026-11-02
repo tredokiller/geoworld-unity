@@ -80,8 +80,9 @@ namespace GeoWorld.Editor
                 roadNetwork.Connect(settings.junctionSnap,settings.pathStep);
                 Progress("Carving water and grading roads",0.12f);
                 var waterLevels=tile?.waterLevels??WaterLevels(env.water,field.Sample);
-                // a river through a lake is at the lake's level (a tiled world settles its rivers once, for the whole export)
-                if(tile==null) GeoWater.SettleRivers(paths,env.water,waterLevels);
+                // rivers that never rise downstream and meet their rivers and lakes at one level (a tiled world levels its rivers
+                // once, for the whole export: GeoTileSource)
+                if(tile==null) new GeoRiverLevels().Level(paths,env.water,waterLevels,settings.pathStep);
                 // lakes, rivers and their areas: one water that is never drawn twice (GeoWater)
                 var water=new GeoWater(field,env.water,waterLevels,tile?.rivers??paths,settings.riverDepth);
                 if(settings.carveRivers) water.Carve();
