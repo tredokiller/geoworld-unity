@@ -1,0 +1,28 @@
+{
+    "name": "GeoWorld.Environment.Editor",
+    "rootNamespace": "",
+    "references": [
+        "GeoWorld.Environment",
+        "GeoWorld.Runtime",
+        "GeoWorld.Generation",
+        "GeoWorld.Editor",
+        "Unity.RenderPipelines.Universal.Runtime",
+        "Unity.RenderPipelines.Core.Runtime"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "Newtonsoft.Json.dll"
+    ],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "ENVIRO_3",
+        "ODIN_INSPECTOR"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

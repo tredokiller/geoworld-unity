@@ -1,0 +1,65 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Water (sea)
+  m_Shader: {fileID: 4800000, guid: 4df6d819f168767458e6b5c355fe3eee, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _FoamTex:
+        m_Texture: {fileID: 2800000, guid: 62eeec30a68f2d14996a082e3939b7c8, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _WaterHeight:
+        m_Texture: {fileID: 2800000, guid: 9f1d5e83b0b47104684e6a5b22948a21, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _WaterNormal:
+        m_Texture: {fileID: 2800000, guid: 53b00ac4b7ee2fb4681d46ce396bde98, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _CalmSwell: 0.25
+    - _Distortion: 0.5
+    - _FoamTiling: 4
+    - _Rain: 0.7
+    - _Ripples: 1
+    - _WashFoam: 1
+    - _WashStreaks: 1
+    m_Colors:
+    - _Chop: {r: 3.5, g: 0.2, b: 0, a: 0}
+    - _CleanFalloff: {r: 1, g: 0.3, b: 0, a: 0}
+    - _DeepColor: {r: 0.012, g: 0.045, b: 0.06, a: 1}
+    - _EdgeFalloff: {r: 3, g: 0.74, b: 0, a: 0}
+    - _FarNormal: {r: 60, g: 0.6, b: 0, a: 0}
+    - _FarReflection: {r: 400, g: 0.8, b: 0, a: 0}
+    - _ShallowColor: {r: 0.1, g: 0.27, b: 0.25, a: 1}
+    - _ShallowFalloff: {r: 1.2, g: 2, b: 0, a: 0}
+    - _Smoothness: {r: 0.97, g: 0.88, b: 0, a: 0}
+    - _Specular: {r: 0.094, g: 0.02, b: 0.35, a: 0}
+    - _Surf: {r: 2.5, g: 0.9, b: 0.12, a: 0.8}
+    - _Swell: {r: 55, g: 0.35, b: 0, a: 0}
+    - _Translucency: {r: 0.6, g: 150, b: 0, a: 0}
+    - _WaterAlpha: {r: 0.35, g: 0.8, b: 0, a: 0}
+    - _Waves: {r: 14, g: 0.3, b: 0, a: 0}
+    - _Whitecaps: {r: 5, g: 14, b: 0.8, a: 0}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1

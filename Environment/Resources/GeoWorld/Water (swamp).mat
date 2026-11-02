@@ -1,0 +1,88 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Water (swamp)
+  m_Shader: {fileID: 4800000, guid: 479e5e9a82134ea49ba1afe390fcfe75, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _AlgaeNormal:
+        m_Texture: {fileID: 2800000, guid: 7fc45e10f5b3c8543aad5d2fafb8430f, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _AlgaeTex:
+        m_Texture: {fileID: 2800000, guid: b8eb42f226f3e07428d524eb7a73251b, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailNoise:
+        m_Texture: {fileID: 2800000, guid: 66398daa156cf5e4886d181446169ca5, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailSmoothness:
+        m_Texture: {fileID: 2800000, guid: c11838f0692dc4c4a8be386a74aa7f26, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DuckweedNormal:
+        m_Texture: {fileID: 2800000, guid: fc322bf55b59260448be2d3ccf25ac91, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DuckweedTex:
+        m_Texture: {fileID: 2800000, guid: 14d1b20a4da601e40bc528c48ead20c7, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _FoamTex:
+        m_Texture: {fileID: 2800000, guid: 62eeec30a68f2d14996a082e3939b7c8, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _WaterNormal:
+        m_Texture: {fileID: 2800000, guid: 53b00ac4b7ee2fb4681d46ce396bde98, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _CalmNormal: 0.02
+    - _Details: 1
+    - _Distortion: 0.2
+    - _FoamTiling: 3
+    - _OpenWeeds: 0.35
+    - _Rain: 1
+    - _Ripples: 0.6
+    - _ShoreWeeds: 1.2
+    - _WashFoam: 0.5
+    - _WashStreaks: 0.5
+    - _WaterTiling: 3.33
+    m_Colors:
+    - _Algae: {r: 0.125, g: 1.6, b: 5, a: 2}
+    - _CleanFalloff: {r: 3, g: 0.3, b: 0, a: 0}
+    - _DeepColor: {r: 0.04, g: 0.032, b: 0.014, a: 1}
+    - _Duckweed: {r: 0.33, g: 3, b: 4, a: 2.6}
+    - _EdgeFalloff: {r: 5.19, g: 0.74, b: 0, a: 0}
+    - _FarNormal: {r: 30, g: 0.5, b: 0, a: 0}
+    - _FarReflection: {r: 250, g: 0.55, b: 0, a: 0}
+    - _Scum: {r: 6, g: 0.25, b: 0, a: 0}
+    - _ShallowColor: {r: 0.17, g: 0.14, b: 0.07, a: 1}
+    - _ShallowFalloff: {r: 8, g: 3, b: 0, a: 0}
+    - _Smoothness: {r: 0.97, g: 0.72, b: 0, a: 0}
+    - _Specular: {r: 0.06, g: 0, b: 0.35, a: 0}
+    - _WaterAlpha: {r: 3, g: 0.6, b: 0, a: 0}
+    - _WaterDrift: {r: 0.004, g: 0.0025, b: 0, a: 0}
+    - _WindRipples: {r: 3, g: 0.04, b: 0, a: 0}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1

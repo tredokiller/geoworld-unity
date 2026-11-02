@@ -1,0 +1,13 @@
+Кора ствола сосны — фото-сканы Poly Haven (CC0 1.0, https://polyhaven.com, скачаны 01.11.2026), переведены в набор коры
+NatureManufacture скриптом Tools~/TreeGen/photo_bark.py; процедурная кора pine_textures.py (ячейки-пластины) читалась
+нарисованной. Цвет — средний прежней коры (тон материалов _TrunkBaseColor не менялся).
+  pine_bark_lower_*  pine_bark (Dimitrios Savva), 4K: кусок 0.6 x 1.2 м в настоящем масштабе, сшитый в бесшовный; на
+                     прямоугольнике deadwood_rect (UV сухих сучьев) — тот же скан без цвета, чуть светлее коры
+                     py -I Tools~/TreeGen/photo_bark.py <папка pine_bark 4K> Packages/com.tredokiller.geoworld/Environment/Vegetation/Generated/Pine/pine_bark_lower
+                         --size 1024 2048 --mean 0.1865 0.1073 0.0713 --saturation 0.85 --crop 0.6 1.2 --scan 2 2
+                         --grey-rect 0.5419921875 0.216796875 0.6630859375 0.310546875
+  pine_bark_upper_*  japanese_zelkova_bark (Charlotte Baglioni), 2K: шелушащиеся пластинки с рыжим подслоем, весь скан
+                     1.8 м в плитку 0.5 м
+                     py -I Tools~/TreeGen/photo_bark.py <папка japanese_zelkova_bark> Packages/com.tredokiller.geoworld/Environment/Vegetation/Generated/Pine/pine_bark_upper
+                         --size 1024 1024 --mean 0.4582 0.1663 0.0613 --saturation 1.0
+Повторная генерация сосны (pine_gen.py) кладёт процедурную кору обратно — после неё снова запустить эти команды.

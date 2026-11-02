@@ -1,0 +1,18 @@
+Мёртвая древесина леса (Tools~/TreeGen: deadwood_gen.py — сканы, deadwood_cut_gen.py — спиленное). Всё — CC0 1.0 или
+своё, поэтому годится для GeoWorld.
+
+Poly Haven (https://polyhaven.com), CC0 1.0, модели glTF 2K, скачаны 01.11.2026; сетки упрощены (Decimate), нормаль
+запечена с исходника, текстуры сведены к 1024²:
+
+  deadwood_log_01      dead_tree_trunk          поваленный ствол 3 м       Rob Tuytel
+  deadwood_log_02      dead_tree_trunk_02       ствол 4 м с суком          Jenelle van Heerden, Rico Cilliers
+  deadwood_stump_01    tree_stump_01            старый пень в бугре        Rob Tuytel
+  deadwood_stump_02    tree_stump_02            старый пень в бугре        Rob Tuytel
+  deadwood_branch_01..03  dry_branches_medium_01   сухие сучья 0.8–1.3 м   Rico Cilliers
+
+Спиленные пни, брёвна и штабель (deadwood_cut_*, deadwood_sawn_log_*, deadwood_log_stack_01) — своя процедурная
+геометрия и свои торцы (годичные кольца, трещины, следы пилы); кора — Poly Haven, CC0 1.0, текстуры 2K, скачаны
+01.11.2026:
+
+  deadwood_cut_oak     bark_willow_02           бурая бороздчатая кора     Charlotte Baglioni
+  deadwood_cut_pine    pine_bark                кора сосны                 Dimitrios Savva

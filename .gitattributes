@@ -1,0 +1,18 @@
+# Large binaries of the moved world-generation content (ThirdParty: Nature Renderer, NatureManufacture; Environment: vegetation, textures) go through Git LFS
+ThirdParty/**/*.tga filter=lfs diff=lfs merge=lfs -text
+ThirdParty/**/*.png filter=lfs diff=lfs merge=lfs -text
+ThirdParty/**/*.psd filter=lfs diff=lfs merge=lfs -text
+ThirdParty/**/*.fbx filter=lfs diff=lfs merge=lfs -text
+ThirdParty/**/*.FBX filter=lfs diff=lfs merge=lfs -text
+ThirdParty/**/*.asset filter=lfs diff=lfs merge=lfs -text
+ThirdParty/**/*.dll filter=lfs diff=lfs merge=lfs -text
+ThirdParty/**/*.pdf filter=lfs diff=lfs merge=lfs -text
+Environment/**/*.png filter=lfs diff=lfs merge=lfs -text
+Environment/**/*.jpg filter=lfs diff=lfs merge=lfs -text
+Environment/**/*.tga filter=lfs diff=lfs merge=lfs -text
+Environment/**/*.fbx filter=lfs diff=lfs merge=lfs -text
+Environment/**/*.asset filter=lfs diff=lfs merge=lfs -text
+Environment/**/*.ogg filter=lfs diff=lfs merge=lfs -text
+Environment/**/*.wav filter=lfs diff=lfs merge=lfs -text
+Environment/**/*.exr filter=lfs diff=lfs merge=lfs -text
+Environment/**/*.tif filter=lfs diff=lfs merge=lfs -text

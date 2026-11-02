@@ -1,0 +1,23 @@
+{
+    "name": "GeoWorld.Environment",
+    "rootNamespace": "",
+    "references": [
+        "GeoWorld.Runtime",
+        "GeoWorld.Generation",
+        "Unity.RenderPipelines.Universal.Runtime",
+        "Unity.RenderPipelines.Core.Runtime",
+        "Enviro3.Runtime"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "ENVIRO_3",
+        "ODIN_INSPECTOR"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

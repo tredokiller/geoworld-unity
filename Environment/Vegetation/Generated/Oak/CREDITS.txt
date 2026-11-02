@@ -1,0 +1,12 @@
+Кора ствола дуба (oak_bark_albedo/_normal/_mask.png) — фото-скан Poly Haven jolcham_oak_bark_01 (Charlotte Baglioni,
+CC0 1.0, https://polyhaven.com, 2K, скачан 01.11.2026), переведён в набор коры NatureManufacture скриптом
+Tools~/TreeGen/photo_bark.py (весь скан 1 x 2 м сжат в плитку меша 0.6 x 1.2 м, цвет приведён к средней процедурной коры
+#59534B). Процедурная кора oak_textures.py читалась нарисованными пластинами. Повторная генерация дуба (oak_gen.py)
+кладёт процедурную кору обратно — после неё снова запустить photo_bark.py:
+  py -I Tools~/TreeGen/photo_bark.py <папка jolcham_oak_bark_01> Packages/com.tredokiller.geoworld/Environment/Vegetation/Generated/Oak/oak_bark
+      --size 1024 2048 --mean 0.100 0.087 0.070 --saturation 0.7
+Остальное в папке (меш, листва, кора ветвей) — своё, процедурное.
+
+Сухостой, снаги и бурелом (oak_dead_*, oak_snag_*, oak_broken_*): своя процедурная геометрия oak_gen.py; кора ствола
+oak_dead_bark — тот же скан jolcham_oak_bark_01 без цвета (photo_bark.py --mean 0.105 0.098 0.087 --saturation 0.35),
+кора ветвей oak_dead_branch — процедурная кора ветвей дуба без цвета.

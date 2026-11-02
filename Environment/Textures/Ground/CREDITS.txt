@@ -1,0 +1,44 @@
+Текстуры земли для смешивания со спутником вблизи камеры. Каждый набор — <имя>_diff (цвет), _nor_gl (нормали OpenGL, как в
+Unity), _rough (шероховатость), _ao, _disp (высота, 8 бит) в JPG.
+
+PolyHaven/ — Poly Haven (https://polyhaven.com), CC0 1.0, скачаны 2K 31.10.2026; высота сведена из 16-битного PNG в JPG.
+Размер одного повтора — по данным Poly Haven.
+
+  farm_furrows          пашня                          2.1 x 2.1 м   Amal Kumar
+  forrest_ground_03     сосновый бор, хвоя             2 x 2 м       Rob Tuytel
+  forrest_sand_01       хвоя на песке                  2 x 2 м       Rob Tuytel
+  dirt_aerial_02        сухая грунтовка с колеями      20 x 20 м     Rob Tuytel
+  aerial_mud_1          мокрая грунтовка с колеями     8 x 8 м       Rob Tuytel
+  brown_mud_03          мокрая земля                   1.3 x 1.3 м   Rob Tuytel
+  brown_mud_rocks_01    берег с камнями                1.3 x 1.3 м   Rob Tuytel
+  dry_mud_field_001     сухое поле, полевая дорога     3 x 3 м       Rob Tuytel, Rico Cilliers
+  grass_ground          сухая трава, дёрн              2.5 x 2.5 м   Charlotte Baglioni
+  asphalt_02            асфальт                        3 x 3 м       Rob Tuytel
+  concrete_pavement_02  плитка                         1.8 x 1.8 м   Charlotte Baglioni
+  gravel_road           гравийка                       2 x 2 м       Amal Kumar
+
+Лесная подстилка (ForestFloor), скачаны 2K 01.11.2026:
+
+  forest_leaves_04      подстилка: лист, ветки         1.5 x 1.5 м   Rob Tuytel
+  dry_decay_leaves      опавший буро-медный лист       2 x 2 м       Amal Kumar
+  leaves_forest_ground  пёстрый опавший лист           1.26 x 1.26 м Dario Barresi, Dimitrios Savva
+  forest_leaves_02      лист со мхом                   3 x 3 м       Rob Tuytel
+
+UnityTerrainPack/ — Unity Terrain Sample Asset Pack (Unity Technologies, лицензия Asset Store), взяты из проекта
+FPV Defence Simulator (Assets/_Game/Textures/Terrain): BaseColor -> _diff, Normal -> _nor_gl, MaskMap: G -> _ao, B -> _disp
+(металличность в R нулевая, гладкости в наборе нет, поэтому _rough нет).
+
+  Grass_A      зелёный луг        Grass_Dry    сухая трава, степь, стерня
+  Grass_Soil   трава с почвой     Grass_Moss   трава с мхом
+  Muddy        тёмная грязь       Tidal_Pools  грязь с лужами (болото)
+  Sand         песок              Pebbles_C    гравий, насыпь
+  Rock         камень (мел — с подкраской)
+
+NatureManufacture/forest_leaves — лиственная подстилка (тополь) из Meadow Environment Dynamic Nature
+(T_forest_ground_leaves_01, лицензия Asset Store), переведена из TGA в тот же вид. В наборе её больше нет: слой леса —
+forest_litter (Poly Haven, CC0), чтобы фактуру можно было перенести в GeoWorld.
+
+<имя>_mask.jpg — маски для фактуры земли (GroundDetail): R высота (растянута по 1–99 перцентилям), G AO, B гладкость
+(1 − шероховатость; у набора Unity — 0.1). Пакует Tools~/GroundTextures/pack_ground_masks.py; набор слоёв и классов
+собирает Tools/Environment/Build Ground Detail Set в Environment/Resources/Terrain/GroundDetailSet.asset.
+В игре из каждого набора — только _diff, _nor_gl и _mask; _rough, _ao и _disp — исходники масок.

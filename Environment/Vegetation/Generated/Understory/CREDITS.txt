@@ -1,0 +1,3 @@
+Подлесок (Tools~/TreeGen/understory_gen.py): своя процедурная геометрия; текстуры — из генератора дуба (oak_gen.py): кора
+ветвей oak_branch и oak_dead_branch (процедурные), листва oak_leaves (процедурная) с полосой коры в верху ячейки 0
+(understory_leaves). Сторонних ассетов нет — годится для GeoWorld.
