@@ -14,15 +14,16 @@ namespace _Game.Scripts.World
     /// колеями, тропинки, плитку, насыпь рельсов. Фактуры — слои набора фактуры земли (GroundDetailSet, по имени —
     /// _RoadLayers): своих сэмплеров у прохода террейна не осталось. Карта перерисовывается, когда камера уходит от середины
     /// окна на recentreDistance. Один на сцену (добавляет WeatherManager).
+    /// Окна два: ближнее (windowSize, 1 м на тексель — точные кромки, разметка, колеи у дрона) и дальнее (farWindowSize, до
+    /// дальности загрузки тайлов, грубее — _RoadMapFar, _RoadMapInfoFar, _RoadJunctionFar, _RoadMapRectFar). С одним окном в
+    /// 512 м дороги обрывались в ~250 м от дрона. В дальнем те же отрезки, и террейн мерит до них так же точно, просто в
+    /// тексель попадает меньше соседних дорог; полоса каждой дороги там шире на тексель, чтобы узкие не проваливались между
+    /// текселями. Террейн берёт ближнее окно внутри него, дальнее — за ним.
     /// </summary>
     public class RoadMap : MonoBehaviour
     {
         private const string MaterialResource = "Materials/RoadMap";
         private const string DetailSetResource = "Terrain/GroundDetailSet";
-        private static readonly int MapId = Shader.PropertyToID("_RoadMap");
-        private static readonly int InfoId = Shader.PropertyToID("_RoadMapInfo");
-        private static readonly int JunctionId = Shader.PropertyToID("_RoadJunction");
-        private static readonly int RectId = Shader.PropertyToID("_RoadMapRect");
         private static readonly int LayersId = Shader.PropertyToID("_RoadLayers");
         private static readonly int Layers2Id = Shader.PropertyToID("_RoadLayers2");
         private static readonly int AsphaltAlbedoId = Shader.PropertyToID("_RoadAsphaltAlbedo");
@@ -44,23 +45,52 @@ namespace _Game.Scripts.World
         [Tooltip("На сколько камера уходит от середины окна, прежде чем карту перерисовать, м.")]
         [SerializeField] private float recentreDistance = 64f;
 
+        [Header("Far window")]
+        [Tooltip("Сторона дальнего окна, м (тайлы грузятся до ~2 км от камеры). Не больше ближнего — дальнего окна нет.")]
+        [SerializeField] private float farWindowSize = 4096f;
+        [Tooltip("Текселей по стороне дальнего окна (4 м на тексель при 1024 и 4096 м; три текстуры ~46 МБ).")]
+        [SerializeField] private int farResolution = 1024;
+        [Tooltip("На сколько камера уходит от середины дальнего окна, прежде чем его перерисовать, м.")]
+        [SerializeField] private float farRecentreDistance = 512f;
+
+        // Окно карты: три текстуры, свои отрезки и где оно лежит.
+        private sealed class Window
+        {
+            public readonly string Name;
+            public readonly int MapId;
+            public readonly int InfoId;
+            public readonly int JunctionId;
+            public readonly int RectId;
+            // отрезки (концы A, B) и их данные (полуширина, вдоль у A, вид и номер дороги)
+            public RenderTexture Map;
+            public RenderTexture Info;
+            // перекрёстки: R — меньший номер дороги, накрывающей точку, A — больший (Hidden/Game/Road Map, проход 1)
+            public RenderTexture Junction;
+            public Mesh Mesh;
+            public Vector2 Origin;
+            public bool Drawn;
+
+            public Window(string name, string suffix)
+            {
+                Name = name;
+                MapId = Shader.PropertyToID("_RoadMap" + suffix);
+                InfoId = Shader.PropertyToID("_RoadMapInfo" + suffix);
+                JunctionId = Shader.PropertyToID("_RoadJunction" + suffix);
+                RectId = Shader.PropertyToID("_RoadMapRect" + suffix);
+            }
+        }
+
         private readonly List<Vector3> _positions = new();
         private readonly List<Vector2> _a = new();
         private readonly List<Vector2> _b = new();
         private readonly List<Vector4> _road = new();
         private readonly List<Vector2> _id = new();
         private readonly List<int> _indices = new();
-        // отрезки (концы A, B) и их данные (полуширина, вдоль у A, вид и номер дороги)
-        private RenderTexture _map;
-        private RenderTexture _info;
         private readonly RenderTargetIdentifier[] _targets = new RenderTargetIdentifier[2];
-        // перекрёстки: R — меньший номер дороги, накрывающей точку, A — больший (Hidden/Game/Road Map, проход 1)
-        private RenderTexture _junction;
+        private readonly Window _near = new("Road map", "");
+        private readonly Window _far = new("Road map far", "Far");
         private Material _material;
-        private Mesh _mesh;
         private CommandBuffer _commands;
-        private Vector2 _origin;
-        private bool _drawn;
         private bool _layersFound;
         private Vector4 _layers;
         private Vector4 _layers2;
@@ -71,28 +101,8 @@ namespace _Game.Scripts.World
 
         private void OnDisable()
         {
-            Shader.SetGlobalVector(RectId, Vector4.zero);
-
-            if (_map != null)
-            {
-                _map.Release();
-                Destroy(_map);
-            }
-
-            if (_junction != null)
-            {
-                _junction.Release();
-                Destroy(_junction);
-            }
-
-            if (_info != null)
-            {
-                _info.Release();
-                Destroy(_info);
-            }
-
-            if (_mesh != null)
-                Destroy(_mesh);
+            ReleaseWindow(_near);
+            ReleaseWindow(_far);
 
             foreach (Texture2DArray array in _arrays)
             {
@@ -108,12 +118,32 @@ namespace _Game.Scripts.World
 
             _commands?.Release();
             _commands = null;
-            _map = null;
-            _info = null;
-            _junction = null;
-            _mesh = null;
             _material = null;
-            _drawn = false;
+        }
+
+        private static void ReleaseWindow(Window window)
+        {
+            Shader.SetGlobalVector(window.RectId, Vector4.zero);
+            Release(ref window.Map);
+            Release(ref window.Info);
+            Release(ref window.Junction);
+
+            if (window.Mesh != null)
+                Destroy(window.Mesh);
+
+            window.Mesh = null;
+            window.Drawn = false;
+        }
+
+        private static void Release(ref RenderTexture texture)
+        {
+            if (texture != null)
+            {
+                texture.Release();
+                Destroy(texture);
+            }
+
+            texture = null;
         }
 
         private void LateUpdate()
@@ -124,53 +154,64 @@ namespace _Game.Scripts.World
                 return;
 
             Vector2 eye = new(camera.transform.position.x, camera.transform.position.z);
-            Vector2 centre = _origin + Vector2.one * (windowSize * 0.5f);
-
-            if (_drawn && _map.IsCreated() && (eye - centre).sqrMagnitude < recentreDistance * recentreDistance)
-                return;
-
-            Draw(eye);
-        }
-
-        private void Draw(Vector2 eye)
-        {
-            float texel = windowSize / resolution;
-            // начало окна — по сетке текселей: когда окно переезжает, дорога не дрожит
-            _origin = new Vector2(Mathf.Floor((eye.x - windowSize * 0.5f) / texel) * texel, Mathf.Floor((eye.y - windowSize * 0.5f) / texel) * texel);
-            _drawn = true;
-            BuildMesh(RoadAreas.Instance.SegmentsIn(new Rect(_origin, Vector2.one * windowSize)));
-
-            _commands.Clear();
-            _targets[0] = _map;
-            _targets[1] = _info;
-            _commands.SetRenderTarget(_targets, _map.depthBuffer);
-            // полуширина 0 — дороги рядом нет
-            _commands.ClearRenderTarget(true, true, Color.clear, 1f);
-            _commands.SetGlobalVector(DrawId, new Vector4(_origin.x, _origin.y, 1f / windowSize, SystemInfo.graphicsUVStartsAtTop ? -1f : 1f));
-            _commands.SetGlobalVector(ReachId, new Vector4(reach, 0f, 0f, 0f));
-
-            if (_mesh.vertexCount > 0)
-                _commands.DrawMesh(_mesh, Matrix4x4.identity, _material, 0, 0);
-
-            _commands.SetRenderTarget(_junction);
-            _commands.ClearRenderTarget(false, true, new Color(60000f, 0f, 0f, -1f));
-
-            if (_mesh.vertexCount > 0)
-                _commands.DrawMesh(_mesh, Matrix4x4.identity, _material, 0, 1);
-
-            Graphics.ExecuteCommandBuffer(_commands);
-            Shader.SetGlobalTexture(MapId, _map);
-            Shader.SetGlobalTexture(InfoId, _info);
-            Shader.SetGlobalTexture(JunctionId, _junction);
             Shader.SetGlobalVector(LayersId, _layers);
             Shader.SetGlobalVector(Layers2Id, _layers2);
             Shader.SetGlobalVector(AsphaltId, _asphalt);
-            Shader.SetGlobalVector(RectId, new Vector4(_origin.x, _origin.y, 1f / windowSize, resolution));
+            UpdateWindow(_near, eye, windowSize, resolution, recentreDistance, 0f);
+
+            if (HasFarWindow)
+                UpdateWindow(_far, eye, farWindowSize, farResolution, farRecentreDistance, farWindowSize / farResolution);
         }
 
-        // Прямоугольник по полотну отрезка с запасом — четыре вершины; в каждой — концы отрезка, полуширина, вдоль у A, до
-        // конца дороги и вид, фрагмент сам считает до оси.
-        private void BuildMesh(RoadAreas.Segment[] segments)
+        private bool HasFarWindow => farWindowSize > windowSize && farResolution > 1;
+
+        private void UpdateWindow(Window window, Vector2 eye, float size, int texels, float recentre, float margin)
+        {
+            Vector2 centre = window.Origin + Vector2.one * (size * 0.5f);
+
+            if (window.Drawn && window.Map.IsCreated() && (eye - centre).sqrMagnitude < recentre * recentre)
+                return;
+
+            Draw(window, eye, size, texels, margin);
+        }
+
+        // margin — запас на тексель окна сверх reach: полоса дороги не уже текселя, узкая не проваливается между ними.
+        private void Draw(Window window, Vector2 eye, float size, int texels, float margin)
+        {
+            float texel = size / texels;
+            // начало окна — по сетке текселей: когда окно переезжает, дорога не дрожит
+            window.Origin = new Vector2(Mathf.Floor((eye.x - size * 0.5f) / texel) * texel, Mathf.Floor((eye.y - size * 0.5f) / texel) * texel);
+            window.Drawn = true;
+            BuildMesh(window.Mesh, RoadAreas.Instance.SegmentsIn(new Rect(window.Origin, Vector2.one * size)), reach + margin);
+
+            _commands.Clear();
+            _targets[0] = window.Map;
+            _targets[1] = window.Info;
+            _commands.SetRenderTarget(_targets, window.Map.depthBuffer);
+            // полуширина 0 — дороги рядом нет
+            _commands.ClearRenderTarget(true, true, Color.clear, 1f);
+            _commands.SetGlobalVector(DrawId, new Vector4(window.Origin.x, window.Origin.y, 1f / size, SystemInfo.graphicsUVStartsAtTop ? -1f : 1f));
+            _commands.SetGlobalVector(ReachId, new Vector4(reach + margin, margin, 0f, 0f));
+
+            if (window.Mesh.vertexCount > 0)
+                _commands.DrawMesh(window.Mesh, Matrix4x4.identity, _material, 0, 0);
+
+            _commands.SetRenderTarget(window.Junction);
+            _commands.ClearRenderTarget(false, true, new Color(60000f, 0f, 0f, -1f));
+
+            if (window.Mesh.vertexCount > 0)
+                _commands.DrawMesh(window.Mesh, Matrix4x4.identity, _material, 0, 1);
+
+            Graphics.ExecuteCommandBuffer(_commands);
+            Shader.SetGlobalTexture(window.MapId, window.Map);
+            Shader.SetGlobalTexture(window.InfoId, window.Info);
+            Shader.SetGlobalTexture(window.JunctionId, window.Junction);
+            Shader.SetGlobalVector(window.RectId, new Vector4(window.Origin.x, window.Origin.y, 1f / size, texels));
+        }
+
+        // Прямоугольник по полотну отрезка с запасом grow за кромкой — четыре вершины; в каждой — концы отрезка, полуширина,
+        // вдоль у A, до конца дороги и вид, фрагмент сам считает до оси.
+        private void BuildMesh(Mesh mesh, RoadAreas.Segment[] segments, float margin)
         {
             _positions.Clear();
             _a.Clear();
@@ -189,7 +230,7 @@ namespace _Game.Scripts.World
 
                 Vector2 along = ab / length;
                 Vector2 across = new(-along.y, along.x);
-                float grow = segment.HalfWidth + reach;
+                float grow = segment.HalfWidth + margin;
                 Vector2 start = segment.A - along * grow;
                 Vector2 end = segment.B + along * grow;
                 // вид, разметка, износ, бордюр и концы дороги (RoadMapCommon.hlsl) — целым в float
@@ -213,15 +254,15 @@ namespace _Game.Scripts.World
                 _indices.Add(first + 3);
             }
 
-            _mesh.Clear();
-            _mesh.indexFormat = _positions.Count > 65000 ? IndexFormat.UInt32 : IndexFormat.UInt16;
-            _mesh.SetVertices(_positions);
-            _mesh.SetUVs(0, _a);
-            _mesh.SetUVs(1, _b);
-            _mesh.SetUVs(2, _road);
-            _mesh.SetUVs(3, _id);
-            _mesh.SetTriangles(_indices, 0, false);
-            _mesh.bounds = new Bounds(Vector3.zero, Vector3.one * 1e6f);
+            mesh.Clear();
+            mesh.indexFormat = _positions.Count > 65000 ? IndexFormat.UInt32 : IndexFormat.UInt16;
+            mesh.SetVertices(_positions);
+            mesh.SetUVs(0, _a);
+            mesh.SetUVs(1, _b);
+            mesh.SetUVs(2, _road);
+            mesh.SetUVs(3, _id);
+            mesh.SetTriangles(_indices, 0, false);
+            mesh.bounds = new Bounds(Vector3.zero, Vector3.one * 1e6f);
         }
 
         private void AddVertex(Vector2 corner, RoadAreas.Segment segment, Vector4 data, Vector2 id)
@@ -256,68 +297,42 @@ namespace _Game.Scripts.World
             }
 
             _commands ??= new CommandBuffer { name = "Road map" };
+            EnsureWindow(_near, resolution);
 
-            if (_mesh == null)
-                _mesh = new Mesh { name = "Road map segments", hideFlags = HideFlags.HideAndDontSave };
-
-            if (_map == null || _map.width != resolution || !_map.IsCreated())
-            {
-                if (_map != null)
-                {
-                    _map.Release();
-                    Destroy(_map);
-                }
-
-                _map = new RenderTexture(resolution, resolution, 24, RenderTextureFormat.ARGBFloat, RenderTextureReadWrite.Linear)
-                {
-                    name = "Road map",
-                    filterMode = FilterMode.Point,
-                    wrapMode = TextureWrapMode.Clamp,
-                    useMipMap = false
-                };
-                _map.Create();
-                _drawn = false;
-            }
-
-            if (_info == null || _info.width != resolution || !_info.IsCreated())
-            {
-                if (_info != null)
-                {
-                    _info.Release();
-                    Destroy(_info);
-                }
-
-                _info = new RenderTexture(resolution, resolution, 0, RenderTextureFormat.ARGBFloat, RenderTextureReadWrite.Linear)
-                {
-                    name = "Road map info",
-                    filterMode = FilterMode.Point,
-                    wrapMode = TextureWrapMode.Clamp,
-                    useMipMap = false
-                };
-                _info.Create();
-                _drawn = false;
-            }
-
-            if (_junction == null || _junction.width != resolution || !_junction.IsCreated())
-            {
-                if (_junction != null)
-                {
-                    _junction.Release();
-                    Destroy(_junction);
-                }
-
-                _junction = new RenderTexture(resolution, resolution, 0, RenderTextureFormat.ARGBHalf, RenderTextureReadWrite.Linear)
-                {
-                    name = "Road junctions",
-                    filterMode = FilterMode.Point,
-                    wrapMode = TextureWrapMode.Clamp,
-                    useMipMap = false
-                };
-                _junction.Create();
-                _drawn = false;
-            }
+            if (HasFarWindow)
+                EnsureWindow(_far, farResolution);
+            else if (_far.Map != null)
+                ReleaseWindow(_far);
 
             return true;
+        }
+
+        private static void EnsureWindow(Window window, int texels)
+        {
+            if (window.Mesh == null)
+                window.Mesh = new Mesh { name = window.Name + " segments", hideFlags = HideFlags.HideAndDontSave };
+
+            window.Drawn &= EnsureTexture(ref window.Map, texels, 24, RenderTextureFormat.ARGBFloat, window.Name);
+            window.Drawn &= EnsureTexture(ref window.Info, texels, 0, RenderTextureFormat.ARGBFloat, window.Name + " info");
+            window.Drawn &= EnsureTexture(ref window.Junction, texels, 0, RenderTextureFormat.ARGBHalf, window.Name + " junctions");
+        }
+
+        // false — текстуру пришлось создать заново (окно надо перерисовать).
+        private static bool EnsureTexture(ref RenderTexture texture, int texels, int depth, RenderTextureFormat format, string textureName)
+        {
+            if (texture != null && texture.width == texels && texture.IsCreated())
+                return true;
+
+            Release(ref texture);
+            texture = new RenderTexture(texels, texels, depth, format, RenderTextureReadWrite.Linear)
+            {
+                name = textureName,
+                filterMode = FilterMode.Point,
+                wrapMode = TextureWrapMode.Clamp,
+                useMipMap = false
+            };
+            texture.Create();
+            return false;
         }
 
         // Полосы асфальта GeoWorld — в два массива (альбедо, нормали): все одного размера и формата, копия на GPU. Без набора

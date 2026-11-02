@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.17.1
+
+- From the Interceptor Drones game (Slavik's changes made there before the move): roads visible to the edge of the loaded tiles through a far road map (`RoadMap`, `GroundRoads.hlsl`, `RoadMap.shader`); marsh ground drier in dry weather (`GroundWetness`, `Puddles.hlsl`); far grass stage 0-1 — Nature Renderer thinning compensation and light plants that grow with the grass distance (`NatureRendererSettings`, the instancing compute shader), `GroundDressing.Busy` for the game's grass benchmark, field card prefabs and `field_cards_gen.py`.
+
 ## 1.17.0
 
 - World dressing from the Interceptor Drones game, where all of it was checked in flight, moved into the package for use inside the company (the package is private: it now carries licensed third-party content).

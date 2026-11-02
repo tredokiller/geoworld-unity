@@ -194,6 +194,9 @@ namespace _Game.Scripts.World
             $"main={(_dressedCount > 0 ? _mainMilliseconds / _dressedCount : 0):F1}ms (frame max {_frameMillisecondsMax:F1}ms) " +
             $"dressed now={CountDressed()} running={_running.Count}";
 
+        // Идёт расчёт или сборка тайла (GrassBenchmark ждёт, пока трава вокруг камеры досчитается).
+        public bool Busy => _running.Count > 0 || _reading > 0 || _building != null;
+
         public void Configure(FlyPointEnvironmentProfile profile) => _profile = profile;
 
         private void OnEnable()

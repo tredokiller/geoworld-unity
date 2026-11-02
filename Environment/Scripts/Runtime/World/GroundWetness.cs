@@ -179,7 +179,8 @@ namespace _Game.Scripts.World
                 return 0f;
 
             float puddleThreshold = PuddleLevel > 0.001f ? 0.873f - 0.313f * suitability * 0.95f + (1f - PuddleLevel) * 0.3f : 2f;
-            float marshThreshold = Mathf.Lerp(1.2f, Mathf.Lerp(0.70f, 0.60f, PuddleLevel), marsh);
+            // как MarshThreshold в Puddles.hlsl: в сухую погоду вода на ~4 % болота, в долгий дождь — на ~25 %
+            float marshThreshold = Mathf.Lerp(1.2f, Mathf.Lerp(0.76f, 0.60f, PuddleLevel), marsh);
             float threshold = Mathf.Min(puddleThreshold, marshThreshold);
 
             if (threshold > 0.97f || Mathf.Max(suitability, marsh) < 0.02f)

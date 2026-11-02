@@ -1292,9 +1292,10 @@ MATERIALS = {
     'field_cards_sprouts': dict(SPROUT_PROPS, texture='sprouts_side'),
     'field_cards_sprouts_top': dict(SPROUT_PROPS, texture='sprouts_top'),
 }
-# прореживание вдали выключено (1.0): Nature Renderer убирает пятно 1.5 м целиком — дырой, а по чему он меряет долю
-# кадра (высота 0.2 м или габарит 1.5 м) не проверено
-NATURE_RENDERER = dict(renderDistance=100.0, shadows=False, densityInDistance=1.0)
+# прореживание вдали — до 0.2: Nature Renderer убирал пятно 1.5 м целиком — дырой, но теперь оставленные пятна растут на
+# столько, сколько ушло (компенсация в Nature Renderer Instancing.compute, NatureRendererSettings.densityCompensation), и
+# покрытие то же. Долю кадра Nature Renderer меряет по габариту прототипа (LOD0, ~1.5 м): прореживание идёт с ~50 до ~220 м
+NATURE_RENDERER = dict(renderDistance=100.0, shadows=False, densityInDistance=0.2)
 
 
 def build_assets(out_dir):

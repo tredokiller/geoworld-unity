@@ -111,7 +111,7 @@ MonoBehaviour:
   _overrideRenderShadows: 1
   _shadowDistance: 0
   _overrideShadowDistance: 0
-  _densityInDistance: 1
+  _densityInDistance: 0.2
   _overrideDensityInDistance: 1
   _densityInDistanceFalloff: {x: 0.08, y: 0.0075}
   _overrideDensityInDistanceFalloff: 0

@@ -36,6 +36,11 @@ TEXTURE2D(_RoadMapInfo);
 TEXTURE2D(_RoadJunction);
 // xy — начало окна в мире, z — 1/размер окна, w — текселей по стороне (0 — карты нет)
 float4 _RoadMapRect;
+// дальнее окно (RoadMap, до дальности загрузки тайлов; тексель в несколько метров) — то же, за ближним окном
+TEXTURE2D(_RoadMapFar);
+TEXTURE2D(_RoadMapInfoFar);
+TEXTURE2D(_RoadJunctionFar);
+float4 _RoadMapRectFar;
 // слои массивов фактуры земли: x асфальт, y гравий, z грязь, w плитка
 float4 _RoadLayers;
 // x — сухой укатанный грунт, y — сухая трава
@@ -74,23 +79,46 @@ struct RoadPoint
     float2 alongDirection;
 };
 
-RoadPoint SampleRoad(float2 xz)
+float4 LoadRoadSegment(bool far, int2 c)
+{
+    [branch] if (far)
+        return LOAD_TEXTURE2D(_RoadMapFar, c);
+    return LOAD_TEXTURE2D(_RoadMap, c);
+}
+
+float4 LoadRoadInfo(bool far, int2 c)
+{
+    [branch] if (far)
+        return LOAD_TEXTURE2D(_RoadMapInfoFar, c);
+    return LOAD_TEXTURE2D(_RoadMapInfo, c);
+}
+
+float4 LoadRoadJunction(bool far, int2 c)
+{
+    [branch] if (far)
+        return LOAD_TEXTURE2D(_RoadJunctionFar, c);
+    return LOAD_TEXTURE2D(_RoadJunction, c);
+}
+
+// Дорога в точке по одному окну карты (rect — его _RoadMapRect…); fadeEdge — сходить на нет у края окна (у ближнего, когда
+// за ним нет дальнего, и у дальнего).
+RoadPoint SampleRoadMap(float2 xz, float4 rect, bool far, bool fadeEdge)
 {
     RoadPoint road = (RoadPoint)0;
     road.acrossDirection = float2(1, 0);
     road.alongDirection = float2(0, -1);
 
-    [branch] if (_RoadMapRect.w > 0.5)
+    [branch] if (rect.w > 0.5)
     {
-        float2 uv = (xz - _RoadMapRect.xy) * _RoadMapRect.z;
+        float2 uv = (xz - rect.xy) * rect.z;
         float2 edge = min(uv, 1 - uv);
-        road.window = saturate(min(edge.x, edge.y) * 12);
+        road.window = fadeEdge ? saturate(min(edge.x, edge.y) * 12) : (min(edge.x, edge.y) > 0 ? 1 : 0);
 
         if (road.window > 0)
         {
             // отрезки четырёх соседних пикселей карты: у каждого — точное расстояние до него в этой точке, берём главную
             // дорогу (как карта выбирала в пикселе). Ничего не смешивается — кромки, бордюры и колеи точные
-            int size = (int)_RoadMapRect.w;
+            int size = (int)rect.w;
             float2 cell = uv * size - 0.5;
             int2 c0 = clamp((int2)floor(cell), 0, size - 2);
             float bestKey = 1e9;
@@ -101,11 +129,11 @@ RoadPoint SampleRoad(float2 xz)
             [unroll] for (int k = 0; k < 4; k++)
             {
                 int2 c = c0 + int2(k & 1, k >> 1);
-                float4 info = LOAD_TEXTURE2D(_RoadMapInfo, c);
+                float4 info = LoadRoadInfo(far, c);
 
                 [branch] if (info.x > 0.01)
                 {
-                    float4 segment = LOAD_TEXTURE2D(_RoadMap, c);
+                    float4 segment = LoadRoadSegment(far, c);
                     RoadMeasure m = MeasureRoad(xz, segment.xy, segment.zw, info);
 
                     if (m.valid && m.key < bestKey)
@@ -137,10 +165,10 @@ RoadPoint SampleRoad(float2 xz)
 
                 // перекрёсток — по четырём соседним текселям (номера дорог не смешиваются, смешивается признак)
                 float2 f = saturate(cell - c0);
-                float4 j00 = LOAD_TEXTURE2D(_RoadJunction, c0);
-                float4 j10 = LOAD_TEXTURE2D(_RoadJunction, c0 + int2(1, 0));
-                float4 j01 = LOAD_TEXTURE2D(_RoadJunction, c0 + int2(0, 1));
-                float4 j11 = LOAD_TEXTURE2D(_RoadJunction, c0 + int2(1, 1));
+                float4 j00 = LoadRoadJunction(far, c0);
+                float4 j10 = LoadRoadJunction(far, c0 + int2(1, 0));
+                float4 j01 = LoadRoadJunction(far, c0 + int2(0, 1));
+                float4 j11 = LoadRoadJunction(far, c0 + int2(1, 1));
                 half4 flags = half4(j00.a - j00.r > 0.5, j10.a - j10.r > 0.5, j01.a - j01.r > 0.5, j11.a - j11.r > 0.5);
                 road.junction = lerp(lerp(flags.x, flags.y, f.x), lerp(flags.z, flags.w, f.x), f.y);
             }
@@ -148,6 +176,20 @@ RoadPoint SampleRoad(float2 xz)
     }
 
     return road;
+}
+
+// Внутри ближнего окна — оно (1 м на тексель), за ним — дальнее. В обоих окнах одни и те же отрезки и мерит террейн до них
+// одинаково точно, поэтому на стыке окон дорога не меняется и ближнее окно у края не гаснет, если дальнее есть.
+RoadPoint SampleRoad(float2 xz)
+{
+    bool hasFar = _RoadMapRectFar.w > 0.5;
+    float2 nearUV = (xz - _RoadMapRect.xy) * _RoadMapRect.z;
+    bool inNear = _RoadMapRect.w > 0.5 && all(nearUV > 0) && all(nearUV < 1);
+
+    [branch] if (inNear || !hasFar)
+        return SampleRoadMap(xz, _RoadMapRect, false, !hasFar);
+
+    return SampleRoadMap(xz, _RoadMapRectFar, true, true);
 }
 
 // Фактура в точке — со своим цветом (не отношением к среднему, как у GroundDetail); нормаль — в осях мира x, z.

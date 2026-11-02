@@ -82,6 +82,45 @@ float4 _FrustumPlanes[6];
 // z: range length
 float4 _DensityInDistance;
 
+// interceptor-drones: компенсация прореживания (NatureRendererSettings, глобально). Экземпляры, которые прореживание
+// оставляет, растут ровно настолько, насколько уменьшились и исчезли остальные, — покрытие земли остаётся прежним, а
+// экземпляров вдали столько же мало. Без этого луг вдали редел до доли x _DensityInDistance, а у пятен полей
+// прореживание вырезало дыры. x — сила (0 — как у Nature Renderer), y — наибольший рост по ширине, z — показатель роста
+// высоты (высота растёт как ширина^z: вдали не вырастают высокие пучки, ширина за это растёт сильнее). При обновлении
+// Nature Renderer — перенести (GameKeptScale, ReduceDensityScale, BuildOutput*).
+float4 _GameDensityCompensation;
+
+// Рост оставленного экземпляра по ширине. Прореживание Nature Renderer: экземпляр с dither > D (доля вдали) на своём
+// отрезке длиной rangeLength·dither уменьшается (1 − u/dither, u — доля пути за начало) и пропадает при 0.3, то есть при
+// dither < u/0.7. Площадь уходящих (масштаб²) по равномерному dither: ∫ от a = max(D, u/0.7) до 1 (1 − u/x)² dx =
+// (1 − a) + 2u·ln a − u²(1 − 1/a). Оставленные (D из них) закрывают остаток: D·k² = 1 − уходящие. Рост высоты k^z,
+// поэтому ширина растёт как k^(2/(1+z)) — сбоку площадь ширина×высота та же.
+float GameKeptScale(float distance)
+{
+    if (_GameDensityCompensation.x <= 0)
+        return 1;
+
+    float density = max(_DensityInDistance.x, 0.01);
+    float u = (distance - _DensityInDistance.y) / max(_DensityInDistance.z, 0.001);
+
+    if (u <= 0)
+        return 1;
+
+    float a = max(density, u / 0.7);
+    float leaving = a >= 1 ? 0 : (1 - a) + 2 * u * log(a) - u * u * (1 - 1 / a);
+    float area = max(1 - leaving, density) / density;
+    float width = pow(area, 1 / (1 + max(_GameDensityCompensation.z, 0)));
+    return lerp(1, min(width, max(_GameDensityCompensation.y, 1)), saturate(_GameDensityCompensation.x));
+}
+
+// Масштаб экземпляра в буфер вывода: уменьшение (прореживание) — равно по ширине и высоте, рост компенсации — высота
+// медленнее (_GameDensityCompensation.z).
+void GameApplyScale(inout InstanceMatrix instnc, float scale)
+{
+    instnc.scale.x *= scale;
+    instnc.scale.y *= scale > 1 ? pow(max(scale, 1), max(_GameDensityCompensation.z, 0)) : scale;
+}
+
 // Plane equation: {(a, b, c) = N, d = -dot(N, P)}.
 // Returns the distance from the plane to the point 'p' along the normal.
 // Positive -> in front (above), negative -> behind (below).
@@ -140,6 +179,8 @@ float ReduceDensityScale( inout InstanceMatrix instnc, float distance )
 
     if( dither > _DensityInDistance.x && distanceNormalized > 0 )
         return 1 - distanceNormalized;
+    else if( dither <= _DensityInDistance.x )
+        return GameKeptScale(distance);
     else
         return 1;
 }
@@ -241,12 +282,12 @@ void BuildOutput (uint3 id : SV_DispatchThreadID)
         return;
         
     InstanceMeta meta = Meta[id.x];
-    if( meta.Lod == _ActiveLod + 1) 
+    if( meta.Lod == _ActiveLod + 1)
     {
         InstanceMatrix instnc = Input[id.x];
-        instnc.scale.xy *= meta.Scale;
+        GameApplyScale(instnc, meta.Scale);
         Output.Append(instnc);
-    } 
+    }
 }
 
 void BuildOutputWithShadows (uint3 id : SV_DispatchThreadID)
@@ -257,7 +298,7 @@ void BuildOutputWithShadows (uint3 id : SV_DispatchThreadID)
     InstanceMatrix instnc = Input[id.x];
     InstanceMeta meta = Meta[id.x];
 
-    instnc.scale.xy *= meta.Scale;
+    GameApplyScale(instnc, meta.Scale);
 
     #if SHADOWS
         if( meta.Shadow == _ActiveLod + 1)

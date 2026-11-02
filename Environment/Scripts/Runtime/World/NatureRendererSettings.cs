@@ -36,6 +36,25 @@ namespace _Game.Scripts.World
         [SerializeField, Min(0f)] private float detailShadowDistance = 20f;
         [SerializeField, Range(0f, 1f)] private float detailShadowFadeStart = 0.45f;
 
+        [Header("Компенсация прореживания")]
+        [Tooltip("Оставленные прореживанием растения растут так, чтобы покрытие земли было прежним (Nature Renderer " +
+                 "Instancing.compute, GameKeptScale): вдали меньше экземпляров, но луг не редеет и у пятен полей нет дыр. " +
+                 "0 — как у Nature Renderer.")]
+        [SerializeField, Range(0f, 1f)] private float densityCompensation = 1f;
+        [Tooltip("Наибольший рост оставленного растения по ширине.")]
+        [SerializeField, Range(1f, 4f)] private float compensationMaxScale = 3f;
+        [Tooltip("Высота растёт как ширина в этой степени: вдали не вырастают высокие пучки, ширина растёт сильнее.")]
+        [SerializeField, Range(0f, 1f)] private float compensationHeightExponent = 0.5f;
+        [Tooltip("Растения со своей дальностью на префабе (цветы, поля, тростник, опад…) с дальностью травы больше 200 м " +
+                 "растут дальше своей в той же доле. Выключено — дальше своей не растут (как было: с ползунком росла " +
+                 "только основная трава).")]
+        [SerializeField] private bool growObjectDistances = true;
+        [Tooltip("Дальше своей растут только растения не тяжелее этого (треугольников на экземпляр). Тяжёлые — дёрн, " +
+                 "ветошь, газон, дерновины из настоящих травинок (860–1550), камешки, ветки, сухостой — остаются на своей " +
+                 "дальности: на 1000 м с ними луг стоил +9 мс GPU (8.5 из них — эти модели), на 250–500 м они меньше пары " +
+                 "пикселей. Лёгкие (основная трава, цветы, тростник, карточки полей, опад) до 500–750 м — ~1.5–2 мс.")]
+        [SerializeField, Min(0)] private int growTriangleLimit = 200;
+
         [Header("Деревья")]
         [Tooltip("Дальность деревьев, м (0 — дальняя плоскость камеры). Одна для всех видов и любого FOV: пороги последнего " +
                  "LOD у деревьев опущены так, что раньше они не срабатывают. Тайлы грузятся до 2 км — деревья до их края " +
@@ -53,26 +72,61 @@ namespace _Game.Scripts.World
         private const float ReferenceDetailDistance = 200f;
 
         private static readonly int GrassShadowFadeId = Shader.PropertyToID("_GrassShadowFade");
+        private static readonly int DensityCompensationId = Shader.PropertyToID("_GameDensityCompensation");
 
         private Component _defaultSettings;
         private Component _globalSettings;
         // свои дальности префабов (NatureRendererObjectSettings) — как они в ассетах; на время игры меняются в доле от травы
         private readonly Dictionary<Object, float> _objectDistances = new();
+        private readonly Dictionary<Object, int> _triangles = new();
 
         private void OnEnable() => Apply();
 
         // Дальности из настроек графики (GraphicsSettingsService): трава, деревья. Растения со своей дальностью на префабе
-        // (цветы, сорняки, опад, ветки, камешки, карточки полей, тростник) с меньшей дальностью травы сжимаются в той же
-        // доле, а дальше своей не растут: за ней они меньше пикселя, а их тысячи на гектар — на 1000 м карточки полей
-        // (128 треугольников, 2.5–5.8 на м², без прореживания) шли до 500 м, тростник до 750 м: над лугом у горизонта
-        // GPU 44 мс (21 FPS), без этого — 12 мс (54 FPS), как при 200 м. Дальняя доля основной травы (0.15) на цену почти
-        // не влияет (0.015 давало те же 12 мс), поэтому трава вдали не прореживается сильнее.
+        // (цветы, сорняки, опад, ветки, камешки, карточки полей, тростник) меняют её в той же доле, что трава, — и с
+        // большей дальностью травы растут дальше своей. Раньше дальше своей они не росли: на 1000 м карточки полей
+        // (128 треугольников, 2.5–5.8 на м², без прореживания) шли до 500 м, тростник до 750 м — GPU 44 мс над лугом у
+        // горизонта, — и с ползунком дальше 200 м росла только основная трава. Теперь цену держит прореживание вдали с
+        // компенсацией размера (densityCompensation): экземпляров вдали мало, покрытие то же; у карточек полей оно включено.
         public void SetDistances(float detailDistance, float treeDistance)
         {
             detailRenderDistance = Mathf.Max(10f, detailDistance);
             treeRenderDistance = Mathf.Max(0f, treeDistance);
             Apply();
-            ScaleObjectDistances(Mathf.Min(1f, detailRenderDistance / ReferenceDetailDistance));
+            float scale = detailRenderDistance / ReferenceDetailDistance;
+            ScaleObjectDistances(growObjectDistances ? scale : Mathf.Min(1f, scale));
+        }
+
+        // Треугольников у экземпляра растения (LOD0 — его Nature Renderer и рисует у деталей), по компоненту настроек.
+        private int TrianglesOf(Object settings)
+        {
+            if (_triangles.TryGetValue(settings, out int cached))
+                return cached;
+
+            int triangles = 0;
+
+            if (settings is Component component)
+            {
+                LODGroup lodGroup = component.GetComponentInChildren<LODGroup>(true);
+                Renderer[] renderers = lodGroup != null && lodGroup.lodCount > 0
+                    ? lodGroup.GetLODs()[0].renderers
+                    : component.GetComponentsInChildren<Renderer>(true);
+
+                foreach (Renderer renderer in renderers)
+                {
+                    MeshFilter filter = renderer != null ? renderer.GetComponent<MeshFilter>() : null;
+                    Mesh mesh = filter != null ? filter.sharedMesh : null;
+
+                    if (mesh == null)
+                        continue;
+
+                    for (int i = 0; i < mesh.subMeshCount; i++)
+                        triangles += (int)(mesh.GetIndexCount(i) / 3);
+                }
+            }
+
+            _triangles[settings] = triangles;
+            return triangles;
         }
 
 
@@ -95,6 +149,7 @@ namespace _Game.Scripts.World
         private void OnDestroy()
         {
             Shader.SetGlobalVector(GrassShadowFadeId, Vector4.zero);
+            Shader.SetGlobalVector(DensityCompensationId, Vector4.zero);
             // префабы — ассеты: в редакторе изменённая дальность осталась бы в них
             ScaleObjectDistances(1f);
 
@@ -111,6 +166,8 @@ namespace _Game.Scripts.World
             _globalSettings ??= AddSettings(GlobalSettingsTypeName);
             Shader.SetGlobalVector(GrassShadowFadeId,
                 new Vector4(detailShadowDistance * detailShadowFadeStart, detailShadowDistance * (1f - detailShadowFadeStart), 0f, 0f));
+            Shader.SetGlobalVector(DensityCompensationId,
+                new Vector4(densityCompensation, compensationMaxScale, compensationHeightExponent, 0f));
 
             if (_defaultSettings != null)
             {
@@ -153,7 +210,9 @@ namespace _Game.Scripts.World
                     _objectDistances[settings] = original;
                 }
 
-                property.SetValue(settings, (float?)Mathf.Max(5f, original * scale));
+                // тяжёлые растения дальше своей дальности не растут (growTriangleLimit)
+                float growth = scale > 1f && TrianglesOf(settings) > growTriangleLimit ? 1f : scale;
+                property.SetValue(settings, (float?)Mathf.Max(5f, original * growth));
             }
         }
 

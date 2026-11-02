@@ -24,7 +24,7 @@ Shader "Hidden/Game/Road Map"
 
             // xy — начало окна в мире (x, z), z — 1/размер окна, w — знак y клипа (−1, где uv идёт сверху)
             float4 _RoadDraw;
-            // x — запас за краем полотна, м
+            // x — запас за краем полотна, м (у дальнего окна — с текселем окна), y — тексель окна сверх обычного запаса
             float4 _RoadReach;
 
             struct Attributes
@@ -99,6 +99,8 @@ Shader "Hidden/Game/Road Map"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
             float4 _RoadDraw;
+            // y — тексель окна: у дальнего окна (тексель в несколько метров) перекрёсток не проваливается между текселями
+            float4 _RoadReach;
 
             struct Attributes
             {
@@ -137,7 +139,7 @@ Shader "Hidden/Game/Road Map"
                 float t = dot(input.p - input.a, ab) / length2;
                 float d = distance(input.p, input.a + ab * saturate(t));
 
-                if (t < 0 || t > 1 || d > input.halfAndId.x + 0.6)
+                if (t < 0 || t > 1 || d > input.halfAndId.x + 0.6 + _RoadReach.y)
                     discard;
 
                 return float4(input.halfAndId.y, 0, 0, input.halfAndId.y);

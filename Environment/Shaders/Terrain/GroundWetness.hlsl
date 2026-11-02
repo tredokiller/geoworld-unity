@@ -177,8 +177,9 @@ void GroundWetness(inout InputData inputData, half3 geometryNormalWS, inout half
     if (_GroundWetness <= 0.001 && _PuddleLevel <= 0.001 && land.g <= 0.004)
         return;
 
-    // болото сырое всегда; снег от сырости не темнеет
-    half wet = max(_GroundWetness, land.g * 0.8) * (1 - snow);
+    // болото сырое всегда, но в сухую погоду слабо (35 %), с дождём и лужами — до 80 %; снег от сырости не темнеет
+    half marshWet = land.g * lerp(0.35, 0.8, saturate(max(_GroundWetness, _PuddleLevel)));
+    half wet = max(_GroundWetness, marshWet) * (1 - snow);
     albedo *= lerp(1, lerp(0.8, 0.6, bare), wet);
     smoothness = max(smoothness, wet * lerp(0.2, 0.42, bare));
 
