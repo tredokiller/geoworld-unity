@@ -65,7 +65,8 @@ namespace GeoWorld.Editor
         }
 
         // Brings the clone at path to version: fetches the version's tag (only the objects the clone does not have), puts its
-        // files in place and fetches its Git LFS files. Returns the error, or null.
+        // files in place (removing those it no longer has, and any that are not the package's) and fetches its Git LFS files.
+        // Returns the error, or null.
         public static string Update(string path, Version version, Action<string, float> progress)
         {
             string tag = "v" + version;
@@ -77,6 +78,9 @@ namespace GeoWorld.Editor
             progress("Putting the new files in place", 0.6f);
             if (Git(path, $"-c advice.detachedHead=false checkout --force --progress {tag}", Report(progress, 0.6f, 0.7f), out output, true) != 0)
                 return "git checkout failed: " + Last(output);
+            // the files the version no longer has went with the checkout; what is not the package's at all (the extractor's
+            // __pycache__, a file put there) goes too, so that nothing of an old version is left for Unity to import
+            Git(path, "clean -fd", null, out _);
             return LargeFiles(path, progress, 0.7f, 0.97f);
         }
 
