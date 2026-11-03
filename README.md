@@ -58,25 +58,45 @@ height is nearest.
 
 ## Install in a project
 
-Package Manager > **+** > **Add package from git URL...** and enter the version you want:
+**Fast updates (recommended): a git submodule in `Packages`.** Every update then downloads and imports only the files that
+changed (a few MB instead of the whole package), and the project's commit of an update is one line. Needs git with
+[Git LFS](https://git-lfs.com) (`git lfs install` once). In the project's folder:
 
 ```
-https://github.com/tredokiller/geoworld-unity.git#v1.9.2
+git submodule add https://github.com/tredokiller/geoworld-unity.git Packages/com.tredokiller.geoworld
+git -C Packages/com.tredokiller.geoworld checkout v1.18.0
+git -C Packages/com.tredokiller.geoworld lfs pull
+git config -f .gitmodules submodule.Packages/com.tredokiller.geoworld.shallow true
+```
+
+Commit `.gitmodules` and `Packages/com.tredokiller.geoworld`; the others get it with `git submodule update --init`. (A project
+that is not a git repository: `git clone` into the same folder.) Unity takes a package in `Packages` without an entry in
+`Packages/manifest.json`.
+
+**Through the Package Manager:** Package Manager > **+** > **Add package from git URL...** and enter the version you want:
+
+```
+https://github.com/tredokiller/geoworld-unity.git#v1.18.0
 ```
 
 or add it to `Packages/manifest.json`:
 
 ```json
-"com.tredokiller.geoworld": "https://github.com/tredokiller/geoworld-unity.git#v1.9.2"
+"com.tredokiller.geoworld": "https://github.com/tredokiller/geoworld-unity.git#v1.18.0"
 ```
+
+The Package Manager downloads the whole package (some 300 MB, and its Git LFS files) for every version, and Unity imports all
+of it again. The first **Update** offers to switch to fast updates.
 
 The repository is private: git on the computer must be signed in to GitHub (the same login that can clone it).
 
 ## Update
 
-Change the version after `#` in `Packages/manifest.json` (`#v1.9.1` to `#v1.9.2`) and go back to Unity: it
-downloads that version. Each version is listed in [CHANGELOG.md](CHANGELOG.md). (Without a version after `#` Unity
-keeps the commit it first downloaded, recorded in `Packages/packages-lock.json`, so a version is the dependable way.)
+**Update** in the Geo World window (or Tools > Geo World > Update Geo World...). With fast updates it fetches the new
+version's tag and checks it out in place, with a bar of git's progress; Unity imports what changed and recompiles. By hand:
+`git -C Packages/com.tredokiller.geoworld fetch --depth 1 origin tag v1.18.0` and `checkout v1.18.0`, then `lfs pull`.
+Through the Package Manager: change the version after `#` in `Packages/manifest.json` and go back to Unity. Each version is
+listed in [CHANGELOG.md](CHANGELOG.md).
 
 ## First steps in a project
 

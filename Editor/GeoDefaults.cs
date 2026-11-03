@@ -22,7 +22,9 @@ namespace GeoWorld.Editor
             get
             {
                 var info = UnityEditor.PackageManager.PackageInfo.FindForAssembly(typeof(GeoDefaults).Assembly);
-                return info == null || info.source == UnityEditor.PackageManager.PackageSource.Embedded || info.source == UnityEditor.PackageManager.PackageSource.Local;
+                // a git clone in Packages (fast updates) is installed, not developed
+                return info == null || (info.source == UnityEditor.PackageManager.PackageSource.Embedded && !GeoGitUpdate.IsClone(info.resolvedPath)) ||
+                       info.source == UnityEditor.PackageManager.PackageSource.Local;
             }
         }
 

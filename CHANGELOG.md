@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.18.0
+
+- Fast updates: Geo World as a git clone in `Packages/com.tredokiller.geoworld` (a submodule of the project's repository where it has one) instead of a package the Package Manager downloads from git (`GeoGitUpdate`). The Package Manager has no updates of a git package: every version was a new download of the whole package (some 300 MB of models and textures, and since 1.17 the Git LFS files of the environment) into a new folder that Unity imported again in full, and an update that went wrong had to be fixed by removing the package and installing it again. A clone fetches only what changed (1.9.0 to 1.17.0 is 1.5 MB), the files change in place and Unity imports only those, and in a project's repository an update is a one-line change of the submodule.
+- The first Update of a package installed through the Package Manager offers Fast updates (or the Package Manager as before): it clones the new version once (with its Git LFS files), adds it as a shallow submodule where the project is a git repository, and takes it out of `Packages/manifest.json`. After that Update fetches the new version's tag, checks it out and pulls its Git LFS files, with git's progress on the Geo World window's bar. Git LFS has to be installed (the update says so if it is not).
+- A clone in Packages counts as installed, not as the package being developed (no developer tools, updates are looked up).
+- An update leaves nothing of the old version behind: the checkout removes the files the new version no longer has (folders included), and `git clean` the files that are not the package's at all (the extractor's `__pycache__`, anything put in the folder), so Unity imports no stale scripts or assets.
+
 ## 1.17.1
 
 - From the Interceptor Drones game (Slavik's changes made there before the move): roads visible to the edge of the loaded tiles through a far road map (`RoadMap`, `GroundRoads.hlsl`, `RoadMap.shader`); marsh ground drier in dry weather (`GroundWetness`, `Puddles.hlsl`); far grass stage 0-1 — Nature Renderer thinning compensation and light plants that grow with the grass distance (`NatureRendererSettings`, the instancing compute shader), `GroundDressing.Busy` for the game's grass benchmark, field card prefabs and `field_cards_gen.py`.

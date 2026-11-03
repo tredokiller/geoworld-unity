@@ -1,6 +1,9 @@
 using System;
 using System.Diagnostics;
+using System.IO;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using UnityEditor;
 using UnityEditor.PackageManager;
 using UnityEditor.PackageManager.Requests;
@@ -15,6 +18,8 @@ namespace GeoWorld.Editor
     // view say so and the Geo World window shows an Update button. Tools > Geo World > Update Geo World... does the same
     // on demand. A project that develops the package (embedded) has no updates: it publishes them
     // (tools/publish_unity_package.py).
+    // Installed as a git clone in Packages (fast updates, GeoGitUpdate), an update fetches only what changed; installed through
+    // the Package Manager, the first update offers to switch to that (the Package Manager downloads the whole package every time).
     [InitializeOnLoad]
     public static class GeoUpdate
     {
@@ -41,6 +46,12 @@ namespace GeoWorld.Editor
         static AddRequest adding;
 
         static PackageInfo Info => info ?? (info = PackageInfo.FindForAssembly(typeof(GeoUpdate).Assembly));
+        static Task<(string error, string note)> working;
+
+        // The package is a git clone of its repository in the project's Packages folder (fast updates).
+        public static bool IsClone => Info != null && Info.source == PackageSource.Embedded && GeoGitUpdate.IsClone(Info.resolvedPath);
+        // Installed from the repository: through the Package Manager, or as a clone. Otherwise it is developed here.
+        static bool FromRepository => Info != null && (Info.source == PackageSource.Git || IsClone);
 
         static GeoUpdate()
         {
@@ -59,7 +70,7 @@ namespace GeoWorld.Editor
                         Changed?.Invoke();
                     }
                 }
-                if (Info == null || Info.source != PackageSource.Git) { Set(Status.Developing); return; }
+                if (!FromRepository) { Set(Status.Developing); return; }
                 if (Application.isBatchMode || SessionState.GetBool(CheckedKey, false)) return;
                 SessionState.SetBool(CheckedKey, true);
                 Check(true);
@@ -69,11 +80,11 @@ namespace GeoWorld.Editor
         // Looks up the newest version in the background; notify: say so in the console and the Scene view when there is one.
         public static void Check(bool notify = false)
         {
-            if (Info == null || Info.source != PackageSource.Git) { Set(Status.Developing); return; }
+            if (!FromRepository) { Set(Status.Developing); return; }
             if (State == Status.Checking || State == Status.Updating) return;
             Set(Status.Checking);
-            string repository = Repository(Info), installed = Info.version;
-            var lookup = Task.Run(() => { var newest = Newest(repository, out var error); return (newest, error); });
+            var package = Info; string installed = Info.version;
+            var lookup = Task.Run(() => { var newest = Newest(Repository(package), out var error); return (newest, error); });
             EditorApplication.CallbackFunction poll = null;
             poll = () =>
             {
@@ -94,8 +105,30 @@ namespace GeoWorld.Editor
         public static void UpdateNow()
         {
             if (State != Status.Available || Latest == null) return;
-            if (!EditorUtility.DisplayDialog("Update Geo World", $"Update Geo World {Installed} to {Latest}?\n\nWhat changed is in the package's CHANGELOG.md. " +
-                "Unity downloads the new version and recompiles; worlds made with the old one keep working.", "Update", "Cancel")) return;
+            if (IsClone)
+            {
+                if (!EditorUtility.DisplayDialog("Update Geo World", $"Update Geo World {Installed} to {Latest}?\n\nWhat changed is in the package's CHANGELOG.md. " +
+                    "Only the files that changed are downloaded and imported; worlds made with the old version keep working.", "Update", "Cancel")) return;
+                string path = Info.resolvedPath; var version = Latest;
+                Begin($"Downloading what changed in Geo World {Latest}");
+                working = Task.Run(() => (GeoGitUpdate.Update(path, version, Progress), (string)null));
+                EditorApplication.update += WaitForGit;
+                return;
+            }
+            int choice = EditorUtility.DisplayDialogComplex("Update Geo World", $"Update Geo World {Installed} to {Latest}?\n\nWhat changed is in the package's CHANGELOG.md.\n\n" +
+                "Fast updates (recommended): Geo World becomes a git clone in Packages/com.tredokiller.geoworld (a submodule of the project's repository, " +
+                "where it has one). This update downloads it once; every later one downloads and imports only the files that changed, and the project's " +
+                "commit of an update is one line. Needs git with Git LFS.\n\nThe Package Manager downloads the whole package (some 300 MB) and Unity imports " +
+                "it again on every update.", "Fast updates", "Cancel", "Package Manager");
+            if (choice == 1) return;
+            if (choice == 0)
+            {
+                string repository = Repository(Info); var version = Latest;
+                Begin($"Downloading Geo World {Latest} as a git clone (once all of it)");
+                working = Task.Run(() => { string error = GeoGitUpdate.Switch(repository, version, Progress, out string note); return (error, note); });
+                EditorApplication.update += WaitForGit;
+                return;
+            }
             Started = DateTime.Now; Fraction = -1;
             Stage = $"Downloading Geo World {Latest} from GitHub";
             SessionState.SetString(UpdatingKey, Installed);
@@ -103,6 +136,56 @@ namespace GeoWorld.Editor
             Set(Status.Updating);
             adding = Client.Add(Repository(Info) + "#v" + Latest);
             EditorApplication.update += WaitForAdd;
+        }
+
+        static void Begin(string stage)
+        {
+            Started = DateTime.Now; Fraction = 0; Stage = stage;
+            SessionState.SetString(UpdatingKey, Installed);
+            Debug.Log("[GeoWorld] " + stage + "…");
+            Set(Status.Updating);
+        }
+
+        // git's progress, from the worker thread: the window's bar reads it
+        static void Progress(string stage, float fraction) { Stage = stage; Fraction = fraction; }
+
+        // A git update (GeoGitUpdate) is done: Unity imports the files that changed (and, after a switch, takes the clone instead
+        // of the Package Manager's copy) and recompiles; the banner says so after that.
+        static void WaitForGit()
+        {
+            if (working == null) { EditorApplication.update -= WaitForGit; return; }
+            if (!working.IsCompleted) { Changed?.Invoke(); return; }
+            EditorApplication.update -= WaitForGit;
+            var (error, note) = working.IsFaulted ? (working.Exception?.GetBaseException().Message, null) : working.Result;
+            bool switched = !IsClone;
+            working = null;
+            if (error != null)
+            {
+                SessionState.EraseString(UpdatingKey);
+                Stage = ""; Fraction = -1;
+                Set(Status.Available);
+                Debug.LogWarning("[GeoWorld] The update failed: " + error);
+                EditorUtility.DisplayDialog("Update Geo World", "The update failed: " + error, "OK");
+                return;
+            }
+            if (note != null) Debug.Log("[GeoWorld] " + note);
+            Stage = "Unity is importing what changed and recompiling"; Fraction = 1;
+            Changed?.Invoke();
+            // the clone in Packages takes over from the Package Manager's copy: the manifest no longer asks for it
+            if (switched) RemoveFromManifest(Info.name);
+            AssetDatabase.Refresh();
+            Client.Resolve();
+        }
+
+        static void RemoveFromManifest(string name)
+        {
+            string manifest = Path.Combine("Packages", "manifest.json");
+            try
+            {
+                var json = JObject.Parse(File.ReadAllText(manifest));
+                if (json["dependencies"] is JObject dependencies && dependencies.Remove(name)) File.WriteAllText(manifest, json.ToString(Formatting.Indented));
+            }
+            catch (Exception e) { Debug.LogWarning("[GeoWorld] Remove " + name + " from Packages/manifest.json yourself (the clone in Packages replaces it): " + e.Message); }
         }
 
         // The updated banner has been read.
@@ -115,7 +198,7 @@ namespace GeoWorld.Editor
         [MenuItem("Tools/Geo World/Update Geo World...", false, 40)]
         static void UpdateMenu()
         {
-            if (Info == null || Info.source != PackageSource.Git)
+            if (!FromRepository)
             {
                 EditorUtility.DisplayDialog("Update Geo World", $"This project uses Geo World {Installed} from {Info?.source.ToString().ToLowerInvariant()} files " +
                     "(it is developed here), not from its repository: there is nothing to update. New versions are published with tools/publish_unity_package.py.", "OK");
@@ -181,9 +264,10 @@ namespace GeoWorld.Editor
             Changed?.Invoke();
         }
 
-        // "com.tredokiller.geoworld@https://github.com/.../geoworld-unity.git#v1.1.0" -> the repository URL
+        // "com.tredokiller.geoworld@https://github.com/.../geoworld-unity.git#v1.1.0" -> the repository URL; a clone: its origin
         static string Repository(PackageInfo package)
         {
+            if (package.source == PackageSource.Embedded && GeoGitUpdate.IsClone(package.resolvedPath)) return GeoGitUpdate.Origin(package.resolvedPath) ?? "";
             string id = package.packageId;
             int at = id.IndexOf('@');
             if (at >= 0) id = id.Substring(at + 1);
