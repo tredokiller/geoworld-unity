@@ -1,0 +1,14 @@
+Сосны pine_set_a..d — из готового набора Vegetation_Set_Pine.blend (папка vegetation-set-pine: source/Vegetation_Set_Pine.blend.blend,
+textures/ALL_VEGETATION.png, plant_pine_bark.jpeg), получен от пользователя 03.11.2026; источник и лицензия набора в нём не указаны.
+Переведены для Nature Renderer скриптом Tools~/TreeGen/pine_set_gen.py:
+  "C:/Program Files/Blender Foundation/Blender 5.2/blender.exe" -b --factory-startup --disable-autoexec <Vegetation_Set_Pine.blend.blend>
+      --python Tools~/TreeGen/pine_set_gen.py -- <папка вывода>
+  затем Tools/Environment/Import Generated Vegetation на эту папку (VegetationImporter).
+  pine_set_a  tree_pine_A  21.9 м     pine_set_b  tree_pine_B  16.9 м
+  pine_set_c  tree_pine_C  29.1 м     pine_set_d  tree_pine_D  26.2 м (масштаб 1.389 из сцены набора применён)
+  pine_set_needles_*  окно 1024 x 1024 общего атласа набора (ALL_VEGETATION_color + _mask, 4096: x 0..1024, строки сверху
+                      2044..3068) — ветки хвои и сухие сучья, без пересэмплирования; нормаль плоская, маска NM постоянная
+                      (гладкость 0.3 у хвои, 0.15 у веток).
+  pine_set_bark_*     plant_pine_bark (1024 x 2048, бесшовная) как есть; нормаль и маска (AO, высота) — из её яркости.
+  *_cross_*           крест — рендер LOD0 (функции pine_gen.py), цвет подогнан под LOD2.
+LOD1/LOD2 — часть карточек LOD0, увеличенных по силуэту (скрипт); LOD3 — крест.

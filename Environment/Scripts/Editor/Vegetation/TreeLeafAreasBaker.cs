@@ -14,8 +14,8 @@ namespace _Game.Scripts.Editor.Vegetation
     /// Породы деревьев по месту. Контуры лесов с типом листвы (TreeLeafAreas) — свои у каждого мира: из его выгрузок
     /// (environment.json частей мира, areas[].leafType: OSM leaf_type — пакет его не переносит в тайлы) в папку мира
     /// (WorldMapBaker: &lt;папка мира&gt;/Environment/Tree leaf areas, на его WorldMapData). Общий профиль видов
-    /// (Resources/World/TreeSpeciesProfile, TileTreeSpecies) — виды с вариантами: сгенерированные сосна и дуб
-    /// (Environment/Vegetation/Generated/Pine, Oak), бук и тополь NatureManufacture — обновляет Update Tree Species
+    /// (Resources/World/TreeSpeciesProfile, TileTreeSpecies) — виды с вариантами: сосны набора и сгенерированный дуб
+    /// (Environment/Vegetation/Generated/PineSet, Oak), бук и тополь NatureManufacture — обновляет Update Tree Species
     /// Profile; он пишет в пакет, так что это инструмент разработки пакета. Смеси по месту задаются при первом создании
     /// профиля; потом их правят в инспекторе, а обновление меняет только варианты видов.
     /// </summary>
@@ -137,23 +137,24 @@ namespace _Game.Scripts.Editor.Vegetation
         {
             string folder = species switch
             {
-                "pine" or "pine_young" => Generated + "/Pine",
+                "pine" or "pine_young" => Generated + "/PineSet",
                 "oak_forest" or "oak_open" or "dead" or "snag" or "broken" => Generated + "/Oak",
                 _ => Vegetation
             };
 
-            string pattern = species switch
+            string[] patterns = species switch
             {
-                "beech" => "prefab_beech_tree_0",
-                "poplar" => "prefab_Baked_0",
-                "pine" => "prefab_pine_forest_",
-                "pine_young" => "prefab_pine_young_",
-                "oak_forest" => "prefab_oak_forest_",
-                "oak_open" => "prefab_oak_open_",
-                "dead" => "prefab_oak_dead_",
-                "snag" => "prefab_oak_snag_",
-                "broken" => "prefab_oak_broken_",
-                _ => "?"
+                "beech" => new[] { "prefab_beech_tree_0" },
+                "poplar" => new[] { "prefab_Baked_0" },
+                "pine" => new[] { "prefab_pine_set_" },
+                // молодые и опушечные — сосны набора с низкой кроной (у d длинный чистый ствол бора)
+                "pine_young" => new[] { "prefab_pine_set_a", "prefab_pine_set_b" },
+                "oak_forest" => new[] { "prefab_oak_forest_" },
+                "oak_open" => new[] { "prefab_oak_open_" },
+                "dead" => new[] { "prefab_oak_dead_" },
+                "snag" => new[] { "prefab_oak_snag_" },
+                "broken" => new[] { "prefab_oak_broken_" },
+                _ => new string[0]
             };
 
             if (!AssetDatabase.IsValidFolder(folder))
@@ -161,7 +162,7 @@ namespace _Game.Scripts.Editor.Vegetation
 
             return AssetDatabase.FindAssets("t:Prefab", new[] { folder })
                 .Select(AssetDatabase.GUIDToAssetPath)
-                .Where(p => Path.GetFileName(p).StartsWith(pattern))
+                .Where(p => patterns.Any(Path.GetFileName(p).StartsWith))
                 .OrderBy(p => p)
                 .Select(AssetDatabase.LoadAssetAtPath<GameObject>)
                 .Where(p => p != null)
