@@ -87,9 +87,9 @@ namespace _Game.Scripts.World
         /// траву. Иначе он перезапускался целиком (его будило сообщение Unity о смене террейна: у копии другое число ячеек
         /// травы на патч) — заново грузил все деревья тайла и переписывал каждый слой травы, а встроенный рендер Unity
         /// оставался включённым и рисовал поверх. Коллайдер остаётся на прежних данных: высоты и деревья те же, а его
-        /// пересборка стоила ~18 мс.
+        /// пересборка стоила ~18 мс. withGrass false — траву Nature Renderer не собирает (тайл далеко, ShowGrass соберёт).
         /// </summary>
-        public static void SwapGrass(Terrain terrain, TerrainData data)
+        public static void SwapGrass(Terrain terrain, TerrainData data, bool withGrass = true)
         {
             Component natureRenderer = terrain.GetComponent("NatureRenderer");
             System.Type type = natureRenderer != null ? natureRenderer.GetType() : null;
@@ -119,7 +119,7 @@ namespace _Game.Scripts.World
 
             try
             {
-                if (!RebuildGrass(type, natureRenderer, terrain))
+                if (!RebuildGrass(type, natureRenderer, terrain, withGrass))
                     Rebuild(type, natureRenderer);
             }
             catch (System.Exception exception)
@@ -129,6 +129,53 @@ namespace _Game.Scripts.World
 
             if (GetBool(type, natureRenderer, "RenderTreesWithNatureRenderer") && GetBool(type, natureRenderer, "RenderDetailsWithNatureRenderer"))
                 terrain.drawTreesAndFoliage = false;
+        }
+
+        /// <summary>
+        /// Есть ли у тайла рендерер травы Nature Renderer: null — Nature Renderer на нём нет или он ещё не рисует (траву
+        /// он тогда построит сам, когда начнёт).
+        /// </summary>
+        public static bool? GrassShown(Terrain terrain)
+        {
+            Component natureRenderer = terrain.GetComponent("NatureRenderer");
+
+            if (natureRenderer == null)
+                return null;
+
+            FieldInfo grassField = natureRenderer.GetType().GetField("_grassRenderer", Members);
+            FieldInfo renderingField = natureRenderer.GetType().GetField("_isRendering", Members);
+
+            if (grassField == null || !(renderingField?.GetValue(natureRenderer) is true))
+                return null;
+
+            return grassField.GetValue(natureRenderer) != null;
+        }
+
+        /// <summary>
+        /// Траву Nature Renderer на тайле — снять (TerrainData с её слоями и деревья остаются) или собрать заново с текущего
+        /// TerrainData. Свои ячейки (патчи) он каждый кадр перебирает во всех тайлах, видна трава или нет: у дальних
+        /// одетых тайлов её снимает GroundDressing. Его LateUpdate рендерер травы null пропускает.
+        /// </summary>
+        public static void ShowGrass(Terrain terrain, bool shown)
+        {
+            Component natureRenderer = terrain.GetComponent("NatureRenderer");
+
+            if (natureRenderer == null)
+                return;
+
+            System.Type type = natureRenderer.GetType();
+
+            if (!GetBool(type, natureRenderer, "IsInitialized"))
+                return;
+
+            try
+            {
+                RebuildGrass(type, natureRenderer, terrain, shown);
+            }
+            catch (System.Exception exception)
+            {
+                Debug.LogWarning($"[NatureRendererTerrain] Nature Renderer grass {(shown ? "rebuild" : "release")} failed: {exception.Message}");
+            }
         }
 
         // После возврата прежнего TerrainData: Nature Renderer пересобирает свои ячейки травы и деревьев с него.
@@ -164,9 +211,10 @@ namespace _Game.Scripts.World
         /// <summary>
         /// Траву — заново с нового TerrainData, деревья — как были. Повторяет половину StopRendering(true)/StartRendering
         /// Nature Renderer 6.0.2, которая про траву: у него для этого нет открытого метода. Экземпляры травы он всё равно
-        /// создаёт позже, ячейками по мере приближения камеры. false — у этой версии нет нужных членов.
+        /// создаёт позже, ячейками по мере приближения камеры. withGrass false — только снять прежнюю. false — у этой версии
+        /// нет нужных членов.
         /// </summary>
-        private static bool RebuildGrass(System.Type type, Component natureRenderer, Terrain terrain)
+        private static bool RebuildGrass(System.Type type, Component natureRenderer, Terrain terrain, bool withGrass = true)
         {
             FindTypes();
             FieldInfo grassField = type.GetField("_grassRenderer", Members);
@@ -192,7 +240,7 @@ namespace _Game.Scripts.World
             grassField.SetValue(natureRenderer, null);
 
             // не рисует (вне камер) — построит траву сам, когда начнёт
-            if (!(renderingField.GetValue(natureRenderer) is true) || !GetBool(type, natureRenderer, "RenderDetailsWithNatureRenderer"))
+            if (!withGrass || !(renderingField.GetValue(natureRenderer) is true) || !GetBool(type, natureRenderer, "RenderDetailsWithNatureRenderer"))
                 return true;
 
             object grass = create.Invoke(new object[] { terrain });

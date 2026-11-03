@@ -23,7 +23,9 @@ namespace _Game.Scripts.World
     /// Виды травы и их правила — те же записи профиля точки взлёта (DefaultFlyPointEnvironment). Nature Renderer рисует
     /// детали только рядом с камерой (дальность и прореживание — NatureRendererSettings и настройки префабов), поэтому
     /// траву получают только тайлы в пределах dressDistance от камеры или от того места, где она будет через
-    /// lookAheadSeconds; дальние так и остаются без неё до выгрузки. Тайл считается в фоновом потоке (до двух сразу),
+    /// lookAheadSeconds; дальние так и остаются без неё до выгрузки. Рендерер травы Nature Renderer у одетого тайла есть,
+    /// только пока тот не дальше дальности травы (+ShowMargin): ячейки рендереров он перебирает каждый кадр во всех тайлах,
+    /// а копия с травой держится и ближе к тайлу собирается заново (ShowGrass). Тайл считается в фоновом потоке (до двух сразу),
     /// а копия TerrainData собирается в главном потоке за несколько кадров. Тайлы, на которых стоит точка взлёта, рисует
     /// её генератор — сеткой 1 м и с этой же травой за краем своей зоны (TryGetWorldDetail).
     /// </summary>
@@ -39,6 +41,12 @@ namespace _Game.Scripts.World
         // Свой OptimizePatchSize (переписать на 64) Nature Renderer на этих террейнах не делает: SwapGrass его выключает
         private const int DetailPatchResolution = 32;
         private const int MaxDetailPerCell = 255;
+        // рендерер травы — у тайлов не дальше дальности травы + ShowMargin (от камеры или точки упреждения), снимается
+        // дальше + HideMargin. Nature Renderer перебирает его ячейки каждый кадр (на тайл 62 вида × 256 патчей): с 9
+        // одетыми тайлами это ~1.4 мс главного потока из ~4 мс всего Nature Renderer, а видна трава только в 200 м. Собрать
+        // заново — ~2 мс (до 4), по одному тайлу за проверку
+        private const float ShowMargin = 150f;
+        private const float HideMargin = 400f;
         private const float CheckInterval = 0.25f;
         private const float RuntimeDataDestroyDelay = 2f;
         // фоновых расчётов тайлов одновременно и слоёв травы, что ложатся в копию за кадр (~3.5 мс каждый при 512²)
@@ -72,6 +80,13 @@ namespace _Game.Scripts.World
             set => dressDistance = Mathf.Max(200f, value);
         }
 
+        // Дальность травы Nature Renderer (настройки графики): рендерер травы — у тайлов не дальше неё + ShowMargin.
+        public float GrassDistance
+        {
+            get => grassDistance;
+            set => grassDistance = Mathf.Max(0f, value);
+        }
+
         [Tooltip("Трава по всей карте; выключено — только у точки взлёта.")]
         [SerializeField] private bool dressWorld = true;
         [Tooltip("Плотность травы мира относительно плотности у точки взлёта.")]
@@ -82,6 +97,8 @@ namespace _Game.Scripts.World
         [SerializeField, Min(200f)] private float dressDistance = 1000f;
         [Tooltip("Упреждение по скорости камеры (с): на 400 км/ч тайлы впереди одеваются заранее.")]
         [SerializeField, Min(0f)] private float lookAheadSeconds = 6f;
+        [Tooltip("Дальность травы Nature Renderer (м): рендерер травы — только у одетых тайлов не дальше неё + ShowMargin.")]
+        [SerializeField, Min(0f)] private float grassDistance = 200f;
 
         private readonly Dictionary<Terrain, Tile> _tiles = new();
         private readonly List<Terrain> _gone = new();
@@ -95,6 +112,8 @@ namespace _Game.Scripts.World
         private Vector3 _eye;
         private Vector3 _eyeVelocity;
         private bool _hasEye;
+        // ближним одетым тайлам ещё собирать траву (по одному за проверку)
+        private bool _showPending;
         private int _dressedCount;
         private double _jobMilliseconds;
         private double _mainMilliseconds;
@@ -192,10 +211,10 @@ namespace _Game.Scripts.World
         public string Stats =>
             $"tiles={_dressedCount} job={(_dressedCount > 0 ? _jobMilliseconds / _dressedCount : 0):F0}ms " +
             $"main={(_dressedCount > 0 ? _mainMilliseconds / _dressedCount : 0):F1}ms (frame max {_frameMillisecondsMax:F1}ms) " +
-            $"dressed now={CountDressed()} running={_running.Count}";
+            $"dressed now={CountDressed()} with grass={CountShown()} running={_running.Count}";
 
         // Идёт расчёт или сборка тайла (GrassBenchmark ждёт, пока трава вокруг камеры досчитается).
-        public bool Busy => _running.Count > 0 || _reading > 0 || _building != null;
+        public bool Busy => _running.Count > 0 || _reading > 0 || _building != null || _showPending;
 
         public void Configure(FlyPointEnvironmentProfile profile) => _profile = profile;
 
@@ -245,12 +264,74 @@ namespace _Game.Scripts.World
             if (!dressWorld || _profile == null)
                 return;
 
+            bool changed = UpdateGrassShown();
             _building ??= NextToBuild();
 
-            // за проверку — один новый расчёт: его подготовка читает землю тайла в главном потоке
-            if (_running.Count + _reading < MaxParallelJobs)
+            // за проверку — один новый расчёт: его подготовка читает землю тайла в главном потоке (не в одном кадре со
+            // сборкой травы тайла)
+            if (!changed && _running.Count + _reading < MaxParallelJobs)
                 StartNearestTile();
         }
+
+        // Рендерер травы — только у одетых тайлов рядом: ближнему без него собираем, дальнему снимаем, по одному за
+        // проверку. Есть ли он — спрашиваем у Nature Renderer: если тот перезапустится и соберёт траву сам, снимем снова.
+        private bool UpdateGrassShown()
+        {
+            _showPending = false;
+
+            if (!_hasEye)
+                return false;
+
+            Vector3 ahead = _eye + _eyeVelocity * lookAheadSeconds;
+            Tile toShow = null, toHide = null;
+            float nearest = float.MaxValue, farthest = 0f;
+            int waiting = 0;
+
+            foreach (Tile tile in _tiles.Values)
+            {
+                // одет: на тайле его копия (тайл генератора точки и собирающиеся не в счёт)
+                if (tile.Terrain == null || tile.Copy == null || tile.Terrain.terrainData != tile.Copy)
+                    continue;
+
+                bool? shown = NatureRendererTerrain.GrassShown(tile.Terrain);
+                float distance = Mathf.Min(DistanceToTile(tile.Terrain, _eye), DistanceToTile(tile.Terrain, ahead));
+
+                if (shown == false && distance <= Square(grassDistance + ShowMargin))
+                {
+                    waiting++;
+
+                    if (distance < nearest)
+                    {
+                        nearest = distance;
+                        toShow = tile;
+                    }
+                }
+                else if (shown == true && distance > Square(grassDistance + HideMargin) && distance > farthest)
+                {
+                    farthest = distance;
+                    toHide = tile;
+                }
+            }
+
+            _showPending = waiting > 1;
+            Tile change = toShow ?? toHide;
+
+            if (change == null)
+                return false;
+
+            Stopwatch watch = Stopwatch.StartNew();
+            NatureRendererTerrain.ShowGrass(change.Terrain, change == toShow);
+            _frameMilliseconds += watch.Elapsed.TotalMilliseconds;
+            return true;
+        }
+
+        private bool NearForGrass(Tile tile)
+        {
+            Vector3 ahead = _eye + _eyeVelocity * lookAheadSeconds;
+            return !_hasEye || Mathf.Min(DistanceToTile(tile.Terrain, _eye), DistanceToTile(tile.Terrain, ahead)) <= Square(grassDistance + ShowMargin);
+        }
+
+        private static float Square(float value) => value * value;
 
         /// <summary>
         /// Трава мира на тайле для генератора точки взлёта: он рисует свою зону сеткой 1 м и за её краем кладёт эту.
@@ -498,7 +579,7 @@ namespace _Game.Scripts.World
                 }
                 else
                 {
-                    Bind(tile.Terrain, tile.Copy);
+                    Bind(tile.Terrain, tile.Copy, NearForGrass(tile));
                     bound = true;
                 }
             }
@@ -1098,11 +1179,12 @@ namespace _Game.Scripts.World
                 tile.Counts = null;
         }
 
-        private static void Bind(Terrain terrain, TerrainData data)
+        // withGrass false — тайл дальше дальности травы: рендерер травы соберёт UpdateGrassShown, когда тот приблизится
+        private static void Bind(Terrain terrain, TerrainData data, bool withGrass)
         {
             // тайл без деревьев GeoWorld оставляет без Nature Renderer — ставим свой
             NatureRendererTerrain.Ensure(terrain);
-            NatureRendererTerrain.SwapGrass(terrain, data);
+            NatureRendererTerrain.SwapGrass(terrain, data, withGrass);
         }
 
         // Выключение травы мира: тайлам — исходный TerrainData, копиям — удаление. Копию, которую сейчас держит
@@ -1216,6 +1298,20 @@ namespace _Game.Scripts.World
             }
 
             return dressed;
+        }
+
+        private int CountShown()
+        {
+            int shown = 0;
+
+            foreach (Tile tile in _tiles.Values)
+            {
+                if (tile.Terrain != null && tile.Copy != null && tile.Terrain.terrainData == tile.Copy &&
+                    NatureRendererTerrain.GrassShown(tile.Terrain) == true)
+                    shown++;
+            }
+
+            return shown;
         }
 
         private FlyPointDetailEntry[] ValidDetails()
