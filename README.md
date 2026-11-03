@@ -73,6 +73,10 @@ cloud shadows, seasons with snow, colour and sound, rain, and wind for plants an
 world without code of its own. It needs Enviro 3 in the scene. A game sets the wind with `WorldWind.Set`, the season with
 `Seasons.Apply` and the distances on `NatureRendererSettings`, `ShadowRange` and `GroundDressing`.
 
+Worlds a player generates (world packages) look the same: the package carries the land cover and the map data, baked from
+the export while it is generated, and its tiles' trees become Nature Renderer terrain trees with species by place when they
+load. Open the package on an object (`GeoWorldPackageStreamer` does it) and keep `WorldEnvironment` in the scene.
+
 ## Install in a project
 
 **Fast updates (recommended): a git submodule in `Packages`.** Every update then downloads and imports only the files that

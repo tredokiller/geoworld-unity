@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using _Game.Scripts.World;
 using UnityEngine;
 
-namespace _Game.Scripts.Editor.Vegetation
+namespace _Game.Scripts.World
 {
     /// <summary>
     /// Стыки дорог (RoadAreas) по осям OSM, до подтяжки к снимку. Части мира перекрываются (~110 м), и одна линия OSM
@@ -331,7 +331,7 @@ namespace _Game.Scripts.Editor.Vegetation
         }
 
         // Расстояние от точки до ломаной; segment — номер отрезка, along — метры вдоль ломаной до ближайшей точки.
-        internal static float Nearest(Vector2[] points, Vector2 p, out int segment, out float along)
+        public static float Nearest(Vector2[] points, Vector2 p, out int segment, out float along)
         {
             float best = float.PositiveInfinity;
             float start = 0f;
@@ -359,7 +359,7 @@ namespace _Game.Scripts.Editor.Vegetation
             return best;
         }
 
-        internal static void RecomputeBounds(RoadAreas.Road road)
+        public static void RecomputeBounds(RoadAreas.Road road)
         {
             float half = road.width * 0.5f;
             Vector2 min = Vector2.positiveInfinity, max = Vector2.negativeInfinity;

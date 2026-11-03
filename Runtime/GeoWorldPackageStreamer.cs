@@ -38,6 +38,8 @@ namespace GeoWorld
             lifetime = new CancellationTokenSource();
             root = new GameObject("Geo World package - " + package.Manifest.name).transform;
             root.SetParent(transform, false);
+            // the world's data (land cover, what other assemblies make of the extras) on the package's root while it streams
+            package.Open(root.gameObject);
         }
 
         public void Close()
@@ -45,7 +47,11 @@ namespace GeoWorld
             lifetime?.Cancel(); lifetime?.Dispose(); lifetime = null;
             foreach (var h in loaded.Values) h.Unload();
             loaded.Clear(); loading.Clear(); failed.Clear();
-            if (root) Destroy(root.gameObject);
+            if (root)
+            {
+                Package?.Close(root.gameObject);
+                Destroy(root.gameObject);
+            }
             Package = null;
         }
 

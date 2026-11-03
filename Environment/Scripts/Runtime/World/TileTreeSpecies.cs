@@ -253,6 +253,45 @@ namespace _Game.Scripts.World
                 tile.Start.enabled = true;
         }
 
+        /// <summary>
+        /// Виды деревьев террейна сразу, целиком — для тайла пакета мира (PackageTiles кладёт его деревья на террейн при
+        /// загрузке, Nature Renderer ещё не начал). false — у мира нет карты земель или у террейна нет деревьев.
+        /// </summary>
+        public bool Process(Terrain terrain)
+        {
+            TerrainData data = terrain != null ? terrain.terrainData : null;
+
+            if (_profile == null || data == null || data.treeInstanceCount == 0)
+                return false;
+
+            Tile tile = new() { Terrain = terrain, Context = BuildContext(terrain) };
+
+            if (tile.Context == null)
+                return false;
+
+            tile.OriginalHeights = GeoTreeHeights.PrototypeHeights(data.treePrototypes);
+            tile.Prototypes = ExtendPrototypes(data.treePrototypes, tile.Context);
+            tile.Trees = data.treeInstances;
+            Vector3 origin = terrain.transform.position;
+            Vector3 size = data.size;
+
+            for (int i = 0; i < tile.Trees.Length; i++)
+            {
+                if (Assign(ref tile.Trees[i], origin, size, tile))
+                    tile.Changed++;
+            }
+
+            if (tile.Changed > 0)
+            {
+                data.treePrototypes = tile.Prototypes;
+                data.SetTreeInstances(tile.Trees, false);
+            }
+
+            ProcessedTiles++;
+            ChangedTrees += tile.Changed;
+            return true;
+        }
+
         private static bool IsRuntimeData(TerrainData data) =>
             data.name.EndsWith("(Clone)") || _Game.Scripts.Locations.CustomSpawnRuntimeEnvironmentGenerator.IsRuntimeCopy(data);
 

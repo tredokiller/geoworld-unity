@@ -59,7 +59,7 @@ namespace GeoWorld
     public static class GeoWorldGenerator
     {
         // The package version this code is (a package says which version made it): keep with package.json.
-        public const string Version = "1.17.1";
+        public const string Version = "1.18.0";
         public const string PackageName = GeoPaths.PackageName;
         public static bool Busy { get; private set; }
 
@@ -266,6 +266,9 @@ namespace GeoWorld
                     tileSeconds.Add(clock.Elapsed.TotalSeconds);
                 }
 
+                Report(GeoWorldProgress.Stage.Writing, 0.975f, "Baking the land cover and the world's map data");
+                await Pause(now, cancellation);
+                var extras = BakeExtras(staging, envPath, env, tileSize, indices, notes);
                 Report(GeoWorldProgress.Stage.Writing, 0.98f, "Writing the manifest");
                 var outer = plan.Outer();
                 var manifest = new GeoWorldManifest
@@ -285,6 +288,7 @@ namespace GeoWorld
                     inputHash = InputHash(envPath, buildingsPath, env, settings, tileSize),
                     attribution = Attribution(settings),
                     notes = notes.Distinct().ToArray(),
+                    extras = extras,
                 };
                 // as it will read back from world.json: a double written as text may come back a bit different, and the hash must be
                 // that of what a reader has
@@ -336,6 +340,46 @@ namespace GeoWorld
         }
 
         public static GeoWorldGenerationReport LastReport { get; private set; }
+
+        // Before the manifest is written: for other assemblies to bake data of the whole world into the package from its export
+        // (GeoPackageBake.Add; the environment layer: roads, fields and leaf types of the world's map). The land cover is there
+        // already (GeoPackageBake.Ground). They come back on the package's opening (GeoWorldPackage.Opened, ReadExtra).
+        public static event Action<GeoPackageBake> Baking;
+
+        // The package's land cover and what Baking adds, written next to world.json; their entries for the manifest.
+        static GeoWorldManifest.Extra[] BakeExtras(string staging, string envPath, EnvironmentData env, float tileSize, IList<Vector2Int> indices, List<string> notes)
+        {
+            var bake = new GeoPackageBake(envPath, env, tileSize, indices, notes);
+            var ground = GeoGroundMap.Read(new[] { envPath }, tileSize, notes);
+            if (ground.Any)
+            {
+                bake.Ground = ground;
+                // as GeoLandCoverBaker: cells of about 10 m, 100 along a 1 km tile
+                int resolution = Mathf.Clamp(Mathf.RoundToInt(tileSize / 10), 1, 1024);
+                var tiles = new List<GeoPackageLandCover.Tile>();
+                foreach (var index in indices)
+                {
+                    var core = GeoTilePlan.Tile(index, tileSize);
+                    var area = new Rect(core.minX, core.minZ, core.Width, core.Depth);
+                    tiles.Add(new GeoPackageLandCover.Tile { index = index, area = area, cells = ground.Cells(area, resolution) });
+                }
+                bake.Add(GeoPackageLandCover.Name, GeoPackageLandCover.FileName, GeoPackageLandCover.Write(resolution, GeoLandCover.Names, tiles));
+            }
+            else notes.Add("Land cover: not in the package, the export has no ground map (materials.png).");
+            if (Baking != null)
+                foreach (Action<GeoPackageBake> listener in Baking.GetInvocationList())
+                {
+                    try { listener(bake); }
+                    catch (Exception e) { notes.Add("Not baked into the package: " + listener.Method.DeclaringType?.Name + " (" + e.Message + ")."); Debug.LogException(e); }
+                }
+            var extras = new List<GeoWorldManifest.Extra>();
+            foreach (var (name, file, bytes) in bake.files)
+            {
+                File.WriteAllBytes(Path.Combine(staging, file), bytes);
+                extras.Add(new GeoWorldManifest.Extra { name = name, file = file, bytes = bytes.Length, sha256 = GeoWorldPackage.Sha256(bytes) });
+            }
+            return extras.ToArray();
+        }
 
         // a progress message without its counts ("Downloading satellite tiles (12 / 121, zoom 18)", "Placing buildings 300 / 2000")
         static string StageName(string text)

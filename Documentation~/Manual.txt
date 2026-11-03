@@ -303,7 +303,9 @@ field; where exports overlap, the export that builds the ground there says what 
    radius (fractions[(int)GeoLandClass.Forest]), across the tiles' edges; GeoLandCover.Share sums some of them.
 It is baked after the tiles are generated or rebuilt, and by Bake land cover in the Geo Tiled World's Inspector (a world
 made earlier: a few seconds, from the exports; no tile is rebuilt or opened). A tile whose land cover did not change
-keeps its asset as it is. World packages (runtime generation) carry no land cover yet.
+keeps its asset as it is. A world package (runtime generation) carries it too: landcover.bin, made from the export's ground map
+on the tiles' grid when the package is generated and put on the package's host as a GeoLandCover when it opens (GeoWorldPackage.Open;
+GeoWorldPackageStreamer opens it on its package root), so GeoLandCover.TrySample answers in a package the same way.
 World map data (the environment layer, assembly GeoWorld.Environment): roads with their width, surface, marking and wear
 (RoadAreas: road surfaces in the terrain, no grass on the carriageway, roads kept clear at the takeoff point), farmland
 outlines with the bearing of their rows (FieldAreas: field rows, tramlines and furrows) and forest outlines with their leaf
@@ -317,7 +319,9 @@ cover. They are written into the world's folder, never into the package, and put
 the open scenes (a game may keep a copy of the world's object in its own scene). Without the exports on the machine the
 data stays as it is. A world without it has no road surfaces, field rows or leaf types, never another world's. The tree
 species themselves (species, variants and mixes by place) are shared: Resources/World/TreeSpeciesProfile. World packages
-(runtime generation) carry no world map data yet.
+(runtime generation) carry it as the extra "world map" (worldmap.json.gz, WorldMapPackage), baked from the export when the package
+is generated (curbs by the package's land cover) and put on the host as a WorldMapData when it opens; without the editor there is
+no satellite step: road centrelines are OpenStreetMap's and field rows follow the field's long side.
 The environment layer's setup (WorldEnvironment, on the world's object; WorldMapBaker puts it there with the map data):
 when it wakes (execution order -1000) it adds to its object every system the layer has and the object lacks, so a scene
 with the world's object gets the whole look without code of its own: TileTreeSpecies (before the tiles' Nature Renderer
@@ -504,10 +508,16 @@ starts the player's own executable with -batchmode -geoworld-host <request.json>
 graphics device keeps no values in its materials, so generation refuses to run there) (the game's scenes are loaded but never
 woken in it: their objects are switched off before Awake), reads its progress from a file, kills it on cancel, and loads the package it
 wrote. The player must allow a second instance (Force Single Instance off); the request's settings cross as their plain values.
-Limits: one export (up to 100 km² and 20 km a side); Nature Renderer trees, prop catalogs and your own tree prefabs are the editor's.
+Limits: one export (up to 100 km² and 20 km a side); Nature Renderer trees, prop catalogs and your own tree prefabs are the editor's
+when the package is made. With the environment layer in the scene (WorldEnvironment), a package's trees become the terrain's own when
+a tile loads (PackageTiles, GeoWorldPackage.TileLoaded): same place, turn, width and height, heights by the package's land cover
+(GeoTreeHeights), species by place (TileTreeSpecies), drawn by Nature Renderer; the package's own instanced trees are switched off.
 A player keeps its things in Application.persistentDataPath/GeoWorld (GeoWorldGenerator.Home): exports and the app's cache, the
 satellite tiles, packages/<name>. The editor's in %LOCALAPPDATA%\GeoWorld (the satellite tiles in Library).
-The package: <folder>/world.json and <folder>/tiles/tile_<x>_<z>.gwt.
+The package: <folder>/world.json, <folder>/tiles/tile_<x>_<z>.gwt and the extras (data of the whole world, GeoWorldManifest.extras:
+name, file, bytes, SHA-256, part of contentHash): landcover.bin ("land cover") and what other assemblies add while it is generated
+(GeoWorldGenerator.Baking: GeoPackageBake gives the export, the tiles and the land cover, Add writes a file); GeoWorldPackage.ReadExtra
+reads one, GeoWorldPackage.Opened / Closed / TileLoaded let other assemblies use them. A package from before the extras keeps its hash.
   world.json (GeoWorldManifest, JSON): format "geoworld-package" and formatVersion; name; generator (package and version), tileVersion
   and unityVersion; origin (lat, lon, crs local-enu-wgs84: x east and z north in metres on the tangent plane at the origin, y up;
   ground: the height above sea level of y 0); request (the area in degrees); bounds (metres); tileSize and the grid (first tile,

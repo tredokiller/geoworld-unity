@@ -44,6 +44,9 @@ namespace GeoWorld.Editor
     {
         // type: the kind of a water area (OSM water=*, or riverbank): a river's own water follows the river (GeoWater)
         public string id, name, material, tag, type;
+        // OpenStreetMap leaf_type of a wood (broadleaved, needleleaved, mixed) and the bearing of a field's long side (degrees)
+        public string leafType;
+        public float rotation;
         public float[][] rings;
     }
     [Serializable] public class TreeFeature { public string id; public float x, z, height, crown; }

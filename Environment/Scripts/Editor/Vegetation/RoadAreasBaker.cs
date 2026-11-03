@@ -57,7 +57,7 @@ namespace _Game.Scripts.Editor.Vegetation
 
                 foreach (JToken road in root["roads"] ?? new JArray())
                 {
-                    if (!Add(road, (float?)road["width"] ?? 3f, KindOf((string)road["material"]), IsMarked((string)road["type"])))
+                    if (!Add(road, (float?)road["width"] ?? 3f, WorldMapExport.KindOf((string)road["material"]), WorldMapExport.IsMarked((string)road["type"])))
                         skipped++;
                 }
 
@@ -77,7 +77,8 @@ namespace _Game.Scripts.Editor.Vegetation
             RoadJunctions.Links links = RoadJunctions.Detect(roads, out string ends);
             // сначала оси и ширина по снимку: по ширине город отличается от села
             string snapped = snap ? RoadSatelliteSnap.Snap(roads, world, links) : "not snapped";
-            int curbs = MarkCurbs(roads, world.GetComponentInChildren<GeoLandCover>(true) ?? Object.FindFirstObjectByType<GeoLandCover>(FindObjectsInactive.Include));
+            GeoLandCover cover = world.GetComponentInChildren<GeoLandCover>(true) ?? Object.FindFirstObjectByType<GeoLandCover>(FindObjectsInactive.Include);
+            int curbs = WorldMapExport.MarkCurbs(roads, cover != null ? (x, z) => cover.Sample(x, z, out GeoLandClass land) ? land : GeoLandClass.None : null);
             asset = WorldMapBaker.Asset<RoadAreas>(world, AssetName, true);
             asset.roads = roads.ToArray();
             asset.coverage = coverage.ToArray();
@@ -121,86 +122,5 @@ namespace _Game.Scripts.Editor.Vegetation
             }
         }
 
-        // Бордюр — у асфальта в городе: вдоль дороги (каждые 10 м, на оси и в 4 м за кромками) застройка карты земель (Urban,
-        // Building, Asphalt) не меньше половины, и дорога размечена, широкая по снимку (городская улица от ~7 м, сельская —
-        // 4–6) или рядом мощёное (тротуары, площади — Paving). В селе застройка тоже Urban — там обочина.
-        private static int MarkCurbs(List<RoadAreas.Road> roads, GeoLandCover cover)
-        {
-            if (cover == null)
-                return 0;
-
-            int marked = 0;
-
-            foreach (RoadAreas.Road road in roads)
-            {
-                if (road.kind != RoadAreas.Kind.Asphalt)
-                    continue;
-
-                int samples = 0, urban = 0, paving = 0;
-                float half = road.width * 0.5f;
-
-                for (int i = 1; i < road.points.Length; i++)
-                {
-                    Vector2 a = road.points[i - 1];
-                    Vector2 b = road.points[i];
-                    float length = Vector2.Distance(a, b);
-
-                    if (length < 0.01f)
-                        continue;
-
-                    Vector2 direction = (b - a) / length;
-                    Vector2 normal = new(-direction.y, direction.x);
-
-                    for (float s = 0f; s < length; s += 10f)
-                    {
-                        Vector2 point = a + direction * s;
-
-                        foreach (float side in new[] { 0f, half + 4f, -half - 4f })
-                        {
-                            Vector2 at = point + normal * side;
-
-                            if (!cover.Sample(at.x, at.y, out GeoLandClass land))
-                                continue;
-
-                            samples++;
-
-                            if (land is GeoLandClass.Urban or GeoLandClass.Building or GeoLandClass.Asphalt)
-                                urban++;
-
-                            if (land == GeoLandClass.Paving)
-                                paving++;
-                        }
-                    }
-                }
-
-                if (samples == 0)
-                    continue;
-
-                float urbanShare = (urban + paving) / (float)samples;
-                road.curb = urbanShare >= 0.5f && (paving / (float)samples >= 0.1f || road.marked || road.width >= 6.8f);
-
-                if (road.curb)
-                    marked++;
-            }
-
-            return marked;
-        }
-
-        // Материал экстрактора (materials.py: asphalt, paving, gravel, dirt_road, path) → покрытие.
-        private static RoadAreas.Kind KindOf(string material) => material switch
-        {
-            "asphalt" => RoadAreas.Kind.Asphalt,
-            "paving" => RoadAreas.Kind.Paving,
-            "gravel" => RoadAreas.Kind.Gravel,
-            "path" => RoadAreas.Kind.Path,
-            _ => RoadAreas.Kind.Dirt
-        };
-
-        // Разметка — у магистралей и дорог областного и районного значения (как GeoRoadPhotos.IsMarked пакета).
-        private static bool IsMarked(string type)
-        {
-            string highway = (type ?? "").Replace("_link", "");
-            return highway is "motorway" or "trunk" or "primary" or "secondary" or "tertiary";
-        }
     }
 }

@@ -15,6 +15,8 @@ namespace GeoWorld
     // A generated world on disk, made in a player or in the editor (GeoWorldGenerator) and loaded tile by tile without the editor:
     //   <folder>/world.json          the manifest (GeoWorldManifest): format version, origin, bounds, tiles, terrain statistics, hashes
     //   <folder>/tiles/tile_x_z.gwt  one file a tile (GeoWorldPackageFormat)
+    //   <folder>/<extra>             data of the whole world besides its tiles (GeoWorldManifest.extras): its land cover
+    //                                (GeoPackageLandCover), and what other assemblies bake into it (GeoWorldGenerator.Baking)
     // Coordinates: metres east (x) and north (z) of the origin on the tangent plane (local ENU on WGS84), y up; Unity world space
     // with the package's root at the world's origin. A package is self-contained apart from the library it refers to
     // (GeoRuntimeAssets), so the same package can be handed to every client of a session; contentHash says whether two are the same.
@@ -29,6 +31,43 @@ namespace GeoWorld
         public IReadOnlyList<GeoWorldManifest.Tile> Tiles => Manifest.tiles;
 
         GeoWorldPackage(string folder, GeoWorldManifest manifest) { Folder = folder; Manifest = manifest; }
+
+        // A package opened on a host (Open: its land cover is put there), for other assemblies to add what the package carries for
+        // them (the environment layer: roads, fields and leaf types of the world's map) and take it off again (Closed).
+        public static event Action<GeoWorldPackage, GameObject> Opened, Closed;
+        // A tile loaded and switched on (LoadTileAsync, LoadTile), before the caller gets it: for other assemblies to finish it
+        // (the environment layer: the trees as the terrain's own, drawn by Nature Renderer).
+        public static event Action<GeoWorldPackage, GeoWorldTileHandle> TileLoaded;
+
+        // The bytes of an extra file by its name (GeoWorldManifest.Extra.name); null when the package has none of that name.
+        public byte[] ReadExtra(string name)
+        {
+            foreach (var extra in Manifest.extras ?? new GeoWorldManifest.Extra[0])
+            {
+                if (extra == null || extra.name != name) continue;
+                string path = Path.Combine(Folder, extra.file);
+                return File.Exists(path) ? File.ReadAllBytes(path) : null;
+            }
+            return null;
+        }
+
+        // The package's world data on host — its land cover (GeoLandCover) and what other assemblies make of its extras (Opened) —
+        // for as long as its tiles are around. GeoWorldPackageStreamer opens the package on itself; a game that loads tiles itself
+        // calls it once with an object of its own, and Close when it is done.
+        public void Open(GameObject host)
+        {
+            if (!host) throw new ArgumentNullException(nameof(host));
+            try { GeoPackageLandCover.Attach(this, host); }
+            catch (Exception e) { UnityEngine.Debug.LogWarning("Geo World: the package's land cover was not read (" + e.Message + ")."); }
+            Opened?.Invoke(this, host);
+        }
+
+        public void Close(GameObject host)
+        {
+            if (!host) return;
+            Closed?.Invoke(this, host);
+            GeoPackageLandCover.Detach(host);
+        }
 
         public static GeoWorldPackage Load(string folder)
         {
@@ -118,6 +157,7 @@ namespace GeoWorld
                 }
                 step.Restart();
                 var handle = Finish(index, data, builder, created, options, colliders);
+                RaiseTileLoaded(handle);
                 if (step.Elapsed.TotalMilliseconds > longest) { longest = step.Elapsed.TotalMilliseconds; longestStep = "switching the tile on"; }
                 handle.LongestStepMs = longest; handle.LongestStep = longestStep;
                 return handle;
@@ -141,14 +181,26 @@ namespace GeoWorld
             try
             {
                 while (builder.Step()) { }
-                return Finish(index, data, builder, created, options,
+                var handle = Finish(index, data, builder, created, options,
                     options.buildingColliders && data.navigation != null ? GeoNavigation.BuildingMeshes(data.navigation, created) : null);
+                RaiseTileLoaded(handle);
+                return handle;
             }
             catch
             {
                 if (builder.Root) Object.DestroyImmediate(builder.Root);
                 foreach (var o in created) if (o) Object.DestroyImmediate(o);
                 throw;
+            }
+        }
+
+        void RaiseTileLoaded(GeoWorldTileHandle handle)
+        {
+            if (TileLoaded == null) return;
+            foreach (Action<GeoWorldPackage, GeoWorldTileHandle> listener in TileLoaded.GetInvocationList())
+            {
+                try { listener(this, handle); }
+                catch (Exception e) { UnityEngine.Debug.LogException(e); }
             }
         }
 
@@ -190,6 +242,12 @@ namespace GeoWorld
                 string path = Path.Combine(Folder, t.file);
                 if (!File.Exists(path)) { problems.Add("missing " + t.file); continue; }
                 if (!string.Equals(Sha256(File.ReadAllBytes(path)), t.sha256, StringComparison.OrdinalIgnoreCase)) problems.Add("changed " + t.file);
+            }
+            foreach (var extra in Manifest.extras ?? new GeoWorldManifest.Extra[0])
+            {
+                string path = extra != null ? Path.Combine(Folder, extra.file) : null;
+                if (path == null || !File.Exists(path)) { problems.Add("the extra " + extra?.name + " is missing"); continue; }
+                if (!string.Equals(Sha256(File.ReadAllBytes(path)), extra.sha256, StringComparison.OrdinalIgnoreCase)) problems.Add("the extra " + extra.name + " has changed");
             }
             if (!string.Equals(Manifest.ComputeContentHash(), Manifest.contentHash, StringComparison.OrdinalIgnoreCase)) problems.Add("the manifest's content hash does not match");
             return problems.Count == 0;
@@ -321,6 +379,15 @@ namespace GeoWorld
         public string[] notes = new string[0];
         [Tooltip("When it was made (UTC, ISO 8601); not part of contentHash.")]
         public string created;
+        [Tooltip("Files of the whole world besides its tiles (its land cover, the environment layer's map data), with their SHA-256 (part of contentHash).")]
+        public Extra[] extras = new Extra[0];
+
+        [Serializable]
+        public sealed class Extra
+        {
+            public string name, file, sha256;
+            public long bytes;
+        }
 
         [Serializable]
         public sealed class Origin
@@ -382,7 +449,13 @@ namespace GeoWorld
         {
             string hash = contentHash, when = created;
             contentHash = ""; created = "";
-            try { return GeoWorldPackage.Sha256(JsonUtility.ToJson(this)); }
+            try
+            {
+                string json = JsonUtility.ToJson(this);
+                // a package from before the extras: the same hash as when it was made
+                if (extras == null || extras.Length == 0) json = json.Replace(",\"extras\":[]", "");
+                return GeoWorldPackage.Sha256(json);
+            }
             finally { contentHash = hash; created = when; }
         }
     }
