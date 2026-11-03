@@ -76,7 +76,7 @@ namespace _Game.Scripts.Editor.Vegetation
             int stitched = RoadJunctions.Stitch(roads, ids);
             RoadJunctions.Links links = RoadJunctions.Detect(roads, out string ends);
             // сначала оси и ширина по снимку: по ширине город отличается от села
-            string snapped = snap ? RoadSatelliteSnap.Snap(roads, world, links) : "not snapped";
+            string snapped = snap ? SnapToSatellite(roads, world, links) : "not snapped";
             GeoLandCover cover = world.GetComponentInChildren<GeoLandCover>(true) ?? Object.FindFirstObjectByType<GeoLandCover>(FindObjectsInactive.Include);
             int curbs = WorldMapExport.MarkCurbs(roads, cover != null ? (x, z) => cover.Sample(x, z, out GeoLandClass land) ? land : GeoLandClass.None : null);
             asset = WorldMapBaker.Asset<RoadAreas>(world, AssetName, true);
@@ -121,6 +121,44 @@ namespace _Game.Scripts.Editor.Vegetation
                 return true;
             }
         }
+        // Подтяжка осей к снимку (RoadSatelliteSnap) по снимкам тайлов мира из их ассетов.
+        private static string SnapToSatellite(List<RoadAreas.Road> roads, GeoTiledWorld world, RoadJunctions.Links links)
+        {
+            RoadSatelliteSnap.Job job = RoadSatelliteSnap.Begin(roads, world.origin, world.tileSize);
+            int wanted = Mathf.Max(1, world.tiles.Count(tile => job.Wants(tile.index)));
+            int done = 0;
 
+            using (SatelliteImage.Reader reader = new(RoadSatelliteSnap.SatelliteSize, false))
+            {
+                try
+                {
+                    foreach (GeoTiledWorld.Tile tile in world.tiles)
+                    {
+                        if (tile.empty || string.IsNullOrEmpty(tile.assetPath) || !job.Wants(tile.index))
+                            continue;
+
+                        if (EditorUtility.DisplayCancelableProgressBar("Bake Road Areas", "Roads on the satellite: " + tile.index, done / (float)wanted))
+                            break;
+
+                        done++;
+                        Texture satellite = SatelliteImage.Of(AssetDatabase.LoadAssetAtPath<TerrainData>(tile.assetPath));
+
+                        if (satellite == null)
+                            continue;
+
+                        RoadSatelliteSnap.AddTile(job, tile.index, tile.area, reader.Read(satellite));
+
+                        if (done % 20 == 0)
+                            EditorUtility.UnloadUnusedAssetsImmediate();
+                    }
+                }
+                finally
+                {
+                    EditorUtility.ClearProgressBar();
+                }
+            }
+
+            return RoadSatelliteSnap.Finish(job, links);
+        }
     }
 }

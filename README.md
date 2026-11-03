@@ -74,8 +74,9 @@ world without code of its own. It needs Enviro 3 in the scene. A game sets the w
 `Seasons.Apply` and the distances on `NatureRendererSettings`, `ShadowRange` and `GroundDressing`.
 
 Worlds a player generates (world packages) look the same: the package carries the land cover and the map data, baked from
-the export while it is generated, and its tiles' trees become Nature Renderer terrain trees with species by place when they
-load. Open the package on an object (`GeoWorldPackageStreamer` does it) and keep `WorldEnvironment` in the scene.
+the export while it is generated (with the editor bake's satellite step: each tile's satellite image moves the roads onto
+the road it shows and gives the fields their rows' bearing), and its tiles' trees become Nature Renderer terrain trees with
+species by place when they load. Open the package on an object (`GeoWorldPackageStreamer` does it) and keep `WorldEnvironment` in the scene.
 
 ## Install in a project
 
@@ -85,7 +86,7 @@ changed (a few MB instead of the whole package), and the project's commit of an 
 
 ```
 git submodule add https://github.com/tredokiller/geoworld-unity.git Packages/com.tredokiller.geoworld
-git -C Packages/com.tredokiller.geoworld checkout v1.18.0
+git -C Packages/com.tredokiller.geoworld checkout v1.19.0
 git -C Packages/com.tredokiller.geoworld lfs pull
 git config -f .gitmodules submodule.Packages/com.tredokiller.geoworld.shallow true
 ```
@@ -97,13 +98,13 @@ that is not a git repository: `git clone` into the same folder.) Unity takes a p
 **Through the Package Manager:** Package Manager > **+** > **Add package from git URL...** and enter the version you want:
 
 ```
-https://github.com/tredokiller/geoworld-unity.git#v1.18.0
+https://github.com/tredokiller/geoworld-unity.git#v1.19.0
 ```
 
 or add it to `Packages/manifest.json`:
 
 ```json
-"com.tredokiller.geoworld": "https://github.com/tredokiller/geoworld-unity.git#v1.18.0"
+"com.tredokiller.geoworld": "https://github.com/tredokiller/geoworld-unity.git#v1.19.0"
 ```
 
 The Package Manager downloads the whole package (some 300 MB, and its Git LFS files) for every version, and Unity imports all
@@ -115,7 +116,7 @@ The repository is private: git on the computer must be signed in to GitHub (the 
 
 **Update** in the Geo World window (or Tools > Geo World > Update Geo World...). With fast updates it fetches the new
 version's tag and checks it out in place, with a bar of git's progress; Unity imports what changed and recompiles. By hand:
-`git -C Packages/com.tredokiller.geoworld fetch --depth 1 origin tag v1.18.0` and `checkout v1.18.0`, then `lfs pull`.
+`git -C Packages/com.tredokiller.geoworld fetch --depth 1 origin tag v1.19.0` and `checkout v1.19.0`, then `lfs pull`.
 Through the Package Manager: change the version after `#` in `Packages/manifest.json` and go back to Unity. Each version is
 listed in [CHANGELOG.md](CHANGELOG.md).
 

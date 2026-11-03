@@ -59,7 +59,7 @@ namespace GeoWorld
     public static class GeoWorldGenerator
     {
         // The package version this code is (a package says which version made it): keep with package.json.
-        public const string Version = "1.18.0";
+        public const string Version = "1.19.0";
         public const string PackageName = GeoPaths.PackageName;
         public static bool Busy { get; private set; }
 
@@ -203,6 +203,8 @@ namespace GeoWorld
                 var stats = new StatsBuilder();
                 var tileSeconds = new List<double>();
                 var stages = new Dictionary<string, double>();
+                var bake = new GeoPackageBake(envPath, env, tileSize, indices, notes);
+                Raise(Starting, bake, notes);
                 for (int k = 0; k < indices.Count; k++)
                 {
                     cancellation.ThrowIfCancellationRequested();
@@ -232,6 +234,12 @@ namespace GeoWorld
                             GeoWorldBuild.progressPrefix = ""; GeoWorldBuild.progressFrom = 0; GeoWorldBuild.progressSpan = 1;
                             root = GeoWorldBuild.Build(envPath, buildingsPath, settings, null, job, "", o => made.Add(o));
                         }
+                        if (TileBuilt != null)
+                            foreach (Action<GeoPackageBake, Vector2Int, GameObject> listener in TileBuilt.GetInvocationList())
+                            {
+                                try { listener(bake, index, root.gameObject); }
+                                catch (Exception e) { tileNotes.Add("Not baked from tile " + index.x + "_" + index.y + ": " + listener.Method.DeclaringType?.Name + " (" + e.Message + ")."); Debug.LogException(e); }
+                            }
                         if (stageNow != null) Add(stages, stageNow, stageClock.Elapsed.TotalSeconds);
                         stageClock.Restart();
                         var navigation = Navigation(job, out float footprintArea, out int damaged);
@@ -268,7 +276,7 @@ namespace GeoWorld
 
                 Report(GeoWorldProgress.Stage.Writing, 0.975f, "Baking the land cover and the world's map data");
                 await Pause(now, cancellation);
-                var extras = BakeExtras(staging, envPath, env, tileSize, indices, notes);
+                var extras = BakeExtras(staging, bake);
                 Report(GeoWorldProgress.Stage.Writing, 0.98f, "Writing the manifest");
                 var outer = plan.Outer();
                 var manifest = new GeoWorldManifest
@@ -345,11 +353,26 @@ namespace GeoWorld
         // (GeoPackageBake.Add; the environment layer: roads, fields and leaf types of the world's map). The land cover is there
         // already (GeoPackageBake.Ground). They come back on the package's opening (GeoWorldPackage.Opened, ReadExtra).
         public static event Action<GeoPackageBake> Baking;
+        // Before the first tile, and after each tile is built (its root, with the terrain and its satellite imagery, before it is
+        // written and destroyed): for what needs the tiles' own data, such as the environment layer's roads moved onto the
+        // road on the satellite and the fields' rows read from it. The same GeoPackageBake comes to Baking afterwards.
+        public static event Action<GeoPackageBake> Starting;
+        public static event Action<GeoPackageBake, Vector2Int, GameObject> TileBuilt;
+
+        static void Raise<T>(Action<T> handlers, T value, List<string> notes)
+        {
+            if (handlers == null) return;
+            foreach (Action<T> listener in handlers.GetInvocationList())
+            {
+                try { listener(value); }
+                catch (Exception e) { notes.Add("Not baked into the package: " + listener.Method.DeclaringType?.Name + " (" + e.Message + ")."); Debug.LogException(e); }
+            }
+        }
 
         // The package's land cover and what Baking adds, written next to world.json; their entries for the manifest.
-        static GeoWorldManifest.Extra[] BakeExtras(string staging, string envPath, EnvironmentData env, float tileSize, IList<Vector2Int> indices, List<string> notes)
+        static GeoWorldManifest.Extra[] BakeExtras(string staging, GeoPackageBake bake)
         {
-            var bake = new GeoPackageBake(envPath, env, tileSize, indices, notes);
+            string envPath = bake.EnvironmentPath; float tileSize = bake.TileSize; var indices = bake.Tiles; var notes = bake.Notes;
             var ground = GeoGroundMap.Read(new[] { envPath }, tileSize, notes);
             if (ground.Any)
             {
@@ -366,12 +389,7 @@ namespace GeoWorld
                 bake.Add(GeoPackageLandCover.Name, GeoPackageLandCover.FileName, GeoPackageLandCover.Write(resolution, GeoLandCover.Names, tiles));
             }
             else notes.Add("Land cover: not in the package, the export has no ground map (materials.png).");
-            if (Baking != null)
-                foreach (Action<GeoPackageBake> listener in Baking.GetInvocationList())
-                {
-                    try { listener(bake); }
-                    catch (Exception e) { notes.Add("Not baked into the package: " + listener.Method.DeclaringType?.Name + " (" + e.Message + ")."); Debug.LogException(e); }
-                }
+            Raise(Baking, bake, notes);
             var extras = new List<GeoWorldManifest.Extra>();
             foreach (var (name, file, bytes) in bake.files)
             {

@@ -1,10 +1,8 @@
 using System.Collections.Generic;
 using _Game.Scripts.World;
-using GeoWorld;
-using UnityEditor;
 using UnityEngine;
 
-namespace _Game.Scripts.Editor.Vegetation
+namespace _Game.Scripts.World
 {
     /// <summary>
     /// Подтягивает оси дорог (RoadAreas) к дороге на снимке тайлов. Оси OSM местами лежат в 1–3 м от неё — полотно
@@ -16,6 +14,9 @@ namespace _Game.Scripts.Editor.Vegetation
     /// дороге, сдвиг переходит в сдвиг той дороги в точке примыкания (конец остаётся на её новой оси), концы, сходящиеся в
     /// одной точке, сдвигаются на средний сдвиг (или со сквозной дорогой через эту точку), тупик — на свой. У асфальта и
     /// плитки ширина — по краям серой полосы снимка (медиана по дороге, от 0.75 до 1.5 ширины OSM).
+    /// По шагам (Begin, AddTile на каждый тайл со снимком SatelliteSize² в sRGB, Finish), чтобы снимок тайла читался, пока
+    /// он есть: в редакторе — из ассетов тайлов (RoadAreasBaker), в плеере — пока генератор строит тайл пакета мира
+    /// (WorldMapPackage, GeoWorldGenerator.TileBuilt).
     /// </summary>
     public static class RoadSatelliteSnap
     {
@@ -27,10 +28,10 @@ namespace _Game.Scripts.Editor.Vegetation
         private const float MinConfidence = 0.05f;
         private const float MinConfidenceBare = 0.08f;
         private const float EndTaper = 12f;
-        private const int SatelliteSize = 2048;
+        public const int SatelliteSize = 2048;
         private const float Simplify = 0.2f;
 
-        private sealed class Sample
+        internal sealed class Sample
         {
             public Vector2 Point;
             public Vector2 Normal;
@@ -39,75 +40,71 @@ namespace _Game.Scripts.Editor.Vegetation
             public float Width = -1f;
         }
 
-        public static string Snap(List<RoadAreas.Road> roads, GeoTiledWorld world, RoadJunctions.Links links)
+        /// <summary>Подтяжка в работе: отсчёты дорог по тайлам и их оценки по снимкам.</summary>
+        public sealed class Job
         {
-            int steps = Mathf.RoundToInt(MaxOffset * 2 / OffsetStep) + 1;
-            var samples = new List<Sample>[roads.Count];
-            var byTile = new Dictionary<Vector2Int, List<(int road, Sample sample)>>();
+            internal List<RoadAreas.Road> Roads;
+            internal List<Sample>[] Samples;
+            internal Dictionary<Vector2Int, List<(int road, Sample sample)>> ByTile;
+            internal int Steps;
+            internal float[] Paved, Bare;
+
+            /// <summary>Тайлы, по которым идут дороги: их снимки нужны AddTile.</summary>
+            public IEnumerable<Vector2Int> Tiles => ByTile.Keys;
+            public bool Wants(Vector2Int tile) => ByTile.ContainsKey(tile);
+        }
+
+        /// <summary>Отсчёты дорог (кроме рельсов) каждые Spacing м, по тайлам сетки (origin — юго-западный угол тайла 0, 0).</summary>
+        public static Job Begin(List<RoadAreas.Road> roads, Vector2 origin, float tileSize)
+        {
+            Job job = new()
+            {
+                Roads = roads, Samples = new List<Sample>[roads.Count], ByTile = new Dictionary<Vector2Int, List<(int, Sample)>>(),
+                Steps = Mathf.RoundToInt(MaxOffset * 2 / OffsetStep) + 1
+            };
 
             for (int r = 0; r < roads.Count; r++)
             {
                 if (roads[r].kind == RoadAreas.Kind.Rail)
                     continue;
 
-                samples[r] = Resample(roads[r].points);
+                job.Samples[r] = Resample(roads[r].points);
 
-                foreach (Sample sample in samples[r])
+                foreach (Sample sample in job.Samples[r])
                 {
-                    var key = new Vector2Int(Mathf.FloorToInt((sample.Point.x - world.origin.x) / world.tileSize),
-                        Mathf.FloorToInt((sample.Point.y - world.origin.y) / world.tileSize));
+                    var key = new Vector2Int(Mathf.FloorToInt((sample.Point.x - origin.x) / tileSize), Mathf.FloorToInt((sample.Point.y - origin.y) / tileSize));
 
-                    if (!byTile.TryGetValue(key, out var list))
-                        byTile[key] = list = new List<(int, Sample)>();
+                    if (!job.ByTile.TryGetValue(key, out var list))
+                        job.ByTile[key] = list = new List<(int, Sample)>();
 
                     list.Add((r, sample));
                 }
             }
 
-            RenderTexture rt = RenderTexture.GetTemporary(SatelliteSize, SatelliteSize, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.sRGB);
-            Texture2D read = new(SatelliteSize, SatelliteSize, TextureFormat.RGBA32, false, false) { hideFlags = HideFlags.DontUnloadUnusedAsset };
-            float[] paved = new float[SatelliteSize * SatelliteSize];
-            float[] bare = new float[SatelliteSize * SatelliteSize];
-            int done = 0;
+            return job;
+        }
 
-            try
-            {
-                foreach (GeoTiledWorld.Tile tile in world.tiles)
-                {
-                    if (tile.empty || string.IsNullOrEmpty(tile.assetPath) || !byTile.TryGetValue(tile.index, out var list))
-                        continue;
+        /// <summary>Снимок тайла (area — тайл в метрах; pixels — SatelliteSize² в sRGB, строки с юга): оценки сдвигов его отсчётов.</summary>
+        public static void AddTile(Job job, Vector2Int tile, Rect area, Color32[] pixels)
+        {
+            if (pixels == null || pixels.Length != SatelliteSize * SatelliteSize || !job.ByTile.TryGetValue(tile, out var list))
+                return;
 
-                    if (EditorUtility.DisplayCancelableProgressBar("Bake Road Areas", "Roads on the satellite: " + tile.index, done / (float)byTile.Count))
-                        break;
+            job.Paved ??= new float[SatelliteSize * SatelliteSize];
+            job.Bare ??= new float[SatelliteSize * SatelliteSize];
+            Classify(pixels, job.Paved, job.Bare);
 
-                    done++;
-                    TerrainData data = AssetDatabase.LoadAssetAtPath<TerrainData>(tile.assetPath);
-                    Texture satellite = data != null ? FieldAreasBaker.Satellite(data) : null;
+            foreach ((int road, Sample sample) in list)
+                Score(sample, job.Roads[road], IsPaved(job.Roads[road].kind) ? job.Paved : job.Bare, area, job.Steps);
+        }
 
-                    if (satellite == null)
-                        continue;
-
-                    RenderTexture previous = RenderTexture.active;
-                    Graphics.Blit(satellite, rt);
-                    RenderTexture.active = rt;
-                    read.ReadPixels(new Rect(0, 0, SatelliteSize, SatelliteSize), 0, 0);
-                    read.Apply(false);
-                    RenderTexture.active = previous;
-                    Classify(read.GetPixels32(), paved, bare);
-
-                    foreach ((int road, Sample sample) in list)
-                        Score(sample, roads[road], IsPaved(roads[road].kind) ? paved : bare, tile.area, steps);
-
-                    if (done % 20 == 0)
-                        EditorUtility.UnloadUnusedAssetsImmediate();
-                }
-            }
-            finally
-            {
-                EditorUtility.ClearProgressBar();
-                RenderTexture.ReleaseTemporary(rt);
-                Object.DestroyImmediate(read);
-            }
+        /// <summary>Сдвиги по оценкам, стыки (links — RoadJunctions.Detect) не разъезжаются; дороги меняются на месте.</summary>
+        public static string Finish(Job job, RoadJunctions.Links links)
+        {
+            List<RoadAreas.Road> roads = job.Roads;
+            List<Sample>[] samples = job.Samples;
+            int steps = job.Steps;
+            job.Paved = job.Bare = null;
 
             int snapped = 0;
             int widened = 0;

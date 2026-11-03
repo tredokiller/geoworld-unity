@@ -10,9 +10,9 @@ namespace _Game.Scripts.World
     /// <summary>
     /// Данные карты мира (дороги, поля, контуры лесов с типом листвы) из прочитанной выгрузки GeoWorld (EnvironmentData) —
     /// без редактора: для пакета мира, который генерирует плеер (WorldMapPackage). Как запекатели редактора (RoadAreasBaker,
-    /// FieldAreasBaker, TreeLeafAreasBaker), но без снимка: оси дорог — как в OSM (не подтянуты к дороге на снимке,
-    /// RoadSatelliteSnap), рядки полей — вдоль длинной стороны поля (rotation экстрактора), а не по рисунку снимка. Стыки
-    /// дорог (RoadJunctions) и бордюры (MarkCurbs — по карте земель) — те же. Вид покрытия и разметку берёт и редактор.
+    /// FieldAreasBaker, TreeLeafAreasBaker); шаг со снимком (RoadSatelliteSnap, FieldRowsSatellite) — у того, кто снимки
+    /// читает (WorldMapPackage: пока генератор строит тайлы). Стыки дорог (RoadJunctions) и бордюры (MarkCurbs — по карте
+    /// земель) — те же. Вид покрытия и разметку берёт и редактор.
     /// </summary>
     public static class WorldMapExport
     {
@@ -21,7 +21,7 @@ namespace _Game.Scripts.World
         private const float DefaultRoadWidth = 3f;
 
         /// <summary>Дороги и рельсы выгрузок со стыками; coverage — их границы (внутри дороги известны осями).</summary>
-        public static List<RoadAreas.Road> Roads(IEnumerable<EnvironmentData> exports, List<Rect> coverage, out string summary)
+        public static List<RoadAreas.Road> Roads(IEnumerable<EnvironmentData> exports, List<Rect> coverage, out RoadJunctions.Links links, out string summary)
         {
             List<RoadAreas.Road> roads = new();
             List<string> ids = new();
@@ -46,7 +46,7 @@ namespace _Game.Scripts.World
             }
 
             int stitched = RoadJunctions.Stitch(roads, ids);
-            RoadJunctions.Detect(roads, out string ends);
+            links = RoadJunctions.Detect(roads, out string ends);
             summary = $"{roads.Count} roads ({skipped} bridges, tunnels and repeats skipped, {stitched} pieces stitched); {ends}";
             return roads;
 
