@@ -16,7 +16,7 @@ namespace _Game.Scripts.Editor.Vegetation
     /// Данные карты мира для слоя окружения (WorldMapData): дороги (RoadAreasBaker), поля (FieldAreasBaker) и контуры лесов с
     /// типом листвы (TreeLeafAreasBaker) из выгрузок мира (environment.json его частей). Пишет их в папку мира
     /// (&lt;папка мира&gt;/Environment: Road areas, Field areas, Tree leaf areas) — никогда в пакет: в проекте, где он
-    /// поставлен из git, пакет только для чтения. Вешает WorldMapData на объект мира — и на копии этого мира в открытых
+    /// поставлен из git, пакет только для чтения. Вешает WorldMapData и WorldEnvironment (весь слой окружения) на объект мира — и на копии этого мира в открытых
     /// сценах (в игре объект мира лежит и в её сцене, не только в сцене мира). Запекается после генерации тайлов (событие
     /// GeoTiles.AfterBake: если тайлы строились или данных у мира нет), кнопкой в инспекторе WorldMapData и
     /// Tools/Environment/Bake World Map Data. Без выгрузок на этой машине (пути в мире — локальные) прежние данные остаются.
@@ -109,6 +109,17 @@ namespace _Game.Scripts.Editor.Vegetation
 
                 set(data);
                 EditorUtility.SetDirty(data);
+
+                // и сам слой окружения: мир с данными карты выглядит как в игре и без её кода
+                WorldEnvironment environment = copy.GetComponent<WorldEnvironment>();
+
+                if (environment == null)
+                    environment = Undo.AddComponent<WorldEnvironment>(copy.gameObject);
+                else
+                    Undo.RecordObject(environment, "World environment");
+
+                environment.SetDefaults();
+                EditorUtility.SetDirty(environment);
 
                 if (copy.gameObject.scene.IsValid())
                     EditorSceneManager.MarkSceneDirty(copy.gameObject.scene);

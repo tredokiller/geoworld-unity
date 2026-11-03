@@ -318,6 +318,15 @@ the open scenes (a game may keep a copy of the world's object in its own scene).
 data stays as it is. A world without it has no road surfaces, field rows or leaf types, never another world's. The tree
 species themselves (species, variants and mixes by place) are shared: Resources/World/TreeSpeciesProfile. World packages
 (runtime generation) carry no world map data yet.
+The environment layer's setup (WorldEnvironment, on the world's object; WorldMapBaker puts it there with the map data):
+when it wakes (execution order -1000) it adds to its object every system the layer has and the object lacks, so a scene
+with the world's object gets the whole look without code of its own: TileTreeSpecies (before the tiles' Nature Renderer
+starts), NatureRendererSettings, ShadowRange, GroundDressing (plants: the takeoff point's profile type; by default the
+package's Profiles/DefaultFlyPointEnvironment), AerialHaze, CloudShadows, GroundWetness, WaterSky, WaterShore, RoadMap,
+GroundDetail, ForestFloor, Seasons, SeasonGrading, SeasonAmbience, RainTuner and WorldWind (plant and water wind; it makes
+its own NM_Wind from the component's wind textures when the scene has none). It needs Enviro 3 in the scene. A game sets the
+wind with WorldWind.Set (metres a second and where it blows; 0: a calm breeze), the season with Seasons.Apply and the
+distances on NatureRendererSettings.SetDistances, ShadowRange and GroundDressing (WorldEnvironment.Instance has them).
 Tree heights (GeoLandCover > Tree Heights, on by default): the generator plants its trees 5-10 m tall (a mapped tree
 without a height 7 m). When a tile's trees load in Play mode, before Nature Renderer sees them, each such tree takes a
 height by the land cover around it: a wood 15-24 m (forest on 45 % of the ground within 50 m), rows, shelterbelts and

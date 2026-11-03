@@ -66,6 +66,13 @@ areas) and found through `WorldMapData` on the world's object, next to its land 
 with **Bake roads, fields and leaf types** in that component's Inspector, or **Tools > Environment > Bake World Map Data**.
 A world without them has no road surfaces, field rows or leaf types; it never takes another world's.
 
+The layer itself is one component, `WorldEnvironment`, which the bake puts on the world's object too: when it wakes it
+adds every system the layer has — tree species by place, grass, flowers, leaf litter, dead wood and understory on the
+tiles, ground detail and forest floor, road surfaces, wet ground, puddles and marsh, water sky and shore, aerial haze and
+cloud shadows, seasons with snow, colour and sound, rain, and wind for plants and water — so a project gets the same
+world without code of its own. It needs Enviro 3 in the scene. A game sets the wind with `WorldWind.Set`, the season with
+`Seasons.Apply` and the distances on `NatureRendererSettings`, `ShadowRange` and `GroundDressing`.
+
 ## Install in a project
 
 **Fast updates (recommended): a git submodule in `Packages`.** Every update then downloads and imports only the files that

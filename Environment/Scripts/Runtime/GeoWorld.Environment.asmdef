@@ -6,7 +6,8 @@
         "GeoWorld.Generation",
         "Unity.RenderPipelines.Universal.Runtime",
         "Unity.RenderPipelines.Core.Runtime",
-        "Enviro3.Runtime"
+        "Enviro3.Runtime",
+        "NatureManufacture.Wind"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
