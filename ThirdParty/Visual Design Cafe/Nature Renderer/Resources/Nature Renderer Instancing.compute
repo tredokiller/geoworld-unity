@@ -121,6 +121,20 @@ void GameApplyScale(inout InstanceMatrix instnc, float scale)
     instnc.scale.y *= scale > 1 ? pow(max(scale, 1), max(_GameDensityCompensation.z, 0)) : scale;
 }
 
+// interceptor-drones: плавная смена LOD (NatureRendererSettings, глобально; патч GameLodFade — перенести при обновлении
+// Nature Renderer вместе с Cull и BuildOutput*). LOD менялся скачком на пороге. В полосе перед концом LOD (x — доля его
+// дальности, 0 — как у Nature Renderer) экземпляр идёт в вывод обоих LOD, а в младшие 9 бит мантиссы scale.x (масштаб
+// меняется меньше чем на 1e-4) ложится код перехода: доля t и сторона. Шейдеры (NatureRendererLodFade.hlsl) делят по
+// нему пиксели дизерингом: уходящий рисует d ≥ t, входящий — d < t. Отбор хранит в Meta.Lod (int) ещё и следующий LOD
+// (биты 8–15) и долю (16–23): размер буфера Meta задаёт DLL.
+float4 _GameLodFade;
+
+// Код перехода: биты 0–7 — 0 без перехода, иначе 1 + t·254; бит 8 — входящий LOD.
+void GameStoreLodFade(inout InstanceMatrix instnc, uint code)
+{
+    instnc.scale.x = asfloat((asuint(instnc.scale.x) & ~0x1FFu) | code);
+}
+
 // Plane equation: {(a, b, c) = N, d = -dot(N, P)}.
 // Returns the distance from the plane to the point 'p' along the normal.
 // Positive -> in front (above), negative -> behind (below).
@@ -213,16 +227,26 @@ void Cull (uint3 id : SV_DispatchThreadID)
     // Calculate active LOD
     float dist = distance(instnc.position.xyz, _CameraPosition.xyz);
     InstanceMeta meta = (InstanceMeta)0;
+    // interceptor-drones: следующий LOD и доля перехода к нему (GameLodFade)
+    uint fadeLod = 0;
+    float fade = 0;
     for(uint i=0; i<_LodCount; i++)
     {
-        float maxDist = 
+        float maxDist =
             i < _LodCount -1 ? _Lods[i].y * instnc.scale.y : _Lods[i].y;
-            
+
         if( dist >= _Lods[i].x * instnc.scale.y && dist < maxDist)
         {
             meta.Lod = i+1;
             if(dist < _ShadowDistance)
                 meta.Shadow = i+1;
+
+            float band = maxDist * _GameLodFade.x;
+            if (i < _LodCount - 1 && band > 0 && dist > maxDist - band)
+            {
+                fadeLod = i + 2;
+                fade = saturate((dist - (maxDist - band)) / band);
+            }
         }
     }
     
@@ -271,6 +295,9 @@ void Cull (uint3 id : SV_DispatchThreadID)
         }
     }
 
+    if (meta.Lod > 0 && fadeLod > 0)
+        meta.Lod |= (int)((fadeLod << 8) | ((1u + (uint)round(fade * 254)) << 16));
+
     Meta[id.x] = meta;
 }
 
@@ -282,10 +309,16 @@ void BuildOutput (uint3 id : SV_DispatchThreadID)
         return;
         
     InstanceMeta meta = Meta[id.x];
-    if( meta.Lod == _ActiveLod + 1)
+    // interceptor-drones: в полосе перехода — и в вывод следующего LOD, с кодом перехода (GameLodFade)
+    uint lod = (uint)meta.Lod & 0xFFu;
+    uint fadeLod = ((uint)meta.Lod >> 8) & 0xFFu;
+    uint fadeLevel = ((uint)meta.Lod >> 16) & 0xFFu;
+    uint active = (uint)(_ActiveLod + 1);
+    if( lod == active || (lod > 0 && fadeLod == active))
     {
         InstanceMatrix instnc = Input[id.x];
         GameApplyScale(instnc, meta.Scale);
+        GameStoreLodFade(instnc, fadeLod == 0 ? 0u : fadeLevel | (lod == active ? 0u : 0x100u));
         Output.Append(instnc);
     }
 }
@@ -299,6 +332,8 @@ void BuildOutputWithShadows (uint3 id : SV_DispatchThreadID)
     InstanceMeta meta = Meta[id.x];
 
     GameApplyScale(instnc, meta.Scale);
+    // тень — одним LOD, без перехода
+    GameStoreLodFade(instnc, 0u);
 
     #if SHADOWS
         if( meta.Shadow == _ActiveLod + 1)

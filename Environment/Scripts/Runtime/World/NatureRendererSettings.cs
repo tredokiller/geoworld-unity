@@ -62,6 +62,10 @@ namespace _Game.Scripts.World
         [SerializeField, Min(0f)] private float treeRenderDistance = 2000f;
         [Tooltip("Тени деревьев, м (заводская — вся дальность деревьев).")]
         [SerializeField, Min(0f)] private float treeShadowDistance = 70f;
+        [Tooltip("Плавная смена LOD деревьев и растений с LODGroup: в полосе перед порогом (эта доля его дальности) " +
+                 "экземпляр рисуется обоими LOD, и дизеринг экрана перетекает от одного к другому (Nature Renderer " +
+                 "Instancing.compute, GameLodFade; NatureRendererLodFade.hlsl). 0 — скачком, как у Nature Renderer.")]
+        [SerializeField, Range(0f, 0.5f)] private float lodFadeBand = 0.15f;
 
         [Header("Стриминг")]
         [Tooltip("Сколько экземпляров травы Nature Renderer догружает за кадр (заводская 1024).")]
@@ -73,6 +77,7 @@ namespace _Game.Scripts.World
 
         private static readonly int GrassShadowFadeId = Shader.PropertyToID("_GrassShadowFade");
         private static readonly int DensityCompensationId = Shader.PropertyToID("_GameDensityCompensation");
+        private static readonly int LodFadeId = Shader.PropertyToID("_GameLodFade");
 
         private Component _defaultSettings;
         private Component _globalSettings;
@@ -150,6 +155,7 @@ namespace _Game.Scripts.World
         {
             Shader.SetGlobalVector(GrassShadowFadeId, Vector4.zero);
             Shader.SetGlobalVector(DensityCompensationId, Vector4.zero);
+            Shader.SetGlobalVector(LodFadeId, Vector4.zero);
             // префабы — ассеты: в редакторе изменённая дальность осталась бы в них
             ScaleObjectDistances(1f);
 
@@ -168,6 +174,7 @@ namespace _Game.Scripts.World
                 new Vector4(detailShadowDistance * detailShadowFadeStart, detailShadowDistance * (1f - detailShadowFadeStart), 0f, 0f));
             Shader.SetGlobalVector(DensityCompensationId,
                 new Vector4(densityCompensation, compensationMaxScale, compensationHeightExponent, 0f));
+            Shader.SetGlobalVector(LodFadeId, new Vector4(lodFadeBand, 0f, 0f, 0f));
 
             if (_defaultSettings != null)
             {

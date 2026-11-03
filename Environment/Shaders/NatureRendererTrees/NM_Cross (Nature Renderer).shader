@@ -138,6 +138,7 @@ Shader "NatureManufacture/URP/Foliage/Cross (Nature Renderer)"
         #include "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/ShaderPass.hlsl"
         
         #include "Packages/com.tredokiller.geoworld/ThirdParty/Visual Design Cafe/Nature Renderer/Shader Includes/Nature Renderer.templatex"
+        #include "Packages/com.tredokiller.geoworld/Environment/Shaders/NatureRendererTrees/NatureRendererLodFade.hlsl"
         #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/LODCrossFade.hlsl"
         
         // --------------------------------------------------
@@ -1324,6 +1325,7 @@ Shader "NatureManufacture/URP/Foliage/Cross (Nature Renderer)"
         #include "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/ShaderPass.hlsl"
         
         #include "Packages/com.tredokiller.geoworld/ThirdParty/Visual Design Cafe/Nature Renderer/Shader Includes/Nature Renderer.templatex"
+        #include "Packages/com.tredokiller.geoworld/Environment/Shaders/NatureRendererTrees/NatureRendererLodFade.hlsl"
         #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/LODCrossFade.hlsl"
         
         // --------------------------------------------------
@@ -2483,6 +2485,7 @@ Shader "NatureManufacture/URP/Foliage/Cross (Nature Renderer)"
         #include "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/ShaderPass.hlsl"
         
         #include "Packages/com.tredokiller.geoworld/ThirdParty/Visual Design Cafe/Nature Renderer/Shader Includes/Nature Renderer.templatex"
+        #include "Packages/com.tredokiller.geoworld/Environment/Shaders/NatureRendererTrees/NatureRendererLodFade.hlsl"
         #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/LODCrossFade.hlsl"
         
         // --------------------------------------------------
@@ -3480,6 +3483,7 @@ Shader "NatureManufacture/URP/Foliage/Cross (Nature Renderer)"
         #include "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/ShaderPass.hlsl"
         
         #include "Packages/com.tredokiller.geoworld/ThirdParty/Visual Design Cafe/Nature Renderer/Shader Includes/Nature Renderer.templatex"
+        #include "Packages/com.tredokiller.geoworld/Environment/Shaders/NatureRendererTrees/NatureRendererLodFade.hlsl"
         #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/LODCrossFade.hlsl"
         
         // --------------------------------------------------
@@ -4476,6 +4480,7 @@ Shader "NatureManufacture/URP/Foliage/Cross (Nature Renderer)"
         #include "Packages/com.unity.render-pipelines.universal/Editor/ShaderGraph/Includes/ShaderPass.hlsl"
         
         #include "Packages/com.tredokiller.geoworld/ThirdParty/Visual Design Cafe/Nature Renderer/Shader Includes/Nature Renderer.templatex"
+        #include "Packages/com.tredokiller.geoworld/Environment/Shaders/NatureRendererTrees/NatureRendererLodFade.hlsl"
         #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/LODCrossFade.hlsl"
         
         // --------------------------------------------------

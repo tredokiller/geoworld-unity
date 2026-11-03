@@ -7,6 +7,10 @@
 #ifndef NODE_NATURE_RENDERER_INCLUDED
 #define NODE_NATURE_RENDERER_INCLUDED
 
+// interceptor-drones: код плавной смены LOD экземпляра (NatureRendererLodFadeState.hlsl, патч GameLodFade в
+// Nature Renderer Instancing.compute). При обновлении Nature Renderer — перенести эту строку и строку в SetupNatureRenderer.
+#include "Packages/com.tredokiller.geoworld/Environment/Shaders/NatureRendererTrees/NatureRendererLodFadeState.hlsl"
+
 #ifdef UNITY_PROCEDURAL_INSTANCING_ENABLED
 
     #define Use_Macro_UNITY_MATRIX_M_instead_of_unity_ObjectToWorld unity_ObjectToWorld
@@ -91,6 +95,7 @@ void SetupNatureRenderer()
 {
     #ifdef UNITY_PROCEDURAL_INSTANCING_ENABLED
         DecompressInstanceMatrix(unity_ObjectToWorld, _Instances[unity_InstanceID]);
+        g_NatureLodFade = NatureLodFadeCode(_Instances[unity_InstanceID].scale.x);
 
         unity_ObjectToWorld = mul(unity_ObjectToWorld, _InstanceMatrix);
         unity_WorldToObject = inverse(unity_ObjectToWorld);
