@@ -245,7 +245,7 @@ namespace GeoWorld.Editor
         static void Watch()
         {
             float fraction = -1; string what = null;
-            foreach (var item in Progress.EnumerateItems())
+            foreach (var item in UnityEditor.Progress.EnumerateItems())
             {
                 if (item == null || item.finished) continue;
                 string text = item.name + " " + item.description;
