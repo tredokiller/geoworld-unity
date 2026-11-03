@@ -216,6 +216,8 @@ namespace GeoWorld.Editor
                 // what the ground is, for a game to ask anywhere (GeoLandCover): the exports' ground maps on the tiles' grid
                 if (built > 0 || !world.GetComponent<GeoLandCover>())
                     world.report += "\n" + BakeLandCover(world);
+                // what other assemblies bake from the world (the environment layer's roads, fields and leaf types)
+                world.report += BakeExtras(world, built > 0);
                 // one copy of what the tiles share in the Addressables build, not one in every tile's bundle
                 if (separateScenes && world.addressableScenes && built > 0)
                 {
@@ -243,6 +245,24 @@ namespace GeoWorld.Editor
             catch (OperationCanceledException) { notes.Add("Overview: cancelled; Bake overview in the world's Inspector makes it."); }
             catch (Exception e) { notes.Add("Overview: not made (" + e.Message + ")."); Debug.LogException(e); }
             return string.Join("\n", notes);
+        }
+
+        // Baked from a world after its tiles and land cover by assemblies the package's editor does not know (the environment
+        // layer: roads, fields and leaf types of the world's map, next to it). Given the world and whether tiles were built this
+        // run; returns a line for the world's report, or null when it had nothing to do.
+        public static event Func<GeoTiledWorld, bool, string> AfterBake;
+
+        static string BakeExtras(GeoTiledWorld world, bool built)
+        {
+            if (AfterBake == null) return "";
+            var lines = new List<string>();
+            foreach (Func<GeoTiledWorld, bool, string> bake in AfterBake.GetInvocationList())
+            {
+                try { string line = bake(world, built); if (!string.IsNullOrEmpty(line)) lines.Add(line); }
+                catch (OperationCanceledException) { lines.Add("Cancelled: " + bake.Method.DeclaringType?.Name + "."); }
+                catch (Exception e) { lines.Add("Not made: " + bake.Method.DeclaringType?.Name + " (" + e.Message + ")."); Debug.LogException(e); }
+            }
+            return lines.Count > 0 ? "\n" + string.Join("\n", lines) : "";
         }
 
         // Bakes the world's land cover (GeoLandCoverBaker) and says what came of it, for the world's report.

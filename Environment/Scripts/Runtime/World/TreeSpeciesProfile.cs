@@ -6,9 +6,9 @@ namespace _Game.Scripts.World
     /// <summary>
     /// Какие деревья где растут на тайлах GeoWorld (TileTreeSpecies): виды с вариантами префабов и смесь видов по месту —
     /// лес хвойный (OSM leaf_type=needleleaved или песок вокруг: сосновые боры на песчаных террасах Северского Донца), лес
-    /// лиственный (дубравы с ясенем, клёном, липой), лесополосы, посёлки, берега. Плюс контуры лесов с типом листвы из
-    /// выгрузок GeoWorld (OSM): пакет их не переносит в тайлы — запекает Tools/Environment/Bake Tree Leaf Areas
-    /// (TreeLeafAreasBaker). Лежит в Resources/World/TreeSpeciesProfile.
+    /// лиственный (дубравы с ясенем, клёном, липой), лесополосы, посёлки, берега. Общий для всех карт, лежит в
+    /// Resources/World/TreeSpeciesProfile; контуры лесов с типом листвы — свои у каждого мира (TreeLeafAreas на его
+    /// WorldMapData).
     /// </summary>
     [CreateAssetMenu(menuName = "Configs/World/Tree Species Profile", fileName = "TreeSpeciesProfile")]
     public sealed class TreeSpeciesProfile : ScriptableObject
@@ -65,6 +65,5 @@ namespace _Game.Scripts.World
         [Tooltip("Доля воды и болота в радиусе WetRadius, с которой дерево — прибрежное.")]
         [Range(0f, 1f)] public float wetShare = 0.2f;
         public float wetRadius = 30f;
-        public LeafArea[] leafAreas = Array.Empty<LeafArea>();
     }
 }

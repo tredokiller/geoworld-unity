@@ -332,7 +332,10 @@ namespace _Game.Scripts.World
 
             Rect tileRect = new(origin.x - 10f, origin.z - 10f, size.x + 20f, size.z + 20f);
 
-            foreach (TreeSpeciesProfile.LeafArea area in _profile.leafAreas)
+            // контуры лесов — свои у каждого мира (WorldMapData); мир без них — по песку вокруг
+            TreeLeafAreas leafAreas = WorldMapData.LeafAreas;
+
+            foreach (TreeSpeciesProfile.LeafArea area in leafAreas != null ? leafAreas.areas : System.Array.Empty<TreeSpeciesProfile.LeafArea>())
             {
                 if (area != null && area.bounds.Overlaps(tileRect))
                     c.Leaves.Add(area);

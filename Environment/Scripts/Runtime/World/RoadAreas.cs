@@ -8,13 +8,13 @@ namespace _Game.Scripts.World
     /// Дороги, грунтовки и тропинки (OSM highway, railway) из выгрузок GeoWorld — оси с шириной. Карта земель пакета
     /// (GeoLandCover) знает их только клетками ~10 м: грунтовка в 3 м там то пропадает, то становится пятном в 10 м, и трава
     /// росла прямо на колее. Пакет оси дорог в тайлы не переносит (земляные дороги тайла — общие меши и снимок), поэтому их
-    /// запекает RoadAreasBaker (Tools/Environment/Bake Road Areas) в Resources/World/RoadAreas. По ним трава карты
+    /// запекает RoadAreasBaker (Tools/Environment/Bake Road Areas, WorldMapBaker) в папку мира — ассет висит на его WorldMapData.
+    /// По ним трава карты
     /// (GroundDressing) и точки взлёта не растёт на полотне дороги и редеет к его краю; там, где выгрузки дорог есть
     /// (Covers), клетки дорог карты земель траву больше не вырезают.
     /// </summary>
     public sealed class RoadAreas : ScriptableObject
     {
-        public const string ResourcePath = "World/RoadAreas";
         // от края полотна: ещё столько голо (карточка травы шириной ~1 м из соседней клетки ложится на колею), дальше
         // столько — трава возвращается
         public const float ClearMargin = 0.5f;
@@ -90,22 +90,11 @@ namespace _Game.Scripts.World
 
         [NonSerialized] private Dictionary<long, List<int>> _buckets;
 
-        private static RoadAreas _instance;
-        private static bool _loaded;
+        /// <summary>Дороги загруженного мира (WorldMapData); null — у него их нет.</summary>
+        public static RoadAreas Instance => WorldMapData.Roads;
 
-        public static RoadAreas Instance
-        {
-            get
-            {
-                if (!_loaded)
-                {
-                    _loaded = true;
-                    _instance = Resources.Load<RoadAreas>(ResourcePath);
-                }
-
-                return _instance;
-            }
-        }
+        // Запекание переписало дороги: корзины поиска — заново.
+        public void ResetIndex() => _buckets = null;
 
         // Известны ли дороги в точке осями (выгрузка её покрывает).
         public bool Covers(float x, float z)

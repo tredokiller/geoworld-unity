@@ -56,6 +56,16 @@ With land cover the tiles' trees are as tall as what they stand in when they loa
 woods 15-24 m, shelterbelts and tree rows 8-14 m, orchards 4-7 m, villages 6-12 m, each tree on the prefab whose own
 height is nearest.
 
+## World map data for the environment layer
+
+The environment layer (`Environment`, assembly `GeoWorld.Environment`) paints road surfaces and keeps grass off roads,
+draws field rows and picks tree species by leaf type from data of the world's own map: roads with their width and
+surface, farmland outlines with the bearing of their rows, forest outlines with their leaf type, all from the exports'
+`environment.json`. They are baked for each world into `<world folder>/Environment` (Road areas, Field areas, Tree leaf
+areas) and found through `WorldMapData` on the world's object, next to its land cover: after the tiles are generated,
+with **Bake roads, fields and leaf types** in that component's Inspector, or **Tools > Environment > Bake World Map Data**.
+A world without them has no road surfaces, field rows or leaf types; it never takes another world's.
+
 ## Install in a project
 
 **Fast updates (recommended): a git submodule in `Packages`.** Every update then downloads and imports only the files that

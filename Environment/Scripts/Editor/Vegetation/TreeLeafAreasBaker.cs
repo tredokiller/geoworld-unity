@@ -11,16 +11,18 @@ using UnityEngine;
 namespace _Game.Scripts.Editor.Vegetation
 {
     /// <summary>
-    /// Профиль видов деревьев (Resources/World/TreeSpeciesProfile, TileTreeSpecies): контуры лесов с типом листвы из выгрузок
-    /// GeoWorld (environment.json частей мира, areas[].leafType: OSM leaf_type — пакет его не переносит в тайлы) и виды с
-    /// вариантами: сгенерированные сосна и дуб (Environment/Vegetation/Generated/Pine, Oak), бук и тополь
-    /// NatureManufacture. Смеси по месту задаются при первом создании профиля; потом их правят в инспекторе, а запекание
-    /// обновляет только контуры и варианты видов.
+    /// Породы деревьев по месту. Контуры лесов с типом листвы (TreeLeafAreas) — свои у каждого мира: из его выгрузок
+    /// (environment.json частей мира, areas[].leafType: OSM leaf_type — пакет его не переносит в тайлы) в папку мира
+    /// (WorldMapBaker: &lt;папка мира&gt;/Environment/Tree leaf areas, на его WorldMapData). Общий профиль видов
+    /// (Resources/World/TreeSpeciesProfile, TileTreeSpecies) — виды с вариантами: сгенерированные сосна и дуб
+    /// (Environment/Vegetation/Generated/Pine, Oak), бук и тополь NatureManufacture — обновляет Update Tree Species
+    /// Profile; он пишет в пакет, так что это инструмент разработки пакета. Смеси по месту задаются при первом создании
+    /// профиля; потом их правят в инспекторе, а обновление меняет только варианты видов.
     /// </summary>
     public static class TreeLeafAreasBaker
     {
         private const string ProfilePath = "Packages/com.tredokiller.geoworld/Environment/Resources/World/TreeSpeciesProfile.asset";
-        private const string WorldScene = "Assets/GeoWorld/Tiled/kharkiv_east/kharkiv_east.unity";
+        private const string AssetName = "Tree leaf areas";
         private const string Generated = "Packages/com.tredokiller.geoworld/Environment/Vegetation/Generated";
         private const string Vegetation = "Packages/com.tredokiller.geoworld/Environment/Vegetation/Prefabs";
 
@@ -28,26 +30,22 @@ namespace _Game.Scripts.Editor.Vegetation
         private static readonly string[] SpeciesNames = { "beech", "poplar", "pine", "oak_forest", "oak_open", "pine_young", "dead", "snag", "broken" };
 
         [MenuItem("Tools/Environment/Bake Tree Leaf Areas")]
-        public static void BakeMenu() => Debug.Log("[TreeLeafAreasBaker] " + Bake());
-
-        public static string Bake()
+        public static void BakeMenu()
         {
-            TreeSpeciesProfile profile = AssetDatabase.LoadAssetAtPath<TreeSpeciesProfile>(ProfilePath);
-            bool created = profile == null;
+            GeoTiledWorld world = WorldMapBaker.FindWorld();
+            Debug.Log("[TreeLeafAreasBaker] " + (world != null ? BakeLeafAreas(world) : WorldMapBaker.NoWorld));
+        }
 
-            if (created)
-            {
-                Directory.CreateDirectory(Path.GetDirectoryName(ProfilePath));
-                profile = ScriptableObject.CreateInstance<TreeSpeciesProfile>();
-                SetDefaultMixes(profile);
-            }
+        [MenuItem("Tools/Environment/Update Tree Species Profile")]
+        public static void SpeciesMenu() => Debug.Log("[TreeLeafAreasBaker] " + UpdateSpecies());
 
-            profile.species = SpeciesNames.Select(name => new TreeSpeciesProfile.Species { name = name, variants = Variants(name), ownHeight = name is "snag" or "broken", lying = name is "broken" }).ToArray();
-            ExtendMixes(profile);
+        /// <summary>Контуры лесов мира с типом листвы — в его папку.</summary>
+        public static string BakeLeafAreas(GeoTiledWorld world)
+        {
             List<TreeSpeciesProfile.LeafArea> areas = new();
             int files = 0;
 
-            foreach (string path in EnvironmentPaths())
+            foreach (string path in WorldMapBaker.EnvironmentPaths(world))
             {
                 if (!File.Exists(path))
                     continue;
@@ -84,13 +82,36 @@ namespace _Game.Scripts.Editor.Vegetation
                 }
             }
 
-            // выгрузок на этой машине нет (пути в сцене — локальные, вне репозитория): прежние контуры не стираем,
-            // обновляются только варианты видов
-            if (files > 0)
-                profile.leafAreas = areas.ToArray();
-            else
-                Debug.LogWarning("[TreeLeafAreasBaker] No GeoWorld environment export found, leaf areas kept: " +
-                                 string.Join(", ", EnvironmentPaths()));
+            // выгрузок на этой машине нет (пути в мире — локальные, вне репозитория): прежние контуры не стираем
+            if (files == 0)
+            {
+                TreeLeafAreas kept = WorldMapBaker.Asset<TreeLeafAreas>(world, AssetName, false);
+                return $"no GeoWorld environment export found, {kept?.areas.Length ?? 0} leaf areas kept";
+            }
+
+            TreeLeafAreas asset = WorldMapBaker.Asset<TreeLeafAreas>(world, AssetName, true);
+            asset.areas = areas.ToArray();
+            EditorUtility.SetDirty(asset);
+            AssetDatabase.SaveAssetIfDirty(asset);
+            WorldMapBaker.Attach(world, data => data.leafAreas = asset);
+            return $"{areas.Count} leaf areas from {files} exports ({areas.Count(a => a.type == 2)} conifer, {areas.Count(a => a.type == 1)} broadleaf)";
+        }
+
+        /// <summary>Виды профиля и их варианты из папок растений пакета; смеси — по умолчанию у новых видов.</summary>
+        public static string UpdateSpecies()
+        {
+            TreeSpeciesProfile profile = AssetDatabase.LoadAssetAtPath<TreeSpeciesProfile>(ProfilePath);
+            bool created = profile == null;
+
+            if (created)
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(ProfilePath));
+                profile = ScriptableObject.CreateInstance<TreeSpeciesProfile>();
+                SetDefaultMixes(profile);
+            }
+
+            profile.species = SpeciesNames.Select(name => new TreeSpeciesProfile.Species { name = name, variants = Variants(name), ownHeight = name is "snag" or "broken", lying = name is "broken" }).ToArray();
+            ExtendMixes(profile);
 
             if (created)
                 AssetDatabase.CreateAsset(profile, ProfilePath);
@@ -98,11 +119,7 @@ namespace _Game.Scripts.Editor.Vegetation
                 EditorUtility.SetDirty(profile);
 
             AssetDatabase.SaveAssetIfDirty(profile);
-            string species = string.Join(", ", profile.species.Select(s => s.name + " " + s.variants.Length));
-            if (files == 0)
-                return $"no exports found, {profile.leafAreas?.Length ?? 0} leaf areas kept; species: {species}";
-
-            return $"{areas.Count} leaf areas from {files} exports ({areas.Count(a => a.type == 2)} conifer, {areas.Count(a => a.type == 1)} broadleaf); species: {species}";
+            return "species: " + string.Join(", ", profile.species.Select(s => s.name + " " + s.variants.Length));
         }
 
         private static Vector2[] Ring(JToken ring)
@@ -114,33 +131,6 @@ namespace _Game.Scripts.Editor.Vegetation
                 points[i] = new Vector2(flat[i * 2], flat[i * 2 + 1]);
 
             return points;
-        }
-
-        // Пути environment.json частей мира — из его GeoTiledWorld (сцена мира открывается в фоне и закрывается).
-        private static IEnumerable<string> EnvironmentPaths()
-        {
-            GeoTiledWorld world = Object.FindFirstObjectByType<GeoTiledWorld>(FindObjectsInactive.Include);
-            UnityEngine.SceneManagement.Scene opened = default;
-
-            if (world == null && File.Exists(WorldScene))
-            {
-                opened = EditorSceneManager.OpenScene(WorldScene, OpenSceneMode.Additive);
-
-                foreach (GameObject root in opened.GetRootGameObjects())
-                {
-                    world = root.GetComponentInChildren<GeoTiledWorld>(true);
-
-                    if (world != null)
-                        break;
-                }
-            }
-
-            List<string> paths = world != null ? world.parts.Select(p => p.environmentPath).Where(p => !string.IsNullOrEmpty(p)).ToList() : new List<string>();
-
-            if (opened.IsValid())
-                EditorSceneManager.CloseScene(opened, true);
-
-            return paths;
         }
 
         private static GameObject[] Variants(string species)

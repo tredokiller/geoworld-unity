@@ -304,6 +304,20 @@ field; where exports overlap, the export that builds the ground there says what 
 It is baked after the tiles are generated or rebuilt, and by Bake land cover in the Geo Tiled World's Inspector (a world
 made earlier: a few seconds, from the exports; no tile is rebuilt or opened). A tile whose land cover did not change
 keeps its asset as it is. World packages (runtime generation) carry no land cover yet.
+World map data (the environment layer, assembly GeoWorld.Environment): roads with their width, surface, marking and wear
+(RoadAreas: road surfaces in the terrain, no grass on the carriageway, roads kept clear at the takeoff point), farmland
+outlines with the bearing of their rows (FieldAreas: field rows, tramlines and furrows) and forest outlines with their leaf
+type (TreeLeafAreas: broadleaf, conifer or mixed forest for the tree species), all from the exports' environment.json
+(roads[], railways[], areas[]). They are the world's own: <world folder>/Environment/Road areas, Field areas and Tree
+leaf areas, found through WorldMapData on the world's object (RoadAreas.Instance, FieldAreas.Instance and TileTreeSpecies
+read the loaded world's). WorldMapBaker makes them after the tiles are generated or rebuilt (or when the world has none),
+by Bake roads, fields and leaf types in WorldMapData's Inspector, and by Tools > Environment > Bake World Map Data; roads
+are moved onto the road in the tiles' satellite imagery (a few minutes for a large world) and get curbs in built-up land
+cover. They are written into the world's folder, never into the package, and put on the world's object and on its copies in
+the open scenes (a game may keep a copy of the world's object in its own scene). Without the exports on the machine the
+data stays as it is. A world without it has no road surfaces, field rows or leaf types, never another world's. The tree
+species themselves (species, variants and mixes by place) are shared: Resources/World/TreeSpeciesProfile. World packages
+(runtime generation) carry no world map data yet.
 Tree heights (GeoLandCover > Tree Heights, on by default): the generator plants its trees 5-10 m tall (a mapped tree
 without a height 7 m). When a tile's trees load in Play mode, before Nature Renderer sees them, each such tree takes a
 height by the land cover around it: a wood 15-24 m (forest on 45 % of the ground within 50 m), rows, shelterbelts and

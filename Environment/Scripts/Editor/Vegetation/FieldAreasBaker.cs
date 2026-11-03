@@ -16,13 +16,13 @@ namespace _Game.Scripts.Editor.Vegetation
     /// kharkiv_east колеи на снимке шли поперёк неё, и рисунок шейдера ложился клеткой поверх настоящих. Снимок тайлов
     /// читается по 1 м на пиксель, в поле (дальше 12 м от края — лесополосы и дороги не в счёт) копится тензор градиентов
     /// (каждый градиент — единичный, чтобы редкие резкие края не перевешивали); линии идут поперёк главного градиента.
-    /// Если рисунок слабый (связность ниже MinCoherence), остаётся длинная сторона. Без выгрузок на этой машине (пути в сцене
-    /// мира — локальные) прежние поля остаются.
+    /// Если рисунок слабый (связность ниже MinCoherence), остаётся длинная сторона. Пишет в папку мира (WorldMapBaker:
+    /// &lt;папка мира&gt;/Environment/Field areas, на его WorldMapData). Без выгрузок на этой машине (пути в мире — локальные)
+    /// прежние поля остаются.
     /// </summary>
     public static class FieldAreasBaker
     {
-        private const string AssetPath = "Packages/com.tredokiller.geoworld/Environment/Resources/" + FieldAreas.ResourcePath + ".asset";
-        private const string WorldScene = "Assets/GeoWorld/Tiled/kharkiv_east/kharkiv_east.unity";
+        private const string AssetName = "Field areas";
         private const int SatelliteSize = 1024;
         private const int SampleStep = 3;
         private const float EdgeMargin = 12f;
@@ -30,15 +30,19 @@ namespace _Game.Scripts.Editor.Vegetation
         private const int MinSamples = 400;
 
         [MenuItem("Tools/Environment/Bake Field Areas")]
-        public static void BakeMenu() => Debug.Log("[FieldAreasBaker] " + Bake());
+        public static void BakeMenu()
+        {
+            GeoTiledWorld world = WorldMapBaker.FindWorld();
+            Debug.Log("[FieldAreasBaker] " + (world != null ? Bake(world) : WorldMapBaker.NoWorld));
+        }
 
-        public static string Bake()
+        public static string Bake(GeoTiledWorld world)
         {
             List<FieldAreas.Field> fields = new();
             int files = 0;
-            List<GeoTiledWorld.Tile> tiles = new();
+            List<GeoTiledWorld.Tile> tiles = world.tiles.Where(tile => !tile.empty).ToList();
 
-            foreach (string path in EnvironmentPaths(tiles))
+            foreach (string path in WorldMapBaker.EnvironmentPaths(world))
             {
                 if (!File.Exists(path))
                     continue;
@@ -84,29 +88,19 @@ namespace _Game.Scripts.Editor.Vegetation
                 }
             }
 
-            FieldAreas asset = AssetDatabase.LoadAssetAtPath<FieldAreas>(AssetPath);
+            FieldAreas asset = WorldMapBaker.Asset<FieldAreas>(world, AssetName, false);
 
             if (files == 0)
                 return $"no GeoWorld environment export found, {asset?.fields.Length ?? 0} fields kept";
 
             int fromSatellite = OrientBySatellite(fields, tiles);
 
-            bool created = asset == null;
-
-            if (created)
-            {
-                Directory.CreateDirectory(Path.GetDirectoryName(AssetPath));
-                asset = ScriptableObject.CreateInstance<FieldAreas>();
-            }
-
+            asset = WorldMapBaker.Asset<FieldAreas>(world, AssetName, true);
             asset.fields = fields.ToArray();
-
-            if (created)
-                AssetDatabase.CreateAsset(asset, AssetPath);
-            else
-                EditorUtility.SetDirty(asset);
-
+            asset.ResetIndex();
+            EditorUtility.SetDirty(asset);
             AssetDatabase.SaveAssetIfDirty(asset);
+            WorldMapBaker.Attach(world, data => data.fields = asset);
             return $"{fields.Count} fields from {files} exports, rows from the satellite on {fromSatellite} (the rest along the long side)";
         }
 
@@ -330,36 +324,6 @@ namespace _Game.Scripts.Editor.Vegetation
             }
 
             return inside;
-        }
-
-        // Пути environment.json частей мира и его тайлы — из его GeoTiledWorld (сцена мира открывается в фоне и закрывается).
-        internal static IEnumerable<string> EnvironmentPaths(List<GeoTiledWorld.Tile> tiles)
-        {
-            GeoTiledWorld world = Object.FindFirstObjectByType<GeoTiledWorld>(FindObjectsInactive.Include);
-            UnityEngine.SceneManagement.Scene opened = default;
-
-            if (world == null && File.Exists(WorldScene))
-            {
-                opened = EditorSceneManager.OpenScene(WorldScene, OpenSceneMode.Additive);
-
-                foreach (GameObject root in opened.GetRootGameObjects())
-                {
-                    world = root.GetComponentInChildren<GeoTiledWorld>(true);
-
-                    if (world != null)
-                        break;
-                }
-            }
-
-            List<string> paths = world != null ? world.parts.Select(p => p.environmentPath).Where(p => !string.IsNullOrEmpty(p)).ToList() : new List<string>();
-
-            if (world != null)
-                tiles.AddRange(world.tiles.Where(tile => !tile.empty));
-
-            if (opened.IsValid())
-                EditorSceneManager.CloseScene(opened, true);
-
-            return paths;
         }
     }
 }

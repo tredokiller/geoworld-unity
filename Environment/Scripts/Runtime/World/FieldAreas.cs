@@ -7,12 +7,11 @@ namespace _Game.Scripts.World
     /// <summary>
     /// Поля (OSM landuse=farmland) из выгрузок GeoWorld — контуры и направление рядков (rotation экстрактора: длинная сторона
     /// поля, как обычно идут рядки и колеи техники). Пакет их в тайлы не переносит, поэтому их запекает FieldAreasBaker
-    /// (Tools/Environment/Bake Field Areas) в Resources/World/FieldAreas. По ним карта земли (GroundWetness, A канал) даёт
+    /// (Tools/Environment/Bake Field Areas, WorldMapBaker) в папку мира — ассет висит на его WorldMapData. По ним карта земли (GroundWetness, A канал) даёт
     /// шейдеру террейна направление рядков, технологических колей и борозд в каждой точке поля (FieldRows.hlsl).
     /// </summary>
     public sealed class FieldAreas : ScriptableObject
     {
-        public const string ResourcePath = "World/FieldAreas";
         private const float BucketSize = 500f;
 
         [Serializable]
@@ -30,22 +29,11 @@ namespace _Game.Scripts.World
 
         [NonSerialized] private Dictionary<long, List<int>> _buckets;
 
-        private static FieldAreas _instance;
-        private static bool _loaded;
+        /// <summary>Поля загруженного мира (WorldMapData); null — у него их нет.</summary>
+        public static FieldAreas Instance => WorldMapData.Fields;
 
-        public static FieldAreas Instance
-        {
-            get
-            {
-                if (!_loaded)
-                {
-                    _loaded = true;
-                    _instance = Resources.Load<FieldAreas>(ResourcePath);
-                }
-
-                return _instance;
-            }
-        }
+        // Запекание переписало поля: корзины поиска — заново.
+        public void ResetIndex() => _buckets = null;
 
         /// <summary>Направление рядков поля в точке (градусы 0..180) или -1, если точка не в поле.</summary>
         public float RotationAt(float x, float z)

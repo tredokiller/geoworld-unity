@@ -16,49 +16,24 @@ namespace _Game.Scripts.Editor.Vegetation
     /// растёт, над тоннелем тоже. Части мира перекрываются, дорога на стыке приходит из обеих — одинаковые (id и точки)
     /// берутся один раз, а куски одной линии, обрезанные по границам частей, сшиваются; концам дорог ставится вид — тупик,
     /// продолжение, примыкание (RoadJunctions). Потом оси подтягиваются к дороге на снимке тайлов (RoadSatelliteSnap), а
-    /// асфальту в городе (вокруг застройка карты земель и мощёные тротуары или разметка) ставится бордюр. Без выгрузок на
-    /// этой машине (пути в сцене мира — локальные) прежние дороги остаются.
+    /// асфальту в городе (вокруг застройка карты земель и мощёные тротуары или разметка) ставится бордюр. Пишет в папку мира
+    /// (WorldMapBaker: &lt;папка мира&gt;/Environment/Road areas, на его WorldMapData). Без выгрузок на этой машине (пути в
+    /// мире — локальные) прежние дороги остаются.
     /// </summary>
     public static class RoadAreasBaker
     {
-        private const string AssetPath = "Packages/com.tredokiller.geoworld/Environment/Resources/" + RoadAreas.ResourcePath + ".asset";
-        private const string WorldScene = "Assets/GeoWorld/Tiled/kharkiv_east/kharkiv_east.unity";
+        private const string AssetName = "Road areas";
         // ширина балласта, если у рельсов её нет
         private const float DefaultRailWidth = 4f;
 
         [MenuItem("Tools/Environment/Bake Road Areas")]
-        public static void BakeMenu() => Debug.Log("[RoadAreasBaker] " + Bake());
-
-        public static string Bake(bool snap = true)
+        public static void BakeMenu()
         {
-            GeoTiledWorld world = Object.FindFirstObjectByType<GeoTiledWorld>(FindObjectsInactive.Include);
-            UnityEngine.SceneManagement.Scene opened = default;
-
-            if (world == null && File.Exists(WorldScene))
-            {
-                opened = EditorSceneManager.OpenScene(WorldScene, OpenSceneMode.Additive);
-
-                foreach (GameObject root in opened.GetRootGameObjects())
-                {
-                    world = root.GetComponentInChildren<GeoTiledWorld>(true);
-
-                    if (world != null)
-                        break;
-                }
-            }
-
-            try
-            {
-                return world != null ? Bake(world, snap) : "no GeoTiledWorld found";
-            }
-            finally
-            {
-                if (opened.IsValid())
-                    EditorSceneManager.CloseScene(opened, true);
-            }
+            GeoTiledWorld world = WorldMapBaker.FindWorld();
+            Debug.Log("[RoadAreasBaker] " + (world != null ? Bake(world) : WorldMapBaker.NoWorld));
         }
 
-        private static string Bake(GeoTiledWorld world, bool snap)
+        public static string Bake(GeoTiledWorld world, bool snap = true)
         {
             List<RoadAreas.Road> roads = new();
             List<string> ids = new();
@@ -67,7 +42,7 @@ namespace _Game.Scripts.Editor.Vegetation
             int files = 0;
             int skipped = 0;
 
-            foreach (string path in world.parts.Select(part => part.environmentPath).Where(path => !string.IsNullOrEmpty(path)))
+            foreach (string path in WorldMapBaker.EnvironmentPaths(world))
             {
                 if (!File.Exists(path))
                     continue;
@@ -93,7 +68,7 @@ namespace _Game.Scripts.Editor.Vegetation
                 }
             }
 
-            RoadAreas asset = AssetDatabase.LoadAssetAtPath<RoadAreas>(AssetPath);
+            RoadAreas asset = WorldMapBaker.Asset<RoadAreas>(world, AssetName, false);
 
             if (files == 0)
                 return $"no GeoWorld environment export found, {asset?.roads.Length ?? 0} roads kept";
@@ -103,23 +78,13 @@ namespace _Game.Scripts.Editor.Vegetation
             // сначала оси и ширина по снимку: по ширине город отличается от села
             string snapped = snap ? RoadSatelliteSnap.Snap(roads, world, links) : "not snapped";
             int curbs = MarkCurbs(roads, world.GetComponentInChildren<GeoLandCover>(true) ?? Object.FindFirstObjectByType<GeoLandCover>(FindObjectsInactive.Include));
-            bool created = asset == null;
-
-            if (created)
-            {
-                Directory.CreateDirectory(Path.GetDirectoryName(AssetPath));
-                asset = ScriptableObject.CreateInstance<RoadAreas>();
-            }
-
+            asset = WorldMapBaker.Asset<RoadAreas>(world, AssetName, true);
             asset.roads = roads.ToArray();
             asset.coverage = coverage.ToArray();
-
-            if (created)
-                AssetDatabase.CreateAsset(asset, AssetPath);
-            else
-                EditorUtility.SetDirty(asset);
-
+            asset.ResetIndex();
+            EditorUtility.SetDirty(asset);
             AssetDatabase.SaveAssetIfDirty(asset);
+            WorldMapBaker.Attach(world, data => data.roads = asset);
             return $"{roads.Count} roads from {files} exports ({skipped} bridges, tunnels and repeats skipped, {stitched} pieces stitched), " +
                    $"{roads.Sum(road => road.points.Length)} points, {curbs} with curbs; {ends}; {snapped}";
 
