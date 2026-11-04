@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.18.1
+
+- 1.18.0 did not compile (`GeoWorld.Editor`): in `GeoUpdate.Watch` the name `Progress` meant the window's own `Progress(string, float)` method, which hides `UnityEditor.Progress` (CS0119), so the editor assembly with the Geo World window and the update was not built. It calls `UnityEditor.Progress.EnumerateItems()` now.
+
 ## 1.18.0
 
 - Fast updates: Geo World as a git clone in `Packages/com.tredokiller.geoworld` (a submodule of the project's repository where it has one) instead of a package the Package Manager downloads from git (`GeoGitUpdate`). The Package Manager has no updates of a git package: every version was a new download of the whole package (some 300 MB of models and textures, and since 1.17 the Git LFS files of the environment) into a new folder that Unity imported again in full, and an update that went wrong had to be fixed by removing the package and installing it again. A clone fetches only what changed (1.9.0 to 1.17.0 is 1.5 MB), the files change in place and Unity imports only those, and in a project's repository an update is a one-line change of the submodule.
