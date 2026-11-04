@@ -151,9 +151,11 @@ namespace GeoWorld.Editor.Tests
             Assert.That(other.Length==first.Length&&other.SequenceEqual(first),Is.False);
         }
 
+        // the walls follow one broken profile in 1.5 m runs (2.4 m read as a comb): 836 vertices for this one; a ruin model of
+        // the library has 2-5k
         [Test] public void BrokenBuildings_StayWithinAVertexBudget()
         {
-            Set("destroyed");using(var output=Build())Assert.That(output.parts.Sum(p=>p.mesh.vertexCount),Is.LessThan(700));
+            Set("destroyed");using(var output=Build())Assert.That(output.parts.Sum(p=>p.mesh.vertexCount),Is.LessThan(900));
             Set("heavily_damaged");using(var output=Build())Assert.That(output.parts.Sum(p=>p.mesh.vertexCount),Is.LessThan(1600));
         }
 

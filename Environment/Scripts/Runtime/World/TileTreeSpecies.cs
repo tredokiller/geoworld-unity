@@ -422,6 +422,12 @@ namespace _Game.Scripts.World
             if (species < 0)
                 return false;
 
+            // где шли бои (воронки, CraterField), деревья посечены — и в лесополосах, где стояли позиции
+            int damaged = WarDamaged(c, x, z);
+
+            if (damaged >= 0)
+                species = damaged;
+
             float height = tree.heightScale * Mathf.Max(tile.OriginalHeights[tree.prototypeIndex], 0.1f);
             float aspect = tree.heightScale > 1e-4f ? tree.widthScale / tree.heightScale : 1f;
             Choose(c, species, height, x, z, out SpeciesChoice choice, out float scale);
@@ -686,6 +692,39 @@ namespace _Game.Scripts.World
             }
 
             return inside;
+        }
+
+        // Дерево, посечённое боем, или −1. Доля таких — по плотности воронок вокруг (CraterField.PerHectareAt): от 1 воронки
+        // на гектар 10 %, к 20 и больше — до 55 % (у самых стоявших под огнём лесополос и боров — вплоть до 50–80 %
+        // погибших деревьев); из них сухостой 35 %, обломанные стволы без кроны 40 %, поваленные 25 % — виды dead, snag,
+        // broken профиля. Выбор — хешем места: дерево тайла всегда то же.
+        private int WarDamaged(Context c, float x, float z)
+        {
+            CraterField craters = CraterField.Instance;
+
+            if (craters == null || craters.craters.Length == 0)
+                return -1;
+
+            float perHectare = craters.PerHectareAt(x, z);
+
+            if (perHectare < CraterField.AbandonedPerHectare)
+                return -1;
+
+            float share = Mathf.Clamp(0.1f + 0.0225f * perHectare, 0f, 0.55f);
+
+            if (Hash(x, z, 53) >= share)
+                return -1;
+
+            float kind = Hash(x, z, 59);
+            string name = kind < 0.35f ? "dead" : kind < 0.75f ? "snag" : "broken";
+
+            for (int s = 0; s < _profile.species.Length && s < c.Variants.Length; s++)
+            {
+                if (_profile.species[s].name == name && c.Variants[s].Count > 0)
+                    return s;
+            }
+
+            return -1;
         }
 
         // lying false — без лежащих видов (бурелом там, где он лёг бы на дорогу)

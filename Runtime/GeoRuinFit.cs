@@ -135,6 +135,13 @@ namespace GeoWorld
             return bounds;
         }
 
+        // whether the model has storeys that may repeat (its height axis has a repeating segment)
+        public static bool HasStoreys(GeoRuinModel model)
+        {
+            Segments(model.height, 0, model.eaves, out string roles);
+            return roles.IndexOf('R') >= 0;
+        }
+
         public static bool IsValid(GeoRuinAxis axis, float start, float end)
         {
             Segments(axis, start, end, out string roles);
@@ -482,6 +489,8 @@ namespace GeoWorld
             public Vector3 stretch;
             public float roofStretch;
             public bool swapped;
+            // how much lower than the building's walls the model is drawn (log of the ratio; 0: as high)
+            public float shortfall;
             public override string ToString()
             {
                 string Axis(string name, AxisPlan plan) => plan.Added > 0 ? name + " +" + plan.Added : plan.LeftOut > 0 ? name + " -" + plan.LeftOut : null;
@@ -528,7 +537,20 @@ namespace GeoWorld
                 eaves = model.eaves * scale; rise = model.roofRise * scale;
             }
             else Heights(model, target, out eaves, out rise);
-            fit.height = Plan(model.height, 0, model.eaves, eaves, false, true, 1.15f);
+            // Upward the model never repeats as a whole (a ruin stacked on itself floated its rubble a storey or two up, under
+            // nothing): one without storeys to repeat is stretched up to 1.4 times its eaves and no higher, and what is left
+            // of a destroyed building (a model only of that) stands as high as the model shows it. Drawn lower than the
+            // building, the model costs more to choose (GeoRuinLibrary).
+            if (!model.keepProportions)
+            {
+                float most = model.minState >= GeoConditionState.Destroyed ? 1.15f : HasStoreys(model) ? float.PositiveInfinity : 1.4f;
+                float drawn = Mathf.Min(eaves, model.eaves * most);
+                fit.shortfall = Mathf.Log(eaves / Mathf.Max(0.01f, drawn));
+                // a pitched model on a flat building: its roof keeps the proportions of the walls it stands on
+                if (model.roofRise > 0.3f && target.roofRise <= 0.3f) rise *= drawn / Mathf.Max(0.01f, eaves);
+                eaves = drawn;
+            }
+            fit.height = Plan(model.height, 0, model.eaves, eaves, false, true, 1.15f, false);
             fit.stretch = new Vector3(sx, eaves / Mathf.Max(0.01f, fit.height.length), sz);
             fit.roofStretch = model.keepProportions ? fit.stretch.y : model.roofRise > 0.3f ? Mathf.Clamp(rise / model.roofRise, 0.4f, 2.5f) : 1f;
             return fit;

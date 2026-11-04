@@ -54,6 +54,9 @@ namespace GeoWorld
         public bool ruinTurn;
         [Tooltip("Metres of the model's yard and debris kept around the footprint (the model's own apron is the upper limit).")]
         [Min(0)] public float ruinApron = 3;
+        // An L, T or U footprint drawn as a model on each of its rectangles (GeoRuins.Assign: the first part is the largest,
+        // its model is also Ruin; an odd ruin may have one). Worked out again before every build, never saved.
+        [System.NonSerialized] public List<GeoRuinPart> ruinParts;
         [Header("Home model")]
         [Tooltip("Auto: the generator picks an intact-building model from the home library for a building the world's Home Models setting covers (again on every rebuild). Model: always the Home below. Procedural: the style's walls and roof.")]
         public GeoRuinMode homeMode = GeoRuinMode.Auto;
@@ -61,6 +64,9 @@ namespace GeoWorld
         public GeoHomeModelAsset home;
         public GeoHomeLibrary homeLibrary;
         public bool homeMirror, homeTurn;
+        // A standing building no single model fits, drawn as several (GeoHomeLibrary.Cover: a row of sections, or a model on
+        // each rectangle of an L, T or U; the first part's model is also Home). Worked out again before every build, never saved.
+        [System.NonSerialized] public List<GeoHomePart> homeParts;
         // The OpenStreetMap building=* value (school, church, garages ...), which can pick a ruin model.
         [HideInInspector] public string buildingTag;
     }

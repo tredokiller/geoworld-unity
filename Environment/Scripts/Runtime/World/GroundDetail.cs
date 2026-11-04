@@ -32,6 +32,8 @@ namespace _Game.Scripts.World
         private static readonly int FadeId = Shader.PropertyToID("_GroundDetailFade");
         private static readonly int LayerId = Shader.PropertyToID("_GroundDetailLayer");
         private static readonly int AverageId = Shader.PropertyToID("_GroundDetailAverage");
+        private static readonly int TrenchSoilId = Shader.PropertyToID("_TrenchSoilLayers");
+        private static readonly int TrenchSoilOnId = Shader.PropertyToID("_TrenchSoilOn");
         private static readonly int ClassId = Shader.PropertyToID("_GroundDetailClass");
 
         private readonly List<Texture2DArray> _arrays = new();
@@ -90,6 +92,8 @@ namespace _Game.Scripts.World
         private void OnDestroy()
         {
             Shader.SetGlobalVector(RectId, Vector4.zero);
+            // массивов больше нет: грунт окопов — вид террейна
+            Shader.SetGlobalFloat(TrenchSoilOnId, 0f);
 
             foreach (Texture2DArray array in _arrays)
             {
@@ -208,6 +212,10 @@ namespace _Game.Scripts.World
             Shader.SetGlobalVectorArray(LayerId, layers);
             Shader.SetGlobalVectorArray(AverageId, averages);
             Shader.SetGlobalVectorArray(ClassId, classes);
+            // почва окопов (TrenchGround.hlsl, меши GeoTrenchMesh): выброшенный грунт, он же заросший, грязь дна, чернозём
+            int Find(string name) => Mathf.Max(0, Mathf.Min(set.layers.FindIndex(l => l.name == name), last));
+            Shader.SetGlobalVector(TrenchSoilId, new Vector4(Find("field_dry"), Find("grass_soil"), Find("mud"), Find("dark_soil")));
+            Shader.SetGlobalFloat(TrenchSoilOnId, 1f);
             float fadeEnd = Mathf.Max(set.fadeEnd, set.fadeStart + 1f);
             Shader.SetGlobalVector(FadeId, new Vector4(set.fadeStart, 1f / (fadeEnd - set.fadeStart), fadeEnd, 0f));
         }

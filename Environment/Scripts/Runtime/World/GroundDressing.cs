@@ -154,9 +154,16 @@ namespace _Game.Scripts.World
             // за краем; null — у мира карты нет
             public byte[] Land;
             public int LandCells;
+            // в тех же узлах: 1 — поле брошено (там шли бои, CraterField.AbandonedAt): растёт как луг и бурьян, а не стерня;
+            // null — брошенных нет
+            public float[] Abandoned;
             // оси дорог у тайла (RoadAreas); RoadsKnown — тайл в выгрузках дорог, клетки дорог карты земель не в счёт
             public RoadAreas.Segment[] Roads;
             public bool RoadsKnown;
+            // воронки у тайла (CraterField): свежая чаша и прудок голы, в старой трава реже, у свежей вокруг — вывороченный грунт
+            public CraterField.Crater[] Craters;
+            // окопы у тайла: во рву трава реже (у брошенных он зарос), у свежих — гол
+            public CraterField.Trench[] Trenches;
             // крутизна рельефа (градусы) и z нормали (−z — юг: там снег тает раньше) в SteepnessNodes² узлах по тайлу
             public float[] Steepness;
             public float[] NormalZ;
@@ -686,10 +693,13 @@ namespace _Game.Scripts.World
                     Resolution = Mathf.Max(64, resolution),
                     Satellite = readSatellite ? ReadSatellite(SatelliteOf(source)) : null,
                     SatelliteSize = SatelliteCopySize,
-                    Land = ReadLand(origin, size, out int landCells),
+                    Land = ReadLand(origin, size, out int landCells, out float[] abandoned),
                     LandCells = landCells,
+                    Abandoned = abandoned,
                     Roads = ReadRoads(origin, size, out bool roadsKnown),
                     RoadsKnown = roadsKnown,
+                    Craters = ReadCraters(origin, size),
+                    Trenches = ReadTrenches(origin, size),
                     Steepness = ReadRelief(source, out float[] normalZ),
                     NormalZ = normalZ,
                     Trees = trees,
@@ -728,6 +738,20 @@ namespace _Game.Scripts.World
                 road = new float[n * n];
                 RoadAreas.Rasterize(input.Roads, input.Origin, input.Size, n, road);
             }
+
+            // воронки: как голо в ячейке — по доле её площади под чашей (мелкая яма меньше ячейки голит её долю)
+            float[] crater = null;
+
+            if (input.Craters is { Length: > 0 } || input.Trenches is { Length: > 0 })
+            {
+                crater = new float[n * n];
+
+                if (input.Craters != null)
+                    RasterizeCraters(input.Craters, input.Origin, input.Size, n, crater);
+
+                if (input.Trenches != null)
+                    RasterizeTrenches(input.Trenches, input.Origin, input.Size, n, crater);
+            }
             float[] forestLattice = hasLand ? LandGroups.Share(input.Land, FlyPointLandGroup.Forest) : null;
             // доля леса по карте в ячейке: листва там лежит почти везде, а не только у деревьев тайла
             float[] forestLand = hasLand ? new float[n * n] : null;
@@ -760,6 +784,9 @@ namespace _Game.Scripts.World
                     bare[cell] = SmoothStep(-0.03f, 0.03f, colour.r - colour.g);
                     blocked[cell] = Mathf.Max(Mathf.Max(water, paved), road != null ? road[cell] : 0f);
 
+                    if (crater != null)
+                        blocked[cell] = Mathf.Max(blocked[cell], crater[cell]);
+
                     if (state != null)
                         state[cell] = SatelliteStates.Sample(satelliteStates, input.SatelliteSize, (x + 0.5f) / n, (z + 0.5f) / n);
 
@@ -790,6 +817,10 @@ namespace _Game.Scripts.World
                             toField[cell] = Mathf.Clamp01(
                                 LandGroups.Sample(maybeFieldLattice, landCount, landCount, gx, gz) * field +
                                 LandGroups.Sample(edgeLattice, landCount, landCount, gx, gz) * (1f - state[cell].x));
+
+                            // брошенное поле — уже не поле: ни стерни, ни всходов
+                            if (input.Abandoned != null)
+                                toField[cell] *= 1f - LandGroups.Sample(input.Abandoned, landCount, landCount, gx, gz);
                         }
                     }
                 }
@@ -802,8 +833,8 @@ namespace _Game.Scripts.World
                 Entry entry = input.Entries[e];
                 byte[] layer = new byte[n * n];
                 counts[e] = layer;
-                // множитель вида по земле: луг, поле и его край, лес, болото и берег, посёлок, дороги, голая земля
-                float[] landScales = hasLand ? LandGroups.EntryScales(input.Land, landCount, landCount, entry.Land) : null;
+                // множитель вида по земле: луг, поле и его край, лес, болото и берег, посёлок, дороги, голая земля, залежь
+                float[] landScales = hasLand ? LandGroups.EntryScales(input.Land, landCount, landCount, entry.Land, input.Abandoned) : null;
 
                 for (int z = 0; z < n; z++)
                 {
@@ -930,9 +961,11 @@ namespace _Game.Scripts.World
         // Земля тайла по карте земель GeoWorld, на главном потоке: классы в узлах через LandCoverStep, на узел за краем
         // тайла. Из неё — вода, дороги и здания без травы (по цвету спутника светлые и зеленоватые реки читались лугом)
         // и группы земли для видов травы. null — у мира карты нет, тогда только спутник и деревья тайла.
-        private static byte[] ReadLand(Vector3 origin, Vector3 size, out int cells)
+        // abandoned — узлы брошенных полей (там шли бои: CraterField.AbandonedAt): пашня в них — луг (залежь), null — таких нет
+        private static byte[] ReadLand(Vector3 origin, Vector3 size, out int cells, out float[] abandoned)
         {
             cells = 0;
+            abandoned = null;
 
             if (GeoLandCover.At(origin.x + size.x * 0.5f, origin.z + size.z * 0.5f) == null)
                 return null;
@@ -950,7 +983,18 @@ namespace _Game.Scripts.World
                     Vector3 point = new(origin.x + (x - LandMargin + 0.5f) * stepX, 0f, origin.z + (z - LandMargin + 0.5f) * stepZ);
 
                     if (GeoLandCover.TrySample(point, out GeoLandClass value))
+                    {
+                        if (CraterField.AbandonedAt(point.x, point.z))
+                        {
+                            abandoned ??= new float[count * count];
+                            abandoned[z * count + x] = 1f;
+
+                            if (value == GeoLandClass.Cropland)
+                                value = GeoLandClass.Grass;
+                        }
+
                         land[z * count + x] = (byte)value;
+                    }
                 }
             }
 
@@ -959,6 +1003,126 @@ namespace _Game.Scripts.World
 
         // Оси дорог у тайла и за его краем на RoadReach (бревно у края тайла не ляжет на дорогу соседнего), на главном потоке;
         // known — тайл в выгрузках дорог. null — дорог рядом нет или их не запекали.
+        private static readonly List<int> FoundCraters = new();
+
+        private static CraterField.Crater[] ReadCraters(Vector3 origin, Vector3 size)
+        {
+            CraterField field = CraterField.Instance;
+
+            if (field == null || field.craters.Length == 0)
+                return null;
+
+            field.Query(new Rect(origin.x, origin.z, size.x, size.z), FoundCraters);
+
+            if (FoundCraters.Count == 0)
+                return null;
+
+            var result = new CraterField.Crater[FoundCraters.Count];
+
+            for (int i = 0; i < result.Length; i++)
+                result[i] = field.craters[FoundCraters[i]];
+
+            return result;
+        }
+
+        private static readonly List<int> FoundTrenches = new();
+
+        private static CraterField.Trench[] ReadTrenches(Vector3 origin, Vector3 size)
+        {
+            CraterField field = CraterField.Instance;
+
+            if (field == null || field.trenches.Length == 0)
+                return null;
+
+            field.QueryTrenches(new Rect(origin.x, origin.z, size.x, size.z), FoundTrenches);
+
+            if (FoundTrenches.Count == 0)
+                return null;
+
+            var result = new CraterField.Trench[FoundTrenches.Count];
+
+            for (int i = 0; i < result.Length; i++)
+                result[i] = field.trenches[FoundTrenches[i]];
+
+            return result;
+        }
+
+        // Голость ячейки от окопов. Окоп — меш тайла (GeoTrenchMesh): ров, бровка и брустверы до конца его бровки, террейн
+        // под ним срезан ниже, и трава с него проросла бы сквозь меш — там травы нет; дальше, на выброшенном грунте внешнего
+        // склона бруствера, — реже.
+        private static void RasterizeTrenches(CraterField.Trench[] trenches, Vector2 origin, Vector2 size, int n, float[] result)
+        {
+            float cellX = size.x / n, cellZ = size.y / n;
+
+            foreach (CraterField.Trench t in trenches)
+            {
+                if (t.points == null || t.points.Length < 4)
+                    continue;
+
+                float half = 0.5f * Mathf.Max(0.3f, t.width) * (1f + 0.5f * t.age);
+                var section = new GeoWorld.Editor.GeoTrenchSection(t.width, t.depth, t.age, GeoWorld.Editor.GeoTrenchSection.LipWidth(1f));
+                float bare = section.CutTo(1f), bank = Mathf.Lerp(0.6f, 0.2f, t.age);
+                float reach = Mathf.Max(bare, half + 2.4f);
+
+                for (int k = 0; k + 3 < t.points.Length; k += 2)
+                {
+                    var a = new Vector2(t.points[k], t.points[k + 1]);
+                    var b = new Vector2(t.points[k + 2], t.points[k + 3]);
+                    int x0 = Mathf.Max(0, Mathf.FloorToInt((Mathf.Min(a.x, b.x) - reach - origin.x) / cellX)), x1 = Mathf.Min(n - 1, Mathf.FloorToInt((Mathf.Max(a.x, b.x) + reach - origin.x) / cellX));
+                    int z0 = Mathf.Max(0, Mathf.FloorToInt((Mathf.Min(a.y, b.y) - reach - origin.y) / cellZ)), z1 = Mathf.Min(n - 1, Mathf.FloorToInt((Mathf.Max(a.y, b.y) + reach - origin.y) / cellZ));
+                    Vector2 ab = b - a;
+                    float lengthSq = Mathf.Max(ab.sqrMagnitude, 1e-6f);
+
+                    for (int z = z0; z <= z1; z++)
+                    for (int x = x0; x <= x1; x++)
+                    {
+                        var p = new Vector2(origin.x + (x + 0.5f) * cellX, origin.y + (z + 0.5f) * cellZ);
+                        float along = Mathf.Clamp01(Vector2.Dot(p - a, ab) / lengthSq);
+                        float d = Vector2.Distance(p, a + ab * along);
+                        float value = d < bare ? 1f : d < reach ? bank : 0f;
+                        int cell = z * n + x;
+
+                        if (value > result[cell])
+                            result[cell] = value;
+                    }
+                }
+            }
+        }
+
+        // Голость ячейки от воронок: в чаше свежей воронки и в прудке трава не растёт, в чаше старой — вдвое реже, у свежей
+        // вокруг ямы — вывороченный грунт, тоже реже. Доля — по площади чаши в ячейке (ячейки ~2 м: яма в метр голит четверть).
+        private static void RasterizeCraters(CraterField.Crater[] craters, Vector2 origin, Vector2 size, int n, float[] result)
+        {
+            float cellX = size.x / n, cellZ = size.y / n, cellArea = cellX * cellZ;
+
+            foreach (CraterField.Crater c in craters)
+            {
+                float radius = Mathf.Max(0.05f, c.diameter * 0.5f);
+                bool fresh = c.age < 0.35f;
+                float strength = c.water || fresh ? 1f : 0.5f;
+                float reach = fresh ? radius * 1.6f : radius;
+                int centreX = Mathf.FloorToInt((c.x - origin.x) / cellX), centreZ = Mathf.FloorToInt((c.z - origin.y) / cellZ);
+                int x0 = Mathf.Max(0, Mathf.FloorToInt((c.x - reach - origin.x) / cellX)), x1 = Mathf.Min(n - 1, Mathf.FloorToInt((c.x + reach - origin.x) / cellX));
+                int z0 = Mathf.Max(0, Mathf.FloorToInt((c.z - reach - origin.y) / cellZ)), z1 = Mathf.Min(n - 1, Mathf.FloorToInt((c.z + reach - origin.y) / cellZ));
+                float share = Mathf.Min(1f, Mathf.PI * radius * radius / cellArea);
+
+                for (int z = z0; z <= z1; z++)
+                for (int x = x0; x <= x1; x++)
+                {
+                    float dx = origin.x + (x + 0.5f) * cellX - c.x, dz = origin.y + (z + 0.5f) * cellZ - c.z;
+                    float s = Mathf.Sqrt(dx * dx + dz * dz) / radius;
+                    // ячейка с центром ямы — хотя бы по её доле, остальные — по расстоянию до центра
+                    float inBowl = s < 1f ? 1f : x == centreX && z == centreZ ? share : 0f;
+                    float spoil = fresh && s < 1.6f ? 0.6f * (1f - SmoothStep(1f, 1.6f, s)) : 0f;
+                    float value = Mathf.Max(inBowl * strength, spoil);
+                    int cell = z * n + x;
+
+                    if (value > result[cell])
+                        result[cell] = value;
+                }
+            }
+        }
+
         private static RoadAreas.Segment[] ReadRoads(Vector3 origin, Vector3 size, out bool known)
         {
             RoadAreas roads = RoadAreas.Instance;

@@ -40,8 +40,9 @@ namespace _Game.Scripts.World
         public static bool IsHard(GeoLandClass land) => land is GeoLandClass.Water or GeoLandClass.Building || IsRoad(land);
 
         // Множитель записи в каждом узле решётки (countX × countZ, по строкам z). Поле у края (межа, у дороги и леса)
-        // — FieldEdge, берег у воды — наполовину болото.
-        public static float[] EntryScales(byte[] classes, int countX, int countZ, FlyPointLandScales scales)
+        // — FieldEdge, берег у воды — наполовину болото. abandoned — узлы брошенной земли (там шли бои, CraterField.AbandonedAt;
+        // null — таких нет): на открытой земле в них запись растёт по своему Fallow, если он задан (бурьян залежи и руин).
+        public static float[] EntryScales(byte[] classes, int countX, int countZ, FlyPointLandScales scales, float[] abandoned = null)
         {
             float[] result = new float[classes.Length];
 
@@ -57,6 +58,11 @@ namespace _Game.Scripts.World
                         group = FlyPointLandGroup.FieldEdge;
 
                     float value = scales.Of(group);
+
+                    // лес, болото и дороги на брошенной земле — как были
+                    if (abandoned != null && abandoned[index] > 0f && scales.Fallow > 0f && group is not (FlyPointLandGroup.Forest or
+                            FlyPointLandGroup.Wetland or FlyPointLandGroup.Track))
+                        value = Mathf.Lerp(value, scales.Fallow, abandoned[index]);
 
                     if (land != GeoLandClass.Water && land != GeoLandClass.Wetland && BordersWater(classes, countX, countZ, x, z))
                         value = Mathf.Lerp(value, scales.Wetland, BankWetland);

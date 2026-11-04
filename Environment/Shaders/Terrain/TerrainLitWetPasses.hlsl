@@ -9,6 +9,9 @@
 
 #ifdef GAME_GROUND_WETNESS
 #include "GroundWetness.hlsl"
+#ifdef _TRENCH_GROUND
+#include "TrenchGround.hlsl"
+#endif
 #endif
 
 struct Attributes
@@ -16,6 +19,10 @@ struct Attributes
     float4 positionOS : POSITION;
     float3 normalOS : NORMAL;
     float2 texcoord : TEXCOORD0;
+#if defined(GAME_GROUND_WETNESS) && defined(_TRENCH_GROUND)
+    // меш окопа: x — доля своей почвы окопа, y — дно (GeoTrenchMesh)
+    float2 trenchSoil : TEXCOORD1;
+#endif
     UNITY_VERTEX_INPUT_INSTANCE_ID
 };
 
@@ -54,6 +61,10 @@ struct Varyings
 
 #ifdef USE_APV_PROBE_OCCLUSION
     float4 probeOcclusion           : TEXCOORD10;
+#endif
+
+#if defined(GAME_GROUND_WETNESS) && defined(_TRENCH_GROUND)
+    half2 trenchSoil                : TEXCOORD11;
 #endif
 
     float4 clipPos                  : SV_POSITION;
@@ -315,6 +326,9 @@ Varyings SplatmapVert(Attributes v)
 
     o.uvMainAndLM.xy = v.texcoord;
     o.uvMainAndLM.zw = v.texcoord * unity_LightmapST.xy + unity_LightmapST.zw;
+#if defined(GAME_GROUND_WETNESS) && defined(_TRENCH_GROUND)
+    o.trenchSoil = v.trenchSoil;
+#endif
 
     #ifndef TERRAIN_SPLAT_BASEPASS
         o.uvSplat01.xy = TRANSFORM_TEX(v.texcoord, _Splat0);
@@ -487,6 +501,10 @@ void SplatmapFragment(
     // фактура земли вблизи камеры (GroundDetail.hlsl) — на слоях, растянутых на весь террейн, то есть на спутнике тайла
     GroundDetail(inputData, dot(splatControl, step(half4(_Splat0_ST.x, _Splat1_ST.x, _Splat2_ST.x, _Splat3_ST.x), 4.0h)),
                  albedo, smoothness, occlusion);
+    #endif
+    #ifdef _TRENCH_GROUND
+    // меш окопа: своя почва на дне и брустверах (TrenchGround.hlsl) — до мокрости, сезонов и снега
+    TrenchGround(inputData, IN.trenchSoil, albedo, smoothness, occlusion);
     #endif
     // мокрая земля и лужи в дождь — до освещения: темнее, глаже, в луже ровная вода с кольцами и рябью
     GroundWetness(inputData, TerrainGeometryNormal(IN), albedo, smoothness, occlusion, groundWater);

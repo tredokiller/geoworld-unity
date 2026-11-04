@@ -38,6 +38,9 @@ namespace _Game.Scripts.Locations.FlyPoints
         [Range(0f, 4f)] public float Track;
         [Tooltip("Песок, голая земля, камень, тропа.")]
         [Range(0f, 4f)] public float Barren;
+        [Tooltip("Брошенная земля, где шли бои (воронки вокруг, CraterField.AbandonedAt): залежь, луг, дворы и руины — вместо " +
+                 "своей группы (лес, болото и дороги — по своей). 0 — по своей группе.")]
+        [Range(0f, 4f)] public float Fallow;
 
         public static FlyPointLandScales Everywhere => new()
         {
@@ -47,7 +50,7 @@ namespace _Game.Scripts.Locations.FlyPoints
         // все нули — запись из профиля, сохранённого до этих настроек: растёт везде, как раньше
         public bool IsUnset =>
             Meadow == 0f && Field == 0f && FieldEdge == 0f && Forest == 0f &&
-            Wetland == 0f && Settlement == 0f && Track == 0f && Barren == 0f;
+            Wetland == 0f && Settlement == 0f && Track == 0f && Barren == 0f && Fallow == 0f;
 
         public float Of(FlyPointLandGroup group) => group switch
         {

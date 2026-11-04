@@ -64,6 +64,10 @@ namespace GeoWorld.Editor
             Measure();
         }
 
+        // Metres from node (x, z) to the nearest water: negative inside a river or its area, 0 in a flat lake, MaxValue where no
+        // water reaches (GeoCombatGround keeps craters out of it).
+        public float Distance(int x, int z) => lakeNode[z, x] >= 0 ? Mathf.Min(0, edge[z, x]) : edge[z, x];
+
         // The narrowest a river's water is on the grid: every cell its line crosses has a corner in the water, so a stream narrower
         // than a cell is still a line of water, and its bed is a groove the water lies in (not ground a few millimetres over it).
         public float MinHalfWidth => 0.75f * cell;

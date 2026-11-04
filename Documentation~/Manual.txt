@@ -338,6 +338,121 @@ trees among fields 8-14 m, orchards 4-7 m, villages and towns 6-12 m (built-up g
 ground within 60 m), with the tree prefab whose own height is nearest (scale within half and twice the prefab's, the
 width in proportion). A tree with a height from the map (outside 5-10 m) keeps it. The same tile always gets the same
 trees; nothing is baked. It runs once a tile, on the main thread while its trees load (GeoTreeHeights.SizedMilliseconds).
+BATTLEFIELDS (A FINISHED BATTLE)
+An area after a battle that is over: craters, trenches, damaged trees, abandoned fields and ruins, never fire, smoke or
+anything still fighting. The combat bake (GeoCombatBake) reads an export once, before any tile is built, and writes
+combat.json next to its environment.json (GeoCombatFile, format geo-combat 2, with the export's origin and bounds: next to
+another export it is ignored with a warning, and extracting the area again deletes it). Bake battlefield in the Geo Tiled
+World's Inspector bakes every export of the world with the default settings (GeoCombatSettings); Rebuild changed tiles then
+carves it (combat.json is part of every tile's fingerprint; a bake that changes nothing leaves the file as it is). A world
+package: GeoWorldRequest.battlefield = true, and combat for its settings (the bake runs before the tiles and is part of the
+package's input hash). environment.json may carry craters[] and trenches[] of its own (source Given); the bake keeps them.
+ - Craters on the imagery (detect): GeoCraterDetector reads the export's satellite in pieces of 1 km with 100 m of overlap at
+   0.49 m a pixel (GeoSatellite.Pixels: the tiles' own imagery and cache) and finds pits from about 2 m across up to bomb
+   craters, with fresh ejecta (bright bare soil) and water in them; building footprints (1.5 m around them) and water are
+   left out. Candidates are the dark spots of the image (local minima of the blurred luma with a centre-surround contrast);
+   each is measured along 16 rays (the pit's edge where the luma has risen halfway, recentred) and kept where a ring test
+   (a logistic score fitted on hand labels, with vetoes for vegetation, cast shadows, concrete, size and contrast) and a
+   blob test (contrast, roundness, open sides, lines through it, clutter, greenness, shadows) both agree, plus a path of
+   its own for fresh craters with a bright ejecta ring; a dark patch holding several pits gives way to them. Precision
+   over recall: on the hand labels of two captures near Bakhmut 0.98 and 0.64 (1.00 and 0.92 above confidence 0.7),
+   while it finds a third to a half of the pits, and none under about 2 m (the scatter adds them). Klishchiivka (March,
+   leaf-off): about 680 a km2, the bomb craters with their size, fresh ejecta and water; Bakhmut's centre (September,
+   leaf-on): 10 in 4 km2, since a dark pit among bushes and rubble looks like a crown or a shadow there (the season comes
+   from the share of vivid green, or Settings.leafOn). About 0.5 s a km2 with 12 threads (3 s on one), deterministic.
+   Tuned at 0.49 m a pixel; the sun azimuth is a setting (155 degrees, a WorldView capture at about 10:30). Reading data
+   out of imagery needs a licence that allows it: Esri World Imagery's terms do not for this use; with detect off only
+   the scattered pits are made.
+ - Scattered pits (scatter): the shells, mortars and drones that leave pits of 1-3 m no imagery at 0.5 m shows. Per 50 m
+   cell, intensity x (basePerHectare + 2 per crater a hectare the imagery shows around it + 30 x the share of damaged
+   buildings within ~125 m), at most maxPerHectare and patchy (0.5-1.5 of that); half in a salvo cluster (an ellipse of
+   about 18 x 8 m, its direction shared by a 200 m district), half anywhere in the cell; 55 % 1-1.8 m, 35 % 1.8-3 m, 10 %
+   3-5 m, a fifth to a third as deep as wide; freshShare of them fresh, the rest worn and grown over; never on a footprint
+   or in water, three times less often on a road. From a hash of the place (seed): the same pits on every bake.
+ - Trenches (trenches): in the style the war dug them, never traced from imagery (no detector finds them reliably at 0.5 m,
+   and a position must never be reproduced). Tree lines (GeoTreeLines: OpenStreetMap tree rows, narrow woods by their long
+   axis when straight, and strips of forest, scrub and orchard up to 50 m wide on the ground map, thinned and traced; each with how far its trees reach on either side)
+   with trenchFromPerHectare craters a hectare around them or more get, with a chance of 45 % + 5 % per crater a hectare
+   (x trenchShare): a fire trench 1-3 m outside the trees on one side, zigzag (every 7-10 m it steps 1.5-2.5 m across), 1 m
+   wide and 1.6-2 m deep as dug; dugouts every 35-60 m, 3.5-5 m into the trees and 2.2 m wide; one or two communication
+   trenches 40-150 m back through the trees, meandering. All abandoned for one to three years (worn 0.6-1), cut where they
+   would cross a building, water or a road.
+ - Building states (estimateBuildings): a building the app gives no condition for takes one from the craters within 150 m
+   (per hectare) or from the share of the buildings around it the app shows damaged (doubled), whichever says heavier: from
+   one crater a hectare (55 % intact, 30 % damaged, 10 % heavily damaged, 5 % destroyed) to 15 and more, or half the
+   buildings around damaged (4 % intact, 22 % damaged, 36 % heavily damaged, 38 % destroyed), by a hash of its id; basis
+   estimated, confidence low, the density in its note. The app's evidence always wins. In Bakhmut's centre the app's radar
+   marks 1 085 of 2 763 buildings and in Klishchiivka 164 of 574; the rest stood whole.
+Carving (GeoCombatGround, in every tile's build after the water and the road grading): a crater is a bowl to its depth at
+the centre, a lip cresting at 1.2 of its radius at 0.18 of its depth and an apron of thrown-out soil to 2.25 radii
+(GeoCraterProfile, after Glasstone & Dolan); a worn one is filled to 55 % of its depth, with a lip 0.4 as high and wider. A
+trench is a groove with steep walls and a flat floor, worn into a V up to 1.5 times wider and a third shallower, with spoil
+banks on both sides (GeoTrenchProfile). The deepest bowl wins where they overlap, and a lip inside another bowl is cut away
+with it; within 3 m of a building's footprint and 4 m of water (rivers and lakes) they fade out. A crater narrower than 1.5
+cells of the height grid is left to the environment layer. With 1025 heights a 1 km tile has cells of about 1 m (craters
+from 1.5 m); heightResolution goes up to 2049, but then the longest step of loading a tile took ~640 ms (110-380 ms at 1025)
+and a 2 x 2 km package 186 s to build (70 s).
+Trenches in 3D (GeoTrenchMesh): a grid of about a metre cannot hold a slot 1.3-1.5 m across with steep walls, so every
+trench is a mesh on its tile and the terrain is only cut under its slot: every height node within a cell's diagonal of
+the slot stands below it by GeoTrenchMesh.Clearance (6 cm) and by however much the ground falls within a cell, so no
+terrain triangle rises through it (GeoTrenchSection.Cap). Past the slot the terrain keeps its height and the mesh lies
+over it 3 cm up (GeoTrenchMesh.Lift): the craters are carved first, the trenches laid on that ground and their slots cut
+after, so a crater beside a trench shows on its spoil. Mesh and cut follow the centreline without spikes
+(GeoTrenchMesh.Centreline: a point turning by more than 110 degrees is dropped). The cross-section (GeoTrenchSection): a
+floor at the depth, walls steep as dug and slumped when old, then the spoil, a low heap from the edge (LipShare of its
+height) up to a round crest (CrestShare of the way) and down to its toe, where it runs out into the ground level and
+flat (Profile, a biweight: no height and no slope there), so the ground carries on without a crease; past the toe an
+apron at the ground level over every terrain triangle the cut lowered (LipWidth: two cell diagonals past the edge), then
+the mesh turns down under the terrain. Each side's heap swells and shrinks along the trench over 5-8 m and a little over
+2 m, its toe nearer or farther, higher and wider on one side (the parapet), with clods placed in the world (about 4.5 cm
+when fresh) that die out toward the toe; eight columns across it. Each side is swept on its own, a cross-section every
+metre: round the outside of a corner a fan, on the inside the mitre (a point that would fold behind the corner takes the
+mitred cross-section's point exactly). The ground's normals come from the faces round each point, whichever strip it
+belongs to, and the walls' texture runs along each side's own length. A trench ends in a rounded end wall, its heaps
+fading round it to 15 %; one that leaves another (a communication trench, a dugout) is cut at the other's floor and
+opens into it: a cross-section where it crosses the other's wall line and only floor before it, cross-sections in the
+other where its walls are crossed, and the spoil and walls of either inside the other cut away exactly along that wall
+line (clipped and re-triangulated). Each tile has a Trenches group, an object per chunk with a collider. Sub-mesh 0, the
+ground (floor, spoil, apron), is drawn with copies of the tile's terrain material (GeoTrenchGround sets the terrain's
+splat textures and layer settings on them; in play they follow the terrain's material and data, and are made again when
+a shader reload drops the layer settings, which are no shader properties: the spoil drew black); a terrain of more than
+four layers gets a pass for every four (its add pass, the ground's triangles again in sub-meshes 2..). Its UV1 says how
+much of it is the trench's own soil, which the environment layer's Game/Terrain Lit (Wet) draws (keyword _TRENCH_GROUND,
+TrenchGround.hlsl): fresh spoil a mix of pale loess loam and chernozem in patches with small soft clods, grown over in
+patches as it ages, fading out to the terrain's look before the toe, and the floor dark damp mud with little sky over
+it, from the ground detail layers (field_dry, grass_soil, mud, dark_soil; _TrenchSoilLayers, _TrenchSoilOn from
+GroundDetail), before wet ground, seasons and snow. Sub-mesh 1, the walls, is the wall atlas Textures/Trenches
+(Tools~/Trenches/trench_textures.py, from Poly Haven scans in the package): cut soil in its horizons (turf and roots,
+chernozem with fine roots, yellow-brown loess with spade or bucket marks, pebbles, krotovinas, wet soil slumped at the
+foot), boards laid flat behind posts (weathered, muddy, some broken out) and wattle; a stretch of wall (5-11 m) takes a
+strip by the trench's kind (fire trench mostly bare, boards in a quarter, some wattle; communication trench bare; a
+dugout's pit lined). A package carries the meshes as any tile mesh; the atlas is in the runtime registry. Bakhmut's
+centre: 103 trenches, 206 000 triangles over 4 km².
+In the environment layer (GeoWorld.Environment): CraterField holds the world's craters and trenches, the list the tiles
+were carved with, in <world folder>/Environment/Craters (CratersBaker: Tools > Environment > Bake Craters, and WorldMapBaker
+with the rest of the world map data; where exports overlap, each crater from the export whose ground it is, as the tiles
+take it), in a package in its world map extra; WorldMapData.Craters finds it. CraterMap (installed by WorldEnvironment)
+draws them top-down into a 256 m window around the camera at 0.25 m (Hidden/Game/Crater Map, redrawn after 48 m): the
+relief of the craters too small for the height grid, every bowl, fresh ejecta and water (trenches are meshes: the map
+does not draw them). GroundCraters.hlsl in Game/Terrain Lit (Wet) bends the normals of the small craters, shades bowls,
+lays fresh soil around fresh craters and fills ponds: craters the imagery shows wet hold water all year, every bowl fills in long rain
+(dark brown still water; ice in winter). A world with craters gets per-pixel terrain normals
+(Resources/Terrain/WorldTerrainWetCraters), so carved craters keep their shape where the terrain's LOD smooths its
+vertices. GroundWetness.WaterAt and WaterNear know the ponds (rotor spray). GroundDressing and the takeoff point keep grass
+out of fresh crater bowls and ponds (old ones are grown over), and grass and props off a trench's mesh out to the end of its
+lip, where the terrain under it is cut lower; the outer slope of its banks grows thinner. Where craters stand at three a hectare or more
+(CraterField.AbandonedPerHectare; the background scatter alone stays under it) the fields are abandoned: cropland grows as meadow, with no rows, tramlines or furrows
+(FieldRows.hlsl), no summer straw (SeasonHarvest) and no stubble. TileTreeSpecies damages the tile trees there: 10 % plus
+2.25 % per crater a hectare of them (from three a hectare, up to 55 %) become dead trees (35 %), snags (40 %) or windthrow (25 %).
+Destroyed buildings: procedural damage (GeoBuildingDamage) breaks the walls along one profile around the whole outline
+(BrokenTop): a heavily damaged building stands roofless mostly up to its top floors, with one to three bays fallen in (6-18 m
+across, down to a storey or two, their sides ragged over 2-4 m) and a top that steps along the storeys, its window openings
+dark on every floor still standing; a destroyed one is stumps of a storey or less with one to three fragments still standing
+(a corner more often than not, 3-9 m across, up to 0.8 of the walls). The walls have their thickness inward from the outline
+(two faces, the broken top, ends where the wall ends), plaster or brick below and sooty above outside and burnt inside,
+plaster loss and bare brick in stretches of a few metres; heavily damaged walls are dusty and sooty instead of a flat dark
+slab, and the rubble mounds have finer, lumpier relief, brown-grey per triangle under the dust; a merged city keeps the
+shades in its palette (GeoBuildingMesh.shade, GeoCityBuilder). The ruin library's models are as they were.
 SEVERAL EXPORTS (THE PARTS OF ONE AREA)
 A city too large for one export (Kharkiv in six parts, 20 km per side at most each) is exported as parts, all with the
 same fixed origin (the app's Origin setting), and generated as one world: Tools > Geo World > Generate one world from
@@ -625,14 +740,22 @@ Settings: Ruin Models For (Off, Heavily Damaged And Destroyed, All Damage), Ruin
 (empty: procedural damage only) and Ruin Yard And Debris (metres of the model's yard and rubble kept around the footprint).
   Choosing. A model must depict the building's condition (each says the lightest and heaviest it shows) and stand for its
   category, or carry its OpenStreetMap tag (school, church, garages ...; a one-of-a-kind model is used only on a tag). Among
-  those the one needing the least stretching wins, with some variety between near equals. Footprints far from a rectangle
-  (an L or U) keep the procedural damage. The pick depends only on the building's ID, so a rebuild changes nothing.
+  those the one needing the least stretching wins, with some variety between near equals. When none of the building's
+  condition and kind fits, the nearest does (GeoRuinLibrary.ChooseNearest): a condition a step off, then a related kind,
+  then both. A footprint far from a rectangle (an L, T or U) is split into the rectangles it is made of (GeoRuins.Parts: the
+  largest that fits, again and again, up to ten, each at least 3 m across and a sixteenth of the footprint; where two meet
+  each reaches 0.6 m into the other) and each gets its model, the first one's where it fits about as well; a heavily
+  damaged or destroyed building may leave half its footprint to their debris, a damaged one a quarter, or it keeps the
+  procedural damage. The pick depends only on the building's ID, so a rebuild changes nothing.
   Fitting. A model is a type, never one size: it is fitted to the footprint's smallest rectangle, its long side along the
   footprint's. Each model is cut at joints along its length, depth and height (in the middle of a pier between window bays,
   at a party wall, between storeys); regular bays, boxes and storeys are repeated for a bigger building or left out for a
   smaller one, the damage itself and the end walls are kept, and the rest is stretched (a garage row becomes one box for a
   shed; a 9-storey block loses four storeys for a 5-storey one). The walls are fitted to the building's eaves and what stands
-  above them to its roof rise (a flat-roofed model keeps its parapets and roof rooms). A model without joints along its length
+  above them to its roof rise (a flat-roofed model keeps its parapets and roof rooms). Upward a model is never repeated
+  whole: one without storeys to repeat is stretched up to 1.4 times its eaves and no higher, what is left of a destroyed
+  building (a model only of that) stands as high as the model shows it, and a model drawn lower than the building costs more
+  to choose. A model without joints along its length
   is stretched, and repeated whole for a building more than 1.5 times as long, every other copy turned end for end so they
   meet end wall to end wall; one-of-a-kind models (church, theatre, mine, silo bank: Keep Proportions) are never repeated and
   their heights follow the plan. A model deeper than wide (the theatre) runs its depth along the footprint, its front at an
@@ -665,6 +788,12 @@ the building's number of storeys wins at equal size (a two-storey block gets the
 export only estimates (no height tag; a storey counts 3 m, which makes a one-storey warehouse 3 m high) may be as low as
 half the model's walls: the model then keeps its lowest walls (three quarters of its own) under the roof, so it stands
 a little taller than the estimate. A mapped height must fit as before.
+Covering what no single model fits (GeoHomeLibrary.Cover): a rectangle becomes a row of two to four sections of one model
+(semi-detached houses, the sections of a block of flats, a row of garages; every other one mirrored), or one model
+stretched further (0.6-1.72), and an L, T or U footprint becomes its rectangles (GeoRuins.Parts), each covered the same way;
+a model of the building's kind first, then of a related one. Each part is a model of its own (GeoBuilding.homeParts), an
+instance and a plinth of its own in a merged city. Bakhmut's centre: 8 of 291 standing buildings keep procedural walls
+(108 before), Klishchiivka's 4 of 48 (18).
 
 Merged city. One object per building does not scale to a city. Building Mode Auto switches to Merged above Merge Above
 buildings (2500), and always in a tiled world: buildings are built with the same code as editable ones (footprint, roof, facade, damage) and baked into

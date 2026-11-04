@@ -49,6 +49,8 @@ namespace _Game.Scripts.World
             public Rect[] coverage = Array.Empty<Rect>();
             public FieldAreas.Field[] fields = Array.Empty<FieldAreas.Field>();
             public TreeSpeciesProfile.LeafArea[] leafAreas = Array.Empty<TreeSpeciesProfile.LeafArea>();
+            public CraterField.Crater[] craters = Array.Empty<CraterField.Crater>();
+            public CraterField.Trench[] trenches = Array.Empty<CraterField.Trench>();
         }
 
 #if UNITY_EDITOR
@@ -152,14 +154,27 @@ namespace _Game.Scripts.World
 
             GeoGroundMap ground = bake.Ground;
             int curbs = WorldMapExport.MarkCurbs(roads, ground != null ? ground.At : null);
+            // the battlefield's craters: the export's own and its combat bake's (combat.json next to it), as the tiles were carved
+            List<CraterFeature> craterList = bake.Environment.craters ?? new List<CraterFeature>();
+            CraterField.Crater[] craters = new CraterField.Crater[craterList.Count];
+
+            for (int i = 0; i < craters.Length; i++)
+                craters[i] = CraterField.From(craterList[i]);
+
+            List<TrenchFeature> trenchList = bake.Environment.trenches ?? new List<TrenchFeature>();
+            CraterField.Trench[] trenches = new CraterField.Trench[trenchList.Count];
+
+            for (int i = 0; i < trenches.Length; i++)
+                trenches[i] = CraterField.From(trenchList[i]);
+
             Payload payload = new()
             {
                 roads = roads.ToArray(), coverage = coverage.ToArray(),
-                fields = fields.ToArray(), leafAreas = WorldMapExport.LeafAreas(exports).ToArray()
+                fields = fields.ToArray(), leafAreas = WorldMapExport.LeafAreas(exports).ToArray(), craters = craters, trenches = trenches
             };
             bake.Add(Name, FileName, Compress(JsonUtility.ToJson(payload)));
             bake.Notes.Add($"World map data: {summary}, {curbs} with curbs; {snapped}; {payload.fields.Length} fields, rows from the satellite on {oriented}; " +
-                           $"{payload.leafAreas.Length} leaf areas.");
+                           $"{payload.leafAreas.Length} leaf areas; {craters.Length} craters, {trenches.Length} trenches.");
         }
 
         private static void Dispose()
@@ -187,6 +202,14 @@ namespace _Game.Scripts.World
             fields.fields = payload.fields ?? Array.Empty<FieldAreas.Field>();
             TreeLeafAreas leafAreas = Make<TreeLeafAreas>("Tree leaf areas");
             leafAreas.areas = payload.leafAreas ?? Array.Empty<TreeSpeciesProfile.LeafArea>();
+            CraterField craters = null;
+
+            if (payload.craters is { Length: > 0 } || payload.trenches is { Length: > 0 })
+            {
+                craters = Make<CraterField>("Craters");
+                craters.craters = payload.craters ?? Array.Empty<CraterField.Crater>();
+                craters.trenches = payload.trenches ?? Array.Empty<CraterField.Trench>();
+            }
 
             WorldMapData data = host.GetComponent<WorldMapData>();
 
@@ -196,7 +219,9 @@ namespace _Game.Scripts.World
             data.roads = roads;
             data.fields = fields;
             data.leafAreas = leafAreas;
-            data.report = $"From the package: {roads.roads.Length} roads, {fields.fields.Length} fields, {leafAreas.areas.Length} leaf areas";
+            data.craters = craters;
+            data.report = $"From the package: {roads.roads.Length} roads, {fields.fields.Length} fields, {leafAreas.areas.Length} leaf areas" +
+                          (craters != null ? $", {craters.craters.Length} craters" : "");
         }
 
         private static void Close(GeoWorldPackage package, GameObject host)
@@ -209,6 +234,10 @@ namespace _Game.Scripts.World
             UnityEngine.Object.Destroy(data.roads);
             UnityEngine.Object.Destroy(data.fields);
             UnityEngine.Object.Destroy(data.leafAreas);
+
+            if (data.craters != null)
+                UnityEngine.Object.Destroy(data.craters);
+
             UnityEngine.Object.Destroy(data);
         }
 

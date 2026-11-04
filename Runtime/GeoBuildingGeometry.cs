@@ -75,6 +75,10 @@ namespace GeoWorld
         public readonly List<Vector3> vertices=new List<Vector3>();
         readonly List<Vector2> uv=new List<Vector2>();
         readonly List<int> triangles=new List<int>();
+        readonly List<Color> colors=new List<Color>();
+        // the shade of what is added next, a multiplier of the part's colour (white: as it is): a merged city draws each
+        // triangle's part colour times it (GeoCityBuilder), so broken walls get soot, plaster loss and exposed brick
+        public Color shade=Color.white;
         public static Vector3 V(Vector2 p,float y)=>new Vector3(p.x,y,p.y);
         public void Triangle(Vector3 a,Vector3 b,Vector3 c)
         {
@@ -82,6 +86,7 @@ namespace GeoWorld
             if(Vector3.Cross(b-a,c-a).sqrMagnitude<0.00000001f)return;
             int n=vertices.Count;vertices.Add(a);vertices.Add(b);vertices.Add(c);
             uv.Add(new Vector2(a.x,a.z)*0.25f);uv.Add(new Vector2(b.x,b.z)*0.25f);uv.Add(new Vector2(c.x,c.z)*0.25f);
+            colors.Add(shade);colors.Add(shade);colors.Add(shade);
             triangles.AddRange(new[]{n,n+1,n+2});
         }
         public void Wall(Vector2 a,Vector2 b,float bottom,float topA,float topB)
@@ -90,13 +95,23 @@ namespace GeoWorld
             int n=vertices.Count;float width=Vector2.Distance(a,b);
             vertices.AddRange(new[]{V(a,bottom),V(a,topA),V(b,topB),V(b,bottom)});
             uv.AddRange(new[]{new Vector2(0,bottom/3),new Vector2(0,topA/3),new Vector2(width/3,topB/3),new Vector2(width/3,bottom/3)});
+            colors.Add(shade);colors.Add(shade);colors.Add(shade);colors.Add(shade);
             if(topA-bottom>0.0001f)triangles.AddRange(new[]{n,n+1,n+2});
             if(topB-bottom>0.0001f)triangles.AddRange(new[]{n,n+2,n+3});
+        }
+        // a wall whose shade runs from the current one at the bottom to topShade at the top
+        public void Wall(Vector2 a,Vector2 b,float bottom,float topA,float topB,Color topShade)
+        {
+            int n=colors.Count;Wall(a,b,bottom,topA,topB);
+            if(colors.Count==n+4){colors[n+1]=topShade;colors[n+2]=topShade;}
         }
         public Mesh ToMesh(string name)
         {
             var mesh=new Mesh{name=name,indexFormat=vertices.Count>65535?IndexFormat.UInt32:IndexFormat.UInt16};
-            mesh.SetVertices(vertices);mesh.SetUVs(0,uv);mesh.SetTriangles(triangles,0);mesh.RecalculateNormals();mesh.RecalculateBounds();return mesh;
+            mesh.SetVertices(vertices);mesh.SetUVs(0,uv);mesh.SetTriangles(triangles,0);
+            // shades only where some part is shaded: a mesh without them stays as it was
+            if(colors.Count==vertices.Count&&colors.Exists(c=>c!=Color.white))mesh.SetColors(colors);
+            mesh.RecalculateNormals();mesh.RecalculateBounds();return mesh;
         }
     }
     public static class GeoBuildingGeometry
@@ -194,6 +209,17 @@ namespace GeoWorld
             var output=new GeoBuildingOutput();
             try
             {
+                var parts=c.building.ruinParts;
+                if(parts!=null&&parts.Count>0)
+                {
+                    // an L, T or U: a model on each of its rectangles (or on the one that stands of an odd ruin)
+                    foreach(var part in parts)
+                    {
+                        var piece=GeoRuins.TargetOf(c.building,c.outline);piece.frame=part.frame;piece.turn=part.turn;piece.ground=ground;
+                        output.Add("Ruin",GeoRuinFit.Build(part.model,piece,out _),part.model.material,true);
+                    }
+                    return output;
+                }
                 var target=GeoRuins.TargetOf(c.building,c.outline);target.ground=ground;
                 output.Add("Ruin",GeoRuinFit.Build(c.building.ruin,target,out _),c.building.ruin.material,true);
                 return output;

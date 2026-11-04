@@ -83,7 +83,11 @@ namespace GeoWorld
                 default: // walls and anything else of the building body
                     // what still stands of a ruin is dusty and scorched in patches, not black
                     if (state == GeoConditionState.Destroyed) return Color.Lerp(Color.Lerp(color, Dust, 0.45f), Soot, 0.25f) * variation;
-                    return Color.Lerp(color, Soot, state == GeoConditionState.Damaged ? 0.3f : 0.45f) * variation;
+                    // a damaged building keeps its walls, sooty; a heavily damaged one's broken walls are dusty and scorched in
+                    // patches like a ruin's (their shades darken the upper parts and the insides): the style's colour taken
+                    // 45 % toward soot made them near black
+                    if (state == GeoConditionState.HeavilyDamaged) return Color.Lerp(Color.Lerp(color, Dust, 0.35f), Soot, 0.2f) * variation;
+                    return Color.Lerp(color, Soot, 0.3f) * variation;
             }
         }
 
@@ -104,57 +108,140 @@ namespace GeoWorld
                 foundationDepth = Mathf.Max(0.2f, foundationDepth);
                 var foundation = Foundation(c, foundationDepth);
 
-                // wall remnants: every edge in short runs, each as high as it still stands
+                // wall remnants: every edge in short runs up to the broken top (BrokenTop: one profile around the whole
+                // outline, so neighbouring runs meet), with the wall's thickness inward from the outline (the facade's window
+                // openings stay in front of it), soot toward the top and inside, plaster gone and brick bare in patches
                 var walls = new GeoBuildingMesh();
-                var tops = new float[c.outline.Count][];
-                var lengths = new float[c.outline.Count];
                 float height = c.eaves;
+                float cap = destroyed ? height * 0.8f : height; // nothing stands higher than the building did
+                var starts = new float[c.outline.Count + 1];
+                var corners = new List<float>();
+                for (int i = 0; i < c.outline.Count; i++)
+                {
+                    corners.Add(starts[i]);
+                    starts[i + 1] = starts[i] + Vector2.Distance(c.outline[i], c.outline[(i + 1) % c.outline.Count]);
+                }
+                var broken = new BrokenTop(seed, starts[c.outline.Count], height, Mathf.Clamp(building.floors, 1, 100), destroyed, corners);
+                // the outline's winding: its outward side
+                float outward = GeoPolygon.Area(c.outline) >= 0 ? 1 : -1;
+                float thickness = c.eaves > 9 ? 0.3f : 0.38f;
                 for (int i = 0; i < c.outline.Count; i++)
                 {
                     Vector2 a = c.outline[i], b = c.outline[(i + 1) % c.outline.Count];
-                    float length = Vector2.Distance(a, b);
-                    lengths[i] = length;
-                    int runs = Mathf.Max(1, Mathf.RoundToInt(length / 2.4f));
-                    tops[i] = new float[runs];
+                    float length = starts[i + 1] - starts[i];
+                    int runs = Mathf.Max(1, Mathf.RoundToInt(length / 1.5f));
+                    var tops = new float[runs + 1];
+                    for (int k = 0; k <= runs; k++) tops[k] = Mathf.Min(broken.At(starts[i] + length * k / runs), cap);
+                    Vector2 along = (b - a) / Mathf.Max(length, 0.001f);
+                    Vector2 inward = -new Vector2(along.y, -along.x) * outward * thickness;
                     for (int k = 0; k < runs; k++)
                     {
-                        float fraction = RemainingFraction(seed, i, k, destroyed);
-                        float cap = destroyed ? height * 0.8f : height; // nothing stands higher than the building did
-                        tops[i][k] = Mathf.Min(height * fraction, cap);
-                        float t0 = (float)k / runs, t1 = (float)(k + 1) / runs;
-                        float top = tops[i][k];
-                        if (top < 0.12f) continue;
-                        // a slanted top breaks the straight line of a run
-                        float topEnd = Mathf.Clamp(top * (0.78f + 0.4f * Hash01(seed, i * 31 + k, 5)), 0.1f, cap);
-                        Vector2 p0 = Vector2.Lerp(a, b, t0), p1 = Vector2.Lerp(a, b, t1);
-                        walls.Wall(p0, p1, 0, top, topEnd);
-                        walls.Wall(p1, p0, 0, topEnd, top); // the inner face
+                        float top = tops[k], topEnd = tops[k + 1];
+                        if (Mathf.Max(top, topEnd) < 0.12f) continue;
+                        top = Mathf.Max(top, 0.05f); topEnd = Mathf.Max(topEnd, 0.05f);
+                        float s = starts[i] + length * (k + 0.5f) / runs;
+                        Vector2 o0 = Vector2.Lerp(a, b, (float)k / runs), o1 = Vector2.Lerp(a, b, (float)(k + 1) / runs);
+                        Vector2 i0 = o0 + inward, i1 = o1 + inward;
+                        // the wall's shade by stretches of it, not by run: plaster partly gone (lighter), bare brick (warmer),
+                        // weathered (darker) over a few metres each
+                        float tone = 0.88f + 0.2f * Noise(seed, s / 9f, 41.3f), bare = Noise(seed, s / 7f, 23.7f);
+                        Color skin = Color.Lerp(Color.white, bare > 0.5f ? new Color(1.08f, 0.86f, 0.74f) : new Color(1.1f, 1.08f, 1.04f),
+                            Mathf.Clamp01(Mathf.Abs(bare - 0.5f) * 4 - 0.6f)) * tone;
+                        skin.a = 1;
+                        // outer face: as it was below, sootier toward the top (fire and smoke went up and out of the openings)
+                        walls.shade = skin;
+                        walls.Wall(o0, o1, 0, top, topEnd, Darker(skin, 0.7f));
+                        // inner face: burnt out
+                        walls.shade = Darker(skin, 0.68f);
+                        walls.Wall(i1, i0, 0, topEnd, top);
+                        // the broken top: the core of the wall, bare brick or concrete, dusty. The outline is counter-clockwise
+                        // (GeoPolygon.Clean), so this winding faces up and the end caps below face out of the wall's end; the
+                        // other sides are inside the wall
+                        walls.shade = new Color(0.78f, 0.7f, 0.64f) * tone;
+                        walls.Triangle(GeoBuildingMesh.V(o0, top), GeoBuildingMesh.V(i0, top), GeoBuildingMesh.V(i1, topEnd));
+                        walls.Triangle(GeoBuildingMesh.V(o0, top), GeoBuildingMesh.V(i1, topEnd), GeoBuildingMesh.V(o1, topEnd));
+                        // the run's ends only where the wall ends: at the corners and beside a gap (inside a wall they are hidden)
+                        if (k == 0 || Mathf.Max(tops[k - 1], tops[k]) < 0.12f) walls.Wall(i0, o0, 0, top, top);
+                        if (k == runs - 1 || k + 2 <= runs && Mathf.Max(tops[k + 1], tops[k + 2]) < 0.12f) walls.Wall(o1, i1, 0, topEnd, topEnd);
+                        walls.shade = Color.white;
                     }
                 }
 
                 var rubble = Rubble(c, seed, destroyed);
+                // dust over what is left: the part colour comes from the style, a dark one lifts a little toward concrete dust
+                // (GeoCityBuilder multiplies it by the shades)
                 output.Add("Foundation", foundation.ToMesh("Footprint foundation"), c.style.foundation, true);
                 output.Add("Walls", walls.ToMesh("Wall remnants"), building.wallMaterial ? building.wallMaterial : c.style.walls, true);
                 output.Add("Rubble", rubble.ToMesh("Rubble"), c.style.foundation, true);
                 if (!destroyed)
-                    GeoBuildingGeometry.Facade(c, output, 1f, (edge, at) => tops[edge][Mathf.Clamp(Mathf.FloorToInt(at / Mathf.Max(0.01f, lengths[edge]) * tops[edge].Length), 0, tops[edge].Length - 1)], seed);
+                    GeoBuildingGeometry.Facade(c, output, 1f, (edge, at) => Mathf.Min(broken.At(starts[edge] + at), cap), seed);
                 return output;
             }
             catch { output.Dispose(); throw; }
         }
 
-        // How much of a wall run is still standing, 0..1.
-        static float RemainingFraction(uint seed, int edge, int run, bool destroyed)
+        static Color Darker(Color c, float f) => new Color(c.r * f, c.g * f, c.b * f, 1);
+
+        // What still stands of the walls, as a height at s metres around the outline from its first corner. Heavily damaged: the
+        // roof gone and the walls mostly up to the top floors, with one to three bays fallen in (6-18 m across, down to a
+        // storey or two) and a top that breaks along the storeys; destroyed: stumps of a storey or less, with one to three
+        // fragments still standing (a corner more often than not: two walls hold each other up), 3-9 m across and up to 0.8
+        // of the walls. One profile around the whole outline, with ragged sides of 2-4 m and an edge ragged by about a metre:
+        // a height drawn for every 2.4 m run on its own read as a comb of organ pipes.
+        sealed class BrokenTop
         {
-            float n = Noise(seed, edge * 3.7f, run * 0.9f);
-            float roll = Hash01(seed, edge * 97 + run, 3);
-            if (destroyed)
+            readonly uint seed;
+            readonly bool destroyed;
+            readonly float perimeter, height, storey;
+            readonly List<Vector3> features = new List<Vector3>(); // centre (s), half-width, share of the walls
+
+            public BrokenTop(uint seed, float perimeter, float height, int floors, bool destroyed, List<float> corners)
             {
-                if (roll < 0.14f) return Mathf.Lerp(0.35f, 0.8f, Hash01(seed, edge * 53 + run, 4)); // a fragment still standing
-                return Mathf.Lerp(0.0f, 0.2f, n * n);
+                this.seed = seed; this.destroyed = destroyed; this.height = height;
+                this.perimeter = Mathf.Max(1, perimeter);
+                storey = height / Mathf.Max(1, floors);
+                int count = 1 + Mathf.FloorToInt(Hash01(seed, 71) * Mathf.Clamp(perimeter / (destroyed ? 40f : 50f), 1, 3));
+                for (int k = 0; k < count; k++)
+                {
+                    float at = destroyed && corners.Count > 0 && Hash01(seed, 73, k) < 0.6f
+                        ? corners[Mathf.FloorToInt(Hash01(seed, 74, k) * corners.Count) % corners.Count]
+                        : Hash01(seed, 75, k) * this.perimeter;
+                    float half = destroyed ? Mathf.Lerp(1.5f, 4.5f, Hash01(seed, 76, k)) : Mathf.Lerp(3f, 9f, Hash01(seed, 77, k));
+                    float share = destroyed ? Mathf.Lerp(0.35f, 0.8f, Hash01(seed, 78, k)) : Mathf.Lerp(0f, 0.35f, Hash01(seed, 79, k));
+                    features.Add(new Vector3(at, half, share));
+                }
             }
-            if (roll < 0.2f) return Mathf.Lerp(0.15f, 0.4f, Hash01(seed, edge * 53 + run, 4)); // a run that came down
-            return Mathf.Lerp(0.45f, 1.0f, n);
+
+            public float At(float s)
+            {
+                // the line it breaks along: mostly up to the top floors (heavily damaged) or a storey of stumps at most
+                float wave = Noise(seed, s / 14f, 3.3f);
+                float share = destroyed ? 0.04f + 0.16f * wave * wave : 0.72f + 0.28f * wave;
+                foreach (var f in features)
+                {
+                    float d = Mathf.Abs(Wrap(s - f.x));
+                    float t = Mathf.Clamp01((d - f.y) / (2f + 2f * Noise(seed, s / 3f, f.x * 0.37f)));
+                    float inside = 1 - t * t * (3 - 2 * t);
+                    share = destroyed ? Mathf.Max(share, Mathf.Lerp(share, f.z, inside)) : Mathf.Min(share, Mathf.Lerp(share, f.z, inside));
+                }
+                float h = share * height;
+                // a storey that came down to its slab in stretches: the top steps along the floors
+                if (h > storey)
+                {
+                    float floor = Mathf.Floor(h / storey) * storey;
+                    h = floor + (h - floor) * Noise(seed, s / 5f, 17.3f);
+                }
+                h += (Noise(seed, s / 2.6f, 9.1f) - 0.5f) * Mathf.Min(1.2f, storey * 0.4f);
+                return Mathf.Clamp(h, 0, height);
+            }
+
+            float Wrap(float d)
+            {
+                d %= perimeter;
+                if (d > perimeter * 0.5f) d -= perimeter;
+                if (d < -perimeter * 0.5f) d += perimeter;
+                return d;
+            }
         }
 
         static GeoBuildingMesh Foundation(GeoBuildingContext c, float depth)
@@ -184,15 +271,26 @@ namespace GeoWorld
             float Height(Vector2 p)
             {
                 float edge = Mathf.SmoothStep(0, 1, DistanceToOutline(c.outline, p) / rise);
-                return Mathf.Max(0.02f, peak * edge * (0.4f + 0.95f * Noise(seed, p.x * 0.55f, p.y * 0.55f)));
+                // lumps of broken slabs and brick: a coarse swell and a fine jumble on top
+                float lumps = 0.4f + 0.75f * Noise(seed, p.x * 0.55f, p.y * 0.55f) + 0.35f * (Noise(seed, p.x * 2.1f + 13f, p.y * 2.1f + 5f) - 0.5f);
+                return Mathf.Max(0.02f, peak * edge * lumps);
             }
             for (int t = 0; t < c.triangles.Count; t += 3)
             {
                 var a = c.outline[c.triangles[t]]; var b = c.outline[c.triangles[t + 1]]; var d = c.outline[c.triangles[t + 2]];
                 float longest = Mathf.Max(Vector2.Distance(a, b), Mathf.Max(Vector2.Distance(b, d), Vector2.Distance(d, a)));
-                int levels = Mathf.Clamp(Mathf.CeilToInt(Mathf.Log(Mathf.Max(longest / 2f, 1f), 2f)), 0, 3);
+                int levels = Mathf.Clamp(Mathf.CeilToInt(Mathf.Log(Mathf.Max(longest / 2f, 1f), 2f)), 0, 4);
                 Split(a, b, d, levels, (p0, p1, p2) =>
-                    mesh.Triangle(GeoBuildingMesh.V(p0, Height(p0)), GeoBuildingMesh.V(p2, Height(p2)), GeoBuildingMesh.V(p1, Height(p1))));
+                {
+                    // broken brick, concrete and plaster in patches: lighter and darker, warmer where brick is
+                    Vector2 m = (p0 + p1 + p2) / 3;
+                    float n = Noise(seed, m.x * 0.9f + 7f, m.y * 0.9f + 3f), roll = Hash01(seed, Mathf.FloorToInt(m.x * 2), Mathf.FloorToInt(m.y * 2) + 500);
+                    // the mound under the dust is darker and browner than the clean foundation it is drawn with
+                    float v = 0.55f + 0.45f * n;
+                    mesh.shade = roll < 0.22f ? new Color(v * 1.05f, v * 0.8f, v * 0.66f) : new Color(v * 0.92f, v * 0.88f, v * 0.82f);
+                    mesh.Triangle(GeoBuildingMesh.V(p0, Height(p0)), GeoBuildingMesh.V(p2, Height(p2)), GeoBuildingMesh.V(p1, Height(p1)));
+                });
+                mesh.shade = Color.white;
             }
             return mesh;
         }

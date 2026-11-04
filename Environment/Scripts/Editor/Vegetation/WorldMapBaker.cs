@@ -42,14 +42,14 @@ namespace _Game.Scripts.Editor.Vegetation
         public static string Folder(GeoTiledWorld world) =>
             (string.IsNullOrEmpty(world.folder) ? GeoPaths.Project : world.folder.TrimEnd('/')) + "/Environment";
 
-        /// <summary>Дороги, поля и контуры лесов мира — всё, что есть в его выгрузках.</summary>
+        /// <summary>Дороги, поля, контуры лесов и воронки мира — всё, что есть в его выгрузках.</summary>
         public static string Bake(GeoTiledWorld world, bool snap = true)
         {
             if (world == null)
                 throw new ArgumentNullException(nameof(world));
 
             string report = "Roads: " + RoadAreasBaker.Bake(world, snap) + "\nFields: " + FieldAreasBaker.Bake(world) +
-                            "\nLeaf types: " + TreeLeafAreasBaker.BakeLeafAreas(world);
+                            "\nLeaf types: " + TreeLeafAreasBaker.BakeLeafAreas(world) + "\nCraters: " + CratersBaker.Bake(world);
             Attach(world, data => data.report = report);
             return report;
         }

@@ -34,6 +34,7 @@ namespace _Game.Scripts.World
         private const string RainEffectName = "Rain";
         private const string WetShaderName = "Game/Terrain Lit (Wet)";
         private const string UrpTerrainShaderName = "Universal Render Pipeline/Terrain/Lit";
+        private const string PerPixelNormal = "_TERRAIN_INSTANCED_PERPIXEL_NORMAL";
         private const float WeatherInterval = 0.25f;
         private const float TerrainInterval = 0.5f;
         private const float OverviewSearchInterval = 2f;
@@ -138,6 +139,10 @@ namespace _Game.Scripts.World
             if (PuddleLevel > 0f)
                 return true;
 
+            // вода в воронках стоит и в сухую погоду (CraterField): в 24 м — по зоне брызг
+            if (CraterField.Instance is { } field && field.WaterWithin(point.x, point.z, 24f))
+                return true;
+
             if (!_near.Has)
                 return false;
 
@@ -162,21 +167,39 @@ namespace _Game.Scripts.World
         /// летят брызги (DroneRotorWash).</summary>
         public float WaterAt(Vector3 point)
         {
+            // прудок в воронке — как в шейдере террейна (GroundCraters.hlsl): середина чаши воронки с водой, в дождь — и в
+            // остальных; где он и лужа рядом, берётся большее (как water = max(...) в GroundWetness.hlsl)
+            float pond = 0f;
+
+            if (CraterField.Instance is { } craters && craters.BowlAt(point.x, point.z, out float bowl, out float waterBowl))
+            {
+                float level = Mathf.Max(waterBowl > 0.001f ? waterBowl + 0.5f : 0f, bowl + Mathf.Lerp(-0.1f, 0.6f, Mathf.Clamp01(PuddleLevel)));
+
+                if (level > 0.91f)
+                {
+                    // рябь края — тот же шум, что у шейдера (PuddleNoise(xz / 0.6 + 37.1) · 0.05)
+                    float ripple = PuddleNoise(point.x / 0.6f + 37.1f, point.z / 0.6f + 37.1f) * 0.05f;
+                    float edge = Mathf.Clamp01((level + ripple - 0.96f) / 0.06f);
+
+                    pond = edge * edge * (3f - 2f * edge);
+                }
+            }
+
             if (!_near.Has)
-                return 0f;
+                return pond;
 
             int x = Mathf.FloorToInt((point.x - _near.Origin.x) / LandTexel);
             int z = Mathf.FloorToInt((point.z - _near.Origin.y) / LandTexel);
 
             if (x < 0 || z < 0 || x >= LandSize || z >= LandSize)
-                return 0f;
+                return pond;
 
             int index = (z * LandSize + x) * LandChannels;
             float suitability = _near.Ready[index] / 255f;
             float marsh = _near.Ready[index + 1] / 255f;
 
             if (PuddleLevel <= 0.001f && marsh <= 0.004f)
-                return 0f;
+                return pond;
 
             float puddleThreshold = PuddleLevel > 0.001f ? 0.873f - 0.313f * suitability * 0.95f + (1f - PuddleLevel) * 0.3f : 2f;
             // как MarshThreshold в Puddles.hlsl: в сухую погоду вода на ~4 % болота, в долгий дождь — на ~25 %
@@ -184,11 +207,11 @@ namespace _Game.Scripts.World
             float threshold = Mathf.Min(puddleThreshold, marshThreshold);
 
             if (threshold > 0.97f || Mathf.Max(suitability, marsh) < 0.02f)
-                return 0f;
+                return pond;
 
             float field = PuddleNoise(point.x / 7f, point.z / 7f) * 0.55f + PuddleNoise(point.x / 2.5f + 17.1f, point.z / 2.5f + 17.1f) * 0.3f + 0.075f;
             float t = Mathf.Clamp01((field - threshold + 0.02f) / 0.07f);
-            return t * t * (3f - 2f * t);
+            return Mathf.Max(pond, t * t * (3f - 2f * t));
         }
 
         // Шум воды Puddles.hlsl на CPU, бит в бит: значения в клетках — Jenkins-хеш из Random.hlsl Core RP.
@@ -452,6 +475,13 @@ namespace _Game.Scripts.World
                     _wetMaterials[material] = wet;
                 }
 
+                // у мира с воронками нормаль земли — из сетки высот в каждом пикселе, а не в вершинах лода: врезанные
+                // воронки видны и там, где лод их сгладил (вариант держит Resources/Terrain/WorldTerrainWetCraters)
+                if (WorldMapData.Craters != null && !wet.IsKeywordEnabled(PerPixelNormal))
+                    wet.EnableKeyword(PerPixelNormal);
+                else if (WorldMapData.Craters == null && wet.IsKeywordEnabled(PerPixelNormal))
+                    wet.DisableKeyword(PerPixelNormal);
+
                 terrain.materialTemplate = wet;
             }
 
@@ -530,8 +560,10 @@ namespace _Game.Scripts.World
                     int index = (z * LandSize + x) * LandChannels;
                     map.Next[index] = (byte)Mathf.RoundToInt(suitability * 255f);
                     map.Next[index + 1] = (byte)Mathf.RoundToInt(marsh * 255f);
-                    map.Next[index + 2] = (byte)(known && land == GeoLandClass.Cropland ? 255 : 0);
-                    map.Next[index + 3] = FieldDirection(point);
+                    // где шли бои (воронки, CraterField), поля брошены: ни рядков и колей, ни стерни летом — бурьян
+                    bool abandoned = CraterField.AbandonedAt(point.x, point.z);
+                    map.Next[index + 2] = (byte)(known && land == GeoLandClass.Cropland && !abandoned ? 255 : 0);
+                    map.Next[index + 3] = abandoned ? (byte)0 : FieldDirection(point);
                 }
             }
 

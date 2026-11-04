@@ -367,6 +367,80 @@ namespace GeoWorld.Editor.Tests
             Assert.That(picks, Is.EquivalentTo(new[] { house, heavy }), "Equal models share the destroyed houses.");
         }
 
+        [Test] public void ChooseNearest_TakesAConditionAStepOff_ThenARelatedCategory()
+        {
+            var heavy = Model("X"); heavy.minState = GeoConditionState.HeavilyDamaged;
+            var library = Library(heavy);
+            var damaged = Building("damaged");
+            Assert.IsNull(library.Choose(damaged, GeoRuinUse.AllDamage, out _), "Choose keeps to the conditions a model depicts.");
+            Assert.That(library.ChooseNearest(damaged, GeoRuinUse.AllDamage, null, null, out _), Is.SameAs(heavy), "The nearest condition the library has.");
+            var shed = Building("destroyed"); shed.category = "shed";
+            Assert.That(library.ChooseNearest(shed, GeoRuinUse.AllDamage, null, null, out _), Is.SameAs(heavy), "A shed takes a house model when no model stands for a shed.");
+            Assert.IsNull(library.ChooseNearest(Building("damaged"), GeoRuinUse.HeavilyDamagedAndDestroyed, null, null, out _), "The use still decides which conditions get a model.");
+            Assert.IsNull(library.ChooseNearest(Building("intact"), GeoRuinUse.AllDamage, null, null, out _), "An intact building has no ruin.");
+        }
+
+        [Test] public void Parts_SplitAnL_IntoItsArms_ThatReachIntoEachOther()
+        {
+            var l = new List<Vector2> { new Vector2(0, 0), new Vector2(30, 0), new Vector2(30, 10), new Vector2(10, 10), new Vector2(10, 30), new Vector2(0, 30) };
+            var frame = GeoRuinFit.FrameOf(l);
+            Assert.That(frame.fill, Is.LessThan(0.6f));
+            var parts = GeoRuins.Parts(l, frame);
+            Assert.That(parts, Has.Count.EqualTo(2));
+            // the arms are 300 and 200 m2; where they meet each reaches 0.6 m into the other along the 10 m between them
+            Assert.That(parts.Sum(p => p.length * p.width), Is.EqualTo(512).Within(8));
+            foreach (var p in parts)
+            {
+                Assert.That(p.length, Is.GreaterThanOrEqualTo(p.width), "The longer side along the axis.");
+                Assert.That(p.axis.x > 1e-6f || Mathf.Abs(p.axis.x) <= 1e-6f && p.axis.y > 0, "One direction for an axis.");
+            }
+            Assert.That(parts.Select(p => p.width), Is.All.EqualTo(10).Within(0.7f), "Both arms are 10 m across.");
+        }
+
+        [Test] public void Assign_DrawsAnLShapedRuin_WithAModelOnEachArm()
+        {
+            var settings = new GenerationSettings { ruinLibrary = Library(Model()) };
+            var l = Building("destroyed");
+            l.footprint = new List<Vector2> { new Vector2(0, 0), new Vector2(12, 0), new Vector2(12, 4), new Vector2(4, 4), new Vector2(4, 12), new Vector2(0, 12) };
+            GeoRuins.Assign(l, settings);
+            Assert.That(l.ruinParts, Has.Count.EqualTo(2));
+            Assert.That(l.ruin, Is.SameAs(l.ruinParts[0].model));
+            using (var output = GeoBuildingGeometry.Build(l, 0.5f))
+            {
+                Assert.That(output.parts.Select(p => p.name), Is.EqualTo(new[] { "Ruin", "Ruin" }));
+                Assert.That(output.parts.All(p => p.mesh.vertexCount > 0));
+            }
+            l.ruinMode = GeoRuinMode.Procedural;
+            GeoRuins.Assign(l, settings);
+            Assert.IsNull(l.ruinParts, "Procedural damage again.");
+        }
+
+        // a model without storeys to repeat on a building four times its eaves: stretched no more than 1.4 times (a destroyed-only
+        // model 1.15), never stacked on itself (its rubble used to hang a storey up, under nothing), and that costs
+        [Test] public void Measure_NeverStacksAModel_OnATallBuilding()
+        {
+            var tall = Building("heavily_damaged", 14, 6, 0);
+            tall.height = 12; tall.roof = GeoRoofShape.Flat; tall.roofHeight = 0;
+            var target = GeoRuins.TargetOf(tall, GeoPolygon.Clean(tall.footprint));
+            var model = Model();
+            Assert.That(GeoRuinFit.HasStoreys(model), Is.False);
+            var fit = GeoRuinFit.Measure(model, target);
+            Assert.That(fit.height.tiles, Is.EqualTo(1));
+            Assert.That(fit.stretch.y, Is.EqualTo(1.4f).Within(0.01f));
+            Assert.That(fit.shortfall, Is.EqualTo(Mathf.Log(12 / 4.2f)).Within(0.01f));
+            using (var mesh = new Disposable(GeoRuinFit.Build(model, target, out _)))
+                Assert.That(mesh.Value.bounds.max.y, Is.EqualTo(4.2f + 2 * 1.4f).Within(0.05f), "the walls end at 4.2 m, the 2 m roof on them grown with them");
+            model.minState = model.maxState = GeoConditionState.Destroyed;
+            Assert.That(GeoRuinFit.Measure(model, target).stretch.y, Is.EqualTo(1.15f).Within(0.01f), "What is left of a destroyed building stays as high as its model.");
+        }
+
+        sealed class Disposable : System.IDisposable
+        {
+            public readonly Mesh Value;
+            public Disposable(Mesh mesh) { Value = mesh; }
+            public void Dispose() { if (Value) Object.DestroyImmediate(Value); }
+        }
+
         [Test] public void Assign_FollowsTheBuildingsRuinMode()
         {
             var model = Model(); var other = Model("O");

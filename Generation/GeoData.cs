@@ -61,6 +61,24 @@ namespace GeoWorld.Editor
         public float height, width;
         public float[] points;
     }
+    // A war crater (GeoCombat): its centre, the pit's diameter and depth below the ground around it, how worn it is (0 fresh,
+    // 1 weathered: rim worn down, bowl partly filled and grown over), water standing in it, where it comes from
+    // (GeoCraterSource) and how sure that is.
+    [Serializable] public class CraterFeature
+    {
+        public float x, z, diameter, depth, age, confidence = 1;
+        public int source;
+        public bool water;
+    }
+    // A trench or ditch of the war (GeoCombat): its centreline (x, z pairs), its width and depth as dug, how worn it is (0 fresh:
+    // steep walls, flat floor; 1 abandoned for years: walls slumped into a V, partly filled, grown over), its kind
+    // (GeoTrenchKind) and where it comes from (GeoCraterSource).
+    [Serializable] public class TrenchFeature
+    {
+        public float[] points;
+        public float width = 1, depth = 1.6f, age;
+        public int kind, source;
+    }
     [Serializable] public class EnvironmentData
     {
         public string format;
@@ -79,6 +97,10 @@ namespace GeoWorld.Editor
         public List<BarrierFeature> hedges = new List<BarrierFeature>();
         public List<BarrierFeature> treeRows = new List<BarrierFeature>();
         public List<LineFeature> railways = new List<LineFeature>();
+        // War craters: the export's own, and the combat bake's next to it (combat.json, GeoCombatFile).
+        public List<CraterFeature> craters = new List<CraterFeature>();
+        // Trenches and ditches: the export's own, and the combat bake's (combat.json).
+        public List<TrenchFeature> trenches = new List<TrenchFeature>();
         // Set for one tile of a tiled world, where bounds is the tile: props and trees belong to the tile, but they keep
         // clear of what stands around it (surround: the tile with its margin) and only the export's own edge (outer)
         // keeps them back. Null: bounds.
@@ -111,7 +133,8 @@ namespace GeoWorld.Editor
         static readonly JsonSerializerSettings JsonSettings = new JsonSerializerSettings
         { MaxDepth = 64, TypeNameHandling = TypeNameHandling.None };
 
-        public static EnvironmentData ReadEnvironment(string path)
+        // combat: with the craters of the combat bake next to the export (combat.json, GeoCombatFile); false: the export's own only.
+        public static EnvironmentData ReadEnvironment(string path, bool combat = true)
         {
             var data = JsonConvert.DeserializeObject<EnvironmentData>(File.ReadAllText(path), JsonSettings);
             if (data == null || data.format != "geo-environment" || data.version != 1)
@@ -127,10 +150,25 @@ namespace GeoWorld.Editor
             data.hedges = data.hedges ?? new List<BarrierFeature>();
             data.treeRows = data.treeRows ?? new List<BarrierFeature>();
             data.railways = data.railways ?? new List<LineFeature>();
+            data.craters = data.craters ?? new List<CraterFeature>();
+            data.trenches = data.trenches ?? new List<TrenchFeature>();
+            // the export's own craters and trenches are given by it: without a source they would read as found on the imagery
+            // (0), and a crater without a depth would not be carved
+            foreach (var c in data.craters)
+            {
+                if (c == null) continue;
+                if (c.source == GeoCraterSource.Detected) c.source = GeoCraterSource.Given;
+                if (!(c.depth > 0) && c.diameter > 0) c.depth = Mathf.Min(6, c.diameter * (c.diameter >= 7 ? 0.33f : 0.27f));
+            }
+            foreach (var t in data.trenches)
+                if (t != null && t.source == GeoCraterSource.Detected) t.source = GeoCraterSource.Given;
+            if (combat) GeoCombatFile.AddTo(data, path);
             return data;
         }
 
-        public static BuildingsData ReadBuildings(string path, GeoOrigin origin)
+        // combat: with the combat bake's estimated states for buildings the app has no evidence for (combat.json next to the
+        // export, GeoBuildingEstimates); false: the export's own conditions only.
+        public static BuildingsData ReadBuildings(string path, GeoOrigin origin, bool combat = true)
         {
             if (string.IsNullOrEmpty(path)) return new BuildingsData();
             var data = JsonConvert.DeserializeObject<BuildingsData>(File.ReadAllText(path), JsonSettings);
@@ -140,6 +178,7 @@ namespace GeoWorld.Editor
                 (Math.Abs(origin.lat - data.origin.lat) > 0.000001 || Math.Abs(origin.lon - data.origin.lon) > 0.000001))
                 throw new InvalidDataException("Buildings and environment have different origins. Export both from the same area with the same fixed origin.");
             data.buildings = data.buildings ?? new List<BuildingFeature>();
+            if (combat) GeoBuildingEstimates.ApplyTo(data, path);
             return data;
         }
 

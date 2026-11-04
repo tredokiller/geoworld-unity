@@ -44,7 +44,7 @@ namespace GeoWorld.Editor
             {
                 env.roads.AddRange(f.env.roads); env.waterways.AddRange(f.env.waterways); env.railways.AddRange(f.env.railways); env.water.AddRange(f.env.water);
                 env.areas.AddRange(f.env.areas); env.barriers.AddRange(f.env.barriers); env.hedges.AddRange(f.env.hedges); env.treeRows.AddRange(f.env.treeRows);
-                env.trees.AddRange(f.env.trees); env.props.AddRange(f.env.props);
+                env.trees.AddRange(f.env.trees); env.props.AddRange(f.env.props); env.craters.AddRange(f.env.craters); env.trenches.AddRange(f.env.trenches);
                 buildings.buildings.AddRange(f.buildings.buildings);
                 levels.AddRange(f.waterLevels); pieces.AddRange(f.paths); if (f.rivers != null) rivers.AddRange(f.rivers);
             }
@@ -88,7 +88,7 @@ namespace GeoWorld.Editor
         public readonly List<string> notes = new List<string>();
         GenerationSettings settings;
         string files;
-        Rect[] pathBox, roadBox, waterwayBox, waterBox, areaBox, barrierBox, hedgeBox, rowBox, railBox;
+        Rect[] pathBox, roadBox, waterwayBox, waterBox, areaBox, barrierBox, hedgeBox, rowBox, railBox, craterBox, trenchBox;
         readonly Dictionary<Vector2Int, List<BuildingFeature>> cells = new Dictionary<Vector2Int, List<BuildingFeature>>();
 
         // origin: the south-west corner of tile (0, 0); null: the corner of the coordinates (0, 0), the same for every export
@@ -144,6 +144,8 @@ namespace GeoWorld.Editor
             s.barrierBox = s.env.barriers.Select(f => Box(f?.points, f?.width ?? 0)).ToArray();
             s.hedgeBox = s.env.hedges.Select(f => Box(f?.points, f?.width ?? 0)).ToArray();
             s.rowBox = s.env.treeRows.Select(f => Box(f?.points, f?.width ?? 0)).ToArray();
+            s.craterBox = s.env.craters.Select(GeoCombatGround.Reach).ToArray();
+            s.trenchBox = s.env.trenches.Select(GeoCombatGround.Reach).ToArray();
             foreach (var building in s.buildings.buildings)
             {
                 if (building == null || !GeoData.Finite(building.x) || !GeoData.Finite(building.z)) continue;
@@ -152,7 +154,8 @@ namespace GeoWorld.Editor
                 list.Add(building);
             }
             var text = new StringBuilder();
-            foreach (var file in new[] { environmentPath, buildingsPath, Package(s.env.terrain?.heightmap?.file), Package(s.env.materials?.file), Package(s.env.materials?.canopyFile) })
+            foreach (var file in new[] { environmentPath, buildingsPath, Package(s.env.terrain?.heightmap?.file), Package(s.env.materials?.file), Package(s.env.materials?.canopyFile),
+                GeoCombatFile.PathFor(environmentPath) })
                 if (!string.IsNullOrEmpty(file) && File.Exists(file)) { var info = new FileInfo(file); text.Append(info.Name).Append(info.Length).Append(info.LastWriteTimeUtc.Ticks).Append('|'); }
             if (blend != null) text.Append(blend.Fingerprint(part));
             s.files = text.ToString();
@@ -198,6 +201,13 @@ namespace GeoWorld.Editor
             for (int i = 0; i < env.water.Count; i++) if (waterBox[i].Overlaps(area)) { e.water.Add(env.water[i]); levels.Add(waterLevels[i]); }
             e.trees = env.trees.Where(t => t != null && around.Contains(t.x, t.z) && owns(t.x, t.z)).ToList();
             e.props = env.props.Where(p => p != null && around.Contains(p.x, p.z) && owns(p.x, p.z)).ToList();
+            // a crater reaches into the tile from beyond its margin with its rim and ejecta; where exports meet, the owner's
+            for (int i = 0; i < env.craters.Count; i++)
+                if (craterBox[i].Overlaps(area) && owns(env.craters[i].x, env.craters[i].z)) e.craters.Add(env.craters[i]);
+            // a trench runs across tiles and exports: every tile it reaches carves it (overlapping grooves take the deepest, so a
+            // trench given by two exports is carved once)
+            for (int i = 0; i < env.trenches.Count; i++)
+                if (trenchBox[i].Overlaps(area)) e.trenches.Add(env.trenches[i]);
             var pieces = new List<PathBuild>();
             for (int i = 0; i < paths.Count; i++) if (pathBox[i].Overlaps(area)) pieces.AddRange(GeoTileGeometry.ClipPath(paths[i], reach, settings.pathStep));
             // the rivers for the water: further out, but where exports meet still only on this export's region

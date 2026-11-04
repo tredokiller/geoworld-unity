@@ -18,6 +18,7 @@ namespace _Game.Scripts.World
         public RoadAreas roads;
         public FieldAreas fields;
         public TreeLeafAreas leafAreas;
+        public CraterField craters;
         [HideInInspector] public string report;
 
         private static readonly List<WorldMapData> Active = new();
@@ -54,6 +55,19 @@ namespace _Game.Scripts.World
                 foreach (WorldMapData data in Active)
                     if (data && data.leafAreas)
                         return data.leafAreas;
+
+                return null;
+            }
+        }
+
+        /// <summary>Воронки загруженного мира (война); null — у него их нет.</summary>
+        public static CraterField Craters
+        {
+            get
+            {
+                foreach (WorldMapData data in Active)
+                    if (data && data.craters)
+                        return data.craters;
 
                 return null;
             }

@@ -80,8 +80,8 @@ namespace GeoWorld.Editor
                                 homeGroups[key] = homeGroup;
                             }
                             PlaceHome(building, context, depth, temp.transform, homeGroup, source.id);
-                            AppendPlinth(chunk, context, depth, temp.transform.localToWorldMatrix);
-                            instanced++;
+                            AppendPlinth(chunk, building, context, depth, temp.transform.localToWorldMatrix);
+                            instanced += building.homeParts != null && building.homeParts.Count > 0 ? building.homeParts.Count : 1;
                         }
                         else
                             using (var output = GeoBuildingGeometry.Build(building, depth, GeoBuildingBuilder.Local(building, ground, baseY)))
@@ -190,15 +190,21 @@ namespace GeoWorld.Editor
         // about the eave line), as matrices for the body (and the fixed roof) and for the roof variant. Only the foot
         // differs: a baked home pulls its lowest vertices down to the foundation, an instance stands on a plinth.
         public static void HomeInstance(GeoBuilding building, GeoBuildingContext context, float depth,
+            out Matrix4x4 body, out Matrix4x4 roof, out Mesh variant, out Material roofMaterial) =>
+            HomeInstance(building, building.home, GeoRuinFit.FrameOf(context.outline), building.homeTurn, building.homeMirror, depth,
+                out body, out roof, out variant, out roofMaterial);
+
+        // the same for one model on one rectangle of the building (a part of GeoHomeLibrary.Cover)
+        public static void HomeInstance(GeoBuilding building, GeoHomeModelAsset model, GeoRuinFit.Frame frame, bool turn, bool mirrored, float depth,
             out Matrix4x4 body, out Matrix4x4 roof, out Mesh variant, out Material roofMaterial)
         {
-            var model = building.home; var roofInfo = building.roofInfo;
+            var roofInfo = building.roofInfo;
             string name = GeoHomeModel.VariantFor(roofInfo?.shape, roofInfo?.renderAs, roofInfo?.ridge, model.defaultVariant);
             if (model.Variant(name) == null) name = model.defaultVariant;
             float roofRise = roofInfo != null && GeoRoofInfo.Has(roofInfo.rise) ? roofInfo.rise : building.roofHeight;
             bool flat = name == "flat";
             float height = GeoHomes.DrawnHeight(model, building.height, roofRise, flat);
-            var p = GeoHomes.Measure(model, context.outline, height, roofRise, flat, building.homeTurn, building.homeMirror, depth);
+            var p = GeoHomes.Measure(model, frame, height, roofRise, flat, turn, mirrored, depth);
             float flip = p.turn ? -1f : 1f, mirror = p.mirror ? -1f : 1f;
             var x = new Vector4(p.axis.x, 0, p.axis.y, 0) * (p.sx * flip * mirror);
             var z = new Vector4(p.across.x, 0, p.across.y, 0) * (p.sz * flip);
@@ -224,8 +230,20 @@ namespace GeoWorld.Editor
         // thousands of them that share a mesh and material together).
         static void PlaceHome(GeoBuilding building, GeoBuildingContext context, float depth, Transform frame, Transform parent, string id)
         {
-            HomeInstance(building, context, depth, out var body, out var roof, out var variant, out var roofMaterial);
-            var model = building.home;
+            var parts = building.homeParts;
+            if (parts == null || parts.Count == 0)
+            {
+                PlaceHome(building, building.home, GeoRuinFit.FrameOf(context.outline), building.homeTurn, building.homeMirror, depth, frame, parent, id);
+                return;
+            }
+            // a row of sections or the rectangles of an L, T or U: one home object for each
+            for (int i = 0; i < parts.Count; i++)
+                PlaceHome(building, parts[i].model, parts[i].frame, parts[i].turn, parts[i].mirror, depth, frame, parent, i == 0 ? id : id + " #" + (i + 1));
+        }
+
+        static void PlaceHome(GeoBuilding building, GeoHomeModelAsset model, GeoRuinFit.Frame rectangle, bool turn, bool mirrored, float depth, Transform frame, Transform parent, string id)
+        {
+            HomeInstance(building, model, rectangle, turn, mirrored, depth, out var body, out var roof, out var variant, out var roofMaterial);
             var home = new GameObject("Home " + model.id + " | " + id).transform;
             home.SetParent(parent, false);
             void Part(string name, Mesh mesh, Matrix4x4 local)
@@ -287,11 +305,16 @@ namespace GeoWorld.Editor
         static readonly Color Plinth = new Color(0.45f, 0.44f, 0.40f);
 
         // A plain plinth under an instanced home on sloping ground, from the ground's lowest point under the footprint up
-        // into the walls, just inside the footprint's rectangle.
-        static void AppendPlinth(Chunk chunk, GeoBuildingContext context, float depth, Matrix4x4 toWorld)
+        // into the walls, just inside the footprint's rectangle (or each part's, so the inside corner of an L stays open).
+        static void AppendPlinth(Chunk chunk, GeoBuilding building, GeoBuildingContext context, float depth, Matrix4x4 toWorld)
+        {
+            if (building.homeParts == null || building.homeParts.Count == 0) AppendPlinth(chunk, GeoRuinFit.FrameOf(context.outline), depth, toWorld);
+            else foreach (var part in building.homeParts) AppendPlinth(chunk, part.frame, depth, toWorld);
+        }
+
+        static void AppendPlinth(Chunk chunk, GeoRuinFit.Frame frame, float depth, Matrix4x4 toWorld)
         {
             if (depth < 0.05f) return;
-            var frame = GeoRuinFit.FrameOf(context.outline);
             float halfL = frame.length * 0.5f - 0.02f, halfW = frame.width * 0.5f - 0.02f;
             if (halfL <= 0 || halfW <= 0) return;
             Vector2 a = frame.axis, b = frame.Across, c = frame.centre;
@@ -364,6 +387,10 @@ namespace GeoWorld.Editor
                     color = new Color(color.r * v, color.g * v, color.b * v);
                 }
                 var uv = isGlass ? Vector2.zero : PaletteUv(color);
+                // a shaded part (broken walls, rubble: GeoBuildingMesh.shade) takes its colour per vertex: every triangle's
+                // vertices share one shade, so each triangle stays one palette colour
+                var shades = isGlass ? null : part.mesh.colors;
+                bool shaded = shades != null && shades.Length == vertices.Length;
                 bool bottomFaces = part.name != "Foundation";
                 var keep = new bool[vertices.Length];
                 var list = isGlass ? chunk.glass : chunk.opaque;
@@ -381,7 +408,7 @@ namespace GeoWorld.Editor
                     chunk.vertices.Add(toWorld.MultiplyPoint3x4(vertices[i]));
                     chunk.normals.Add(toWorld.MultiplyVector(normals[i]).normalized);
                     chunk.tangents.Add(NoTangent);
-                    chunk.uvs.Add(uv);
+                    chunk.uvs.Add(shaded ? PaletteUv(color * shades[i]) : uv);
                 }
                 for (int i = 0; i < triangles.Length; i += 3)
                 {

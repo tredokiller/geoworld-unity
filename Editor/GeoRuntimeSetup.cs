@@ -50,6 +50,8 @@ namespace GeoWorld.Editor
             Root(GeoRoadTextures.VersionFile);
             for (int i = 0; i < GeoTerrainTextures.Names.Length; i++) if (GeoTerrainTextures.Names[i] != null) { Root(GeoTerrainTextures.DiffusePath(i)); Root(GeoTerrainTextures.NormalPath(i)); }
             Root(GeoTerrainTextures.Stamp);
+            // the trenches' wall atlas (GeoWorldBuild's Trench walls material)
+            foreach (var map in new[] { "albedo", "normal", "mask" }) Root(GeoPaths.Package + "/Textures/Trenches/trench_walls_" + map + ".png");
             Root(GeoPaths.Package + "/Runtime/Resources/" + GeoWaterLook.Resource + ".mat");
             // the water tiles are made with: the project's own (GeoWaterLook.ProjectResource) where it has one
             if (GeoWaterLook.Material) Root(AssetDatabase.GetAssetPath(GeoWaterLook.Material));

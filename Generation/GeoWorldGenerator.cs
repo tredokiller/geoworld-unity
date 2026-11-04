@@ -36,6 +36,14 @@ namespace GeoWorld
         public bool background = true;
         [Tooltip("The background's rings (null: GeoBackgroundSettings' defaults); the same settings for GeoWorldBackground.ShowAsync.")]
         public GeoBackgroundSettings backgroundSettings;
+        [Tooltip("A battlefield: find the craters on the imagery and scatter the small pits where the fighting was, dig the trenches along tree " +
+                 "lines under fire and estimate the damage of buildings without evidence, before the tiles are built (GeoCombatBake, with the " +
+                 "settings below; written next to the export as combat.json), so the ground is carved with them. Off: none (an earlier bake's " +
+                 "combat.json next to the export is still used).")]
+        public bool battlefield;
+        // the battlefield's settings (null: the defaults). A flag above, not null here, says whether there is one: a second
+        // process gets the request through JsonUtility, which writes a null class field as a default object
+        public GeoCombatSettings combat;
 
         public double WidthKm => (east - west) * 111.32 * Math.Cos((south + north) / 2 * Math.PI / 180);
         public double HeightKm => (north - south) * 111.32;
@@ -187,6 +195,11 @@ namespace GeoWorld
 
                 Report(GeoWorldProgress.Stage.Preparing, 0, "Reading the export");
                 await Pause(now, cancellation);
+                // the battlefield before the tiles: its craters for the whole area (on the main thread: the imagery is decoded by Unity)
+                var combatNotes = new List<string>();
+                if (request.battlefield)
+                    GeoCombatBake.Run(envPath, buildingsPath, request.combat ?? new GeoCombatSettings(), settings, combatNotes,
+                        (label, f) => Report(GeoWorldProgress.Stage.Preparing, 0.005f * f, label), cancellation);
                 // the export's JSON on a worker thread (tens of megabytes for a town)
                 var env = await Work(now, () => GeoData.ReadEnvironment(envPath), cancellation);
                 var plan = GeoTilePlan.Make(new[] { env.bounds }, tileSize);
@@ -200,6 +213,7 @@ namespace GeoWorld
                 var indices = plan.tiles.Keys.OrderBy(i => i.y).ThenBy(i => i.x).ToList();
                 var tiles = new List<GeoWorldManifest.Tile>();
                 var notes = new List<string>(source.notes);
+                notes.AddRange(combatNotes);
                 var stats = new StatsBuilder();
                 var tileSeconds = new List<double>();
                 var stages = new Dictionary<string, double>();
@@ -454,6 +468,10 @@ namespace GeoWorld
             foreach (var file in new[] { envPath, buildingsPath, Package(env.terrain?.heightmap?.file), Package(env.materials?.file), Package(env.materials?.canopyFile) })
                 if (!string.IsNullOrEmpty(file) && File.Exists(file)) text.Append(Path.GetFileName(file)).Append('=').Append(GeoWorldPackage.Sha256(File.ReadAllBytes(file))).Append('|');
             text.Append(JsonUtility.ToJson(Stored(settings))).Append('|');
+            // the combat bake next to the export changes every tile it reaches (only when there is one: exports without it keep
+            // their hash); its time stamp says nothing about what is in it
+            var combat = GeoCombatFile.Read(envPath);
+            if (combat != null) { combat.created = null; text.Append("combat.json=").Append(GeoWorldPackage.Sha256(Newtonsoft.Json.JsonConvert.SerializeObject(combat))).Append('|'); }
             text.Append(GeoAssets.Key(settings.homeLibrary)).Append('|').Append(GeoAssets.Key(settings.ruinLibrary)).Append('|');
             text.Append(tileSize.ToString("R", CultureInfo.InvariantCulture));
             return GeoWorldPackage.Sha256(text.ToString());

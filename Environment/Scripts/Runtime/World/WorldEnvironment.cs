@@ -69,6 +69,7 @@ namespace _Game.Scripts.World
             Ensure<WaterSky>();
             Ensure<WaterShore>();
             Ensure<RoadMap>();
+            Ensure<CraterMap>();
             Ensure<GroundDetail>();
             Ensure<ForestFloor>();
             Seasons = Ensure<Seasons>();

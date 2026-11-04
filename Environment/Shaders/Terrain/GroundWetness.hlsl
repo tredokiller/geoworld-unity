@@ -102,6 +102,9 @@ half3 GroundIce(float2 p, float footprint, out half smoothness, out half snowSha
     return ice;
 }
 
+// воронки по карте воронок (CraterMap): в GroundWetness после дорог (воронка рвёт и полотно), до снега; лёд прудков — GroundIce
+#include "GroundCraters.hlsl"
+
 // water — доля воды луж и болот в пикселе (для живого неба в отражении, PuddleSky)
 void GroundWetness(inout InputData inputData, half3 geometryNormalWS, inout half3 albedo, inout half smoothness, inout half occlusion, out half water)
 {
@@ -145,6 +148,10 @@ void GroundWetness(inout InputData inputData, half3 geometryNormalWS, inout half
     half roadSurface;
     half roadHollow;
     GroundRoad(inputData, dpdx, dpdy, albedo, smoothness, occlusion, roadSurface, roadHollow);
+
+    // воронки: рельеф мелких, тёмные чаши, свежий выброс, вода в них — и в сухую погоду (её доля — для живого неба)
+    half craterBowl;
+    GroundCraters(inputData, footprint, distanceToCamera, albedo, smoothness, occlusion, craterBowl, water);
 
     half snow = 0;
     half3 snowAlbedo = SEASON_SNOW_COLOR;
@@ -277,7 +284,7 @@ void GroundWetness(inout InputData inputData, half3 geometryNormalWS, inout half
     half mirror = WaterWashSmoothness(lerp(0.96, 0.85, saturate(distanceToCamera / 300)), washRough);
     smoothness = lerp(smoothness, lerp(lerp(mirror, 0.45, weed), iceSmoothness, frozen), puddle);
     occlusion = lerp(occlusion, 1, puddle);
-    water = puddle * (1 - weed);
+    water = max(water, puddle * (1 - weed));
 
     // снег поверх льда — полосами по ветру: на льду его меньше, чем на земле
     half snowOnIce = snow * puddle * frozen * iceSnow;

@@ -78,6 +78,20 @@ the export while it is generated (with the editor bake's satellite step: each ti
 the road it shows and gives the fields their rows' bearing), and its tiles' trees become Nature Renderer terrain trees with
 species by place when they load. Open the package on an object (`GeoWorldPackageStreamer` does it) and keep `WorldEnvironment` in the scene.
 
+## Battlefields
+
+An area after a finished battle (no fire, smoke or artillery: what is left): **Bake battlefield** in the Geo Tiled World's
+Inspector, then **Rebuild changed tiles**. The bake reads each export once and writes `combat.json` next to it: craters
+found on the satellite imagery (from about 2 m across to bomb craters, fresh ones and ones with water), the small pits no
+imagery resolves scattered where the fighting was, trenches dug in the style of the war along tree lines under fire (never
+traced from imagery), and an estimated state for the buildings the app has no evidence for. The tiles carve the craters
+into their ground and draw the trenches in 3D (walls, floor, lip and spoil banks as meshes with the terrain's own look, the
+terrain cut under them); the environment layer draws the craters too small for the height grid, fills ponds, keeps grass
+out of fresh bowls and off the trenches, leaves the fields there abandoned and damages the trees. Destroyed buildings are drawn with thick
+broken walls and lumpy rubble. A world package gets the same with `GeoWorldRequest.battlefield`. Reading data out of the
+imagery needs a licence that allows it (Esri World Imagery's terms do not for this use; `GeoCombatSettings.detect` off
+keeps only the scattered pits). See BATTLEFIELDS in the manual.
+
 ## Install in a project
 
 **Fast updates (recommended): a git submodule in `Packages`.** Every update then downloads and imports only the files that

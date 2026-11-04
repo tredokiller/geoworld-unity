@@ -652,6 +652,35 @@ namespace GeoWorld.Editor
             if (GUILayout.Button(new GUIContent("Bake land cover", "What the ground is on a grid of 10 m, from the exports' ground maps (ESA WorldCover with OpenStreetMap's land use, water, roads " +
                 "and buildings over it), for the game to ask anywhere (GeoLandCover on this object). No tile is rebuilt; generating tiles bakes it again."), GUILayout.Height(24)))
                 Debug.Log("Geo World: " + GeoTiles.BakeLandCover(world).Replace("\n", " "), world);
+            GUILayout.Label("Battlefield", EditorStyles.boldLabel);
+            EditorGUILayout.HelpBox("A finished battle on this world: craters found on the imagery and small pits scattered where the fighting was, trenches " +
+                "along tree lines under fire (in the style of, never traced), and an estimated state for buildings the app has no evidence for, written next to " +
+                "each export (combat.json). Rebuild changed tiles carves them into the ground; the environment layer draws them closer.", MessageType.None);
+            if (GUILayout.Button(new GUIContent("Bake battlefield", "GeoCombatBake on every export of the world with the default settings (GeoCombatSettings). " +
+                "Reading data out of the satellite imagery needs a licence that allows it (Esri's does not for this pipeline)."), GUILayout.Height(24)))
+                Debug.Log("Geo World: " + BakeBattlefield(world).Replace("\n", " "), world);
+        }
+
+        // The combat bake (GeoCombatBake) of every export of the world, next to each; the tiles carve it when rebuilt.
+        public static string BakeBattlefield(GeoTiledWorld world)
+        {
+            var parts = world.parts != null && world.parts.Count > 0 ? world.parts
+                : new List<GeoTiledWorld.Part> { new GeoTiledWorld.Part { environmentPath = world.environmentPath, buildingsPath = world.buildingsPath } };
+            var settings = GeoWorldBuild.Sanitize(GeoWorldBuild.TileSettings(world.settings));
+            var notes = new List<string>();
+            try
+            {
+                for (int i = 0; i < parts.Count; i++)
+                {
+                    var part = parts[i];
+                    if (string.IsNullOrEmpty(part.environmentPath) || !File.Exists(part.environmentPath)) { notes.Add($"Export {i + 1}: not on this machine."); continue; }
+                    int index = i;
+                    GeoCombatBake.Run(part.environmentPath, part.buildingsPath, new GeoCombatSettings(), settings, notes,
+                        (label, f) => EditorUtility.DisplayProgressBar("Bake battlefield", $"Export {index + 1} / {parts.Count}: {label}", (index + f) / parts.Count));
+                }
+            }
+            finally { EditorUtility.ClearProgressBar(); }
+            return string.Join("\n", notes) + "\nRebuild changed tiles to carve it into the ground.";
         }
 
         static string Describe(GeoOverviewData data)

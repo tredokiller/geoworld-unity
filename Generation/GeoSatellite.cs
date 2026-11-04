@@ -81,14 +81,31 @@ namespace GeoWorld.Editor
         // (row 0 = south edge). Throws when no tile could be read.
         public static Texture2D Build(GeoOrigin origin, GeoBounds b, GenerationSettings settings, List<string> notes, Action<string, float> progress)
         {
+            int resolution = settings.satelliteResolution > 0 ? settings.satelliteResolution : AutoResolution(b);
+            var pixels = Pixels(origin, b, settings, resolution, notes, progress, out int zoom, out int tileSize, out int tiles, out int failed, out string template);
+            var result = new Texture2D(resolution, resolution, TextureFormat.RGBA32, true, false)
+                { name = "Satellite imagery", wrapMode = TextureWrapMode.Clamp, filterMode = FilterMode.Trilinear, anisoLevel = 8 };
+            result.SetPixels32(pixels); result.Apply(true);
+            Compress(result, pixels, settings, notes);
+            double metres = MetresPerPixel(origin.lat, zoom, tileSize);
+            notes?.Add($"Terrain draped with satellite imagery: {tiles} tiles at zoom {zoom} ({metres:F2} m per pixel) into {resolution} x {resolution} " +
+                $"({Math.Max(b.Width, b.Depth) / resolution:F2} m per texel). {Attribution(template)}." +
+                (failed > 0 ? $" {failed} tiles were missing and are grey." : "") + " Tiles are cached in Library/GeoWorld/SatelliteTiles.");
+            return result;
+        }
+
+        // The imagery over the bounds as resolution x resolution pixels (row 0 = south edge), from the same tiles and cache as
+        // Build, without making a texture: for reading the picture (GeoCombatBake's craters). Throws when no tile could be read.
+        public static Color32[] Pixels(GeoOrigin origin, GeoBounds b, GenerationSettings settings, int resolution, List<string> notes, Action<string, float> progress,
+            out int zoom, out int tileSize, out int tiles, out int failed, out string template)
+        {
             if (origin == null) throw new InvalidDataException("the export has no geographic origin");
-            string template = string.IsNullOrWhiteSpace(settings.satelliteTiles) ? EsriWorldImagery : settings.satelliteTiles.Trim();
+            template = string.IsNullOrWhiteSpace(settings.satelliteTiles) ? EsriWorldImagery : settings.satelliteTiles.Trim();
             if (!template.Contains("{z}") || !template.Contains("{x}") || !template.Contains("{y}"))
                 throw new ArgumentException("the tile URL needs {z}, {x} and {y}");
-            int resolution = settings.satelliteResolution > 0 ? settings.satelliteResolution : AutoResolution(b);
             var enu = new GeoEnu(origin.lat, origin.lon);
-            int zoom = Zoom(enu, b, origin.lat, resolution, settings.satelliteMaxZoom), wanted = zoom;
-            RectInt range; byte[][] images; int failed;
+            zoom = Zoom(enu, b, origin.lat, resolution, settings.satelliteMaxZoom); int wanted = zoom;
+            RectInt range; byte[][] images;
             // Servers answer with 404 or with one "no imagery here" picture where a zoom is not covered:
             // step out until nearly every tile is real imagery.
             while (true)
@@ -102,7 +119,7 @@ namespace GeoWorld.Editor
             if (zoom < wanted) notes?.Add($"Satellite imagery: zoom {wanted} is not covered here, zoom {zoom} is used.");
 
             progress?.Invoke("Decoding satellite tiles", 0.8f);
-            int tileSize = 0;
+            tileSize = 0;
             var decoded = new Color32[range.width * range.height][];
             var texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
             try
@@ -158,17 +175,8 @@ namespace GeoWorld.Editor
                     pixels[v * resolution + u] = Sample(mosaic, mw, mh, px, py);
                 }
             });
-            mosaic = null;
-
-            var result = new Texture2D(resolution, resolution, TextureFormat.RGBA32, true, false)
-                { name = "Satellite imagery", wrapMode = TextureWrapMode.Clamp, filterMode = FilterMode.Trilinear, anisoLevel = 8 };
-            result.SetPixels32(pixels); result.Apply(true);
-            Compress(result, pixels, settings, notes);
-            double metres = MetresPerPixel(origin.lat, zoom, tileSize);
-            notes?.Add($"Terrain draped with satellite imagery: {range.width * range.height} tiles at zoom {zoom} ({metres:F2} m per pixel) into {resolution} x {resolution} " +
-                $"({Math.Max(b.Width, b.Depth) / resolution:F2} m per texel). {Attribution(template)}." +
-                (failed > 0 ? $" {failed} tiles were missing and are grey." : "") + " Tiles are cached in Library/GeoWorld/SatelliteTiles.");
-            return result;
+            tiles = range.width * range.height;
+            return pixels;
         }
 
         // The texture (mipmapped RGBA32 made from pixels) in the form the settings ask for: DXT1 at its best encoding (the same size

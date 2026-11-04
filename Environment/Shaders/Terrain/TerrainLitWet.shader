@@ -111,6 +111,8 @@ Shader "Game/Terrain Lit (Wet)"
             #define SKIP_SHADOWS_LIGHT_INDEX_CHECK 1
             #endif
 
+            // грунт окопов (GeoTrenchMesh): только на копии материала для их мешей (GeoTrenchGround), у террейна — нет
+            #pragma shader_feature_local _TRENCH_GROUND
             #include "Packages/com.unity.render-pipelines.universal/Shaders/Terrain/TerrainLitInput.hlsl"
             #define GAME_GROUND_WETNESS 1
             #include "TerrainLitWetPasses.hlsl"

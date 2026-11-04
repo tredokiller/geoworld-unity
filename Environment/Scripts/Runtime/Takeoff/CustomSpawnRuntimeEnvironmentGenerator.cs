@@ -1347,6 +1347,7 @@ namespace _Game.Scripts.Locations
 
             ReadLand(grid, width, height);
             ReadRoads(grid, width, height);
+            ReadCraters(grid, width, height);
             ReadSatelliteStates(grid, terrain, profile);
             ReadSnow(grid, terrain);
 
@@ -1451,6 +1452,10 @@ namespace _Game.Scripts.Locations
                     grid.ToField[z, x] = Mathf.Clamp01(
                         LandGroups.Sample(maybeField, grid.LandCountX, grid.LandCountZ, gx, gz) * field +
                         LandGroups.Sample(edge, grid.LandCountX, grid.LandCountZ, gx, gz) * (1f - grid.Satellite[z, x].x));
+
+                    // брошенное поле — уже не поле
+                    if (grid.Abandoned != null)
+                        grid.ToField[z, x] *= 1f - LandGroups.Sample(grid.Abandoned, grid.LandCountX, grid.LandCountZ, gx, gz);
                 }
             }
 
@@ -1494,7 +1499,20 @@ namespace _Game.Scripts.Locations
                     Vector3 point = new(start.x + i * HardGroundStep, 0f, start.y + j * HardGroundStep);
 
                     if (GeoLandCover.TrySample(point, out GeoLandClass value))
+                    {
+                        // где шли бои (воронки, CraterField), поле брошено: пашня — залежь, растёт как луг, без стерни — как
+                        // у травы тайлов (GroundDressing)
+                        if (CraterField.AbandonedAt(point.x, point.z))
+                        {
+                            grid.Abandoned ??= new float[countX * countZ];
+                            grid.Abandoned[j * countX + i] = 1f;
+
+                            if (value == GeoLandClass.Cropland)
+                                value = GeoLandClass.Grass;
+                        }
+
                         land[j * countX + i] = (byte)value;
+                    }
                 }
             }
 
@@ -1514,6 +1532,55 @@ namespace _Game.Scripts.Locations
                         grid.Blocked[z, x] = 1f;
 
                     grid.ForestLand[z, x] = LandGroups.Sample(forest, countX, countZ, gx, gz);
+                }
+            }
+        }
+
+        // Воронки и окопы в ячейках зоны (CraterField), как у травы тайлов (GroundDressing): в чаше свежей воронки, в прудке
+        // и во рву свежего окопа травы нет; старые заросли — трава в них растёт.
+        private static readonly List<int> FoundCraters = new();
+
+        private static void ReadCraters(DetailGrid grid, int width, int height)
+        {
+            CraterField field = CraterField.Instance;
+
+            if (field == null)
+                return;
+
+            Vector2 first = grid.Local(0, 0) + grid.Center;
+            Vector2 last = grid.Local(width - 1, height - 1) + grid.Center;
+            Rect zone = Rect.MinMaxRect(first.x, first.y, last.x, last.y);
+            field.Query(zone, FoundCraters);
+
+            foreach (int i in FoundCraters)
+            {
+                CraterField.Crater c = field.craters[i];
+
+                if (!c.water && c.age >= 0.35f)
+                    continue;
+
+                grid.Rasterize(new Vector2(c.x, c.z), c.diameter * 0.5f, (cellDistance, radius) => cellDistance < radius ? 1f : 0f, grid.Blocked);
+            }
+
+            field.QueryTrenches(zone, FoundCraters);
+
+            foreach (int i in FoundCraters)
+            {
+                CraterField.Trench t = field.trenches[i];
+
+                if (t.points == null)
+                    continue;
+
+                // the trench is a mesh out to the end of its lip, the terrain under it cut lower: nothing grows or stands there
+                float half = new GeoWorld.Editor.GeoTrenchSection(t.width, t.depth, t.age, GeoWorld.Editor.GeoTrenchSection.LipWidth(1f)).CutTo(1f);
+
+                for (int k = 0; k + 3 < t.points.Length; k += 2)
+                {
+                    Vector2 a = new(t.points[k], t.points[k + 1]), b = new(t.points[k + 2], t.points[k + 3]);
+                    int steps = Mathf.Max(1, Mathf.CeilToInt(Vector2.Distance(a, b) / Mathf.Max(0.25f, half)));
+
+                    for (int s = 0; s <= steps; s++)
+                        grid.Rasterize(Vector2.Lerp(a, b, s / (float)steps), half, (cellDistance, radius) => cellDistance < radius ? 1f : 0f, grid.Blocked);
                 }
             }
         }
@@ -1563,9 +1630,9 @@ namespace _Game.Scripts.Locations
             float fadeWidth = Mathf.Max(8f, entry.MaxRadius * 0.3f);
             float worn = 1f - entry.TrampleTolerance;
             int hashChannel = _seed + entryIndex * 7919;
-            // и поклеточно по карте земель: луг, поле и его край, лес, болото и берег, посёлок, дороги (LandScales)
+            // и поклеточно по карте земель: луг, поле и его край, лес, болото и берег, посёлок, дороги, залежь (LandScales)
             FlyPointLandScales landScales = entry.EffectiveLandScales;
-            float[] landLattice = grid.HasLand ? LandGroups.EntryScales(grid.Land, grid.LandCountX, grid.LandCountZ, landScales) : null;
+            float[] landLattice = grid.HasLand ? LandGroups.EntryScales(grid.Land, grid.LandCountX, grid.LandCountZ, landScales, grid.Abandoned) : null;
 
             for (int z = 0; z < grid.Height; z++)
             {
@@ -2254,6 +2321,8 @@ namespace _Game.Scripts.Locations
             public float[,] Steepness { get; set; }
             // классы карты земель в узлах решётки (null — карты нет)
             public byte[] Land { get; private set; }
+            // в узлах карты земель: 1 — поле брошено (воронки вокруг, CraterField.AbandonedAt); null — таких нет
+            public float[] Abandoned { get; set; }
             public int LandCountX { get; private set; }
             public int LandCountZ { get; private set; }
             public bool HasLand => Land != null;

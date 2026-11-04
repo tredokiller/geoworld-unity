@@ -14,10 +14,14 @@ namespace GeoWorld.Editor
     // few things only the editor can do to the generation target (GeoGeneration).
     public static class GeoWorldBuild
     {
+        // Cells along a side of the heightmap, at most: 2048 (2049 heights, 0.49 m on a 1 km tile) shapes the craters of a
+        // battlefield (GeoCombatGround); a tile then holds 16 times the heights of 513, in memory and in its collider.
+        public const int MaxHeightCells = 2048;
+
         public static GenerationSettings Sanitize(GenerationSettings settings)
         {
             settings=JsonUtility.FromJson<GenerationSettings>(JsonUtility.ToJson(settings));
-            settings.heightResolution = Mathf.Clamp(Mathf.ClosestPowerOfTwo(settings.heightResolution-1),32,1024)+1;
+            settings.heightResolution = Mathf.Clamp(Mathf.ClosestPowerOfTwo(settings.heightResolution-1),32,MaxHeightCells)+1;
             settings.textureResolution = Mathf.Clamp(Mathf.ClosestPowerOfTwo(settings.textureResolution),32,1024);
             settings.roadPaintResolution = Mathf.Clamp(Mathf.ClosestPowerOfTwo(settings.roadPaintResolution > 0 ? settings.roadPaintResolution : 2048),32,4096);
             settings.pathStep = Mathf.Clamp(settings.pathStep,0.5f,10);
@@ -34,7 +38,7 @@ namespace GeoWorld.Editor
         public static GenerationSettings TileSettings(GenerationSettings settings)
         {
             settings = JsonUtility.FromJson<GenerationSettings>(JsonUtility.ToJson(settings ?? new GenerationSettings()));
-            settings.heightResolution = Mathf.Clamp(Mathf.ClosestPowerOfTwo(settings.heightResolution - 1), 32, 1024) + 1;
+            settings.heightResolution = Mathf.Clamp(Mathf.ClosestPowerOfTwo(settings.heightResolution - 1), 32, MaxHeightCells) + 1;
             settings.pathStep = Mathf.Clamp(settings.pathStep, 0.5f, 10);
             settings.riverDepth = Mathf.Clamp(settings.riverDepth, 0.5f, 8);
             // Road meshes draw the roads: the paint under them needs no more detail than the ground (three RGBA maps
@@ -89,6 +93,17 @@ namespace GeoWorld.Editor
                 GeoTerrain.Grade(field,paths,settings);
                 if(settings.gradeRoads) roadNetwork.GradeJunctions(settings.roadShoulder);
                 if(roadNetwork.snappedEndpoints>0) notes.Add(roadNetwork.snappedEndpoints+" nearby road endpoints snapped into connections.");
+                // war craters, after the water and the roads (shores would fill them, grading would level them) and before the
+                // terrain, buildings and trees are made from the field, so all of them follow the craters
+                // trenches are drawn as meshes on the ground with its craters, as it was before their slots were cut under them
+                // (GeoTrenchMesh): a crater beside a trench shows on its spoil, and its rim does not rise through it
+                if(env.craters.Count>0) GeoCombatGround.Carve(field,env.craters,null,buildings,water,notes);
+                HeightField uncut=null;
+                if(env.trenches.Count>0)
+                {
+                    uncut=new HeightField(field.bounds,field.resolution);Array.Copy(field.heights,uncut.heights,field.heights.Length);
+                    GeoCombatGround.Carve(field,null,env.trenches,buildings,water,notes);
+                }
 
                 var go=new GameObject(tile!=null?"Geo World tile "+tile.index.x+", "+tile.index.y:
                     "Geo World - "+(string.IsNullOrEmpty(environmentPath)?"Buildings":new DirectoryInfo(Path.GetDirectoryName(Path.GetFullPath(environmentPath))).Name));
@@ -170,6 +185,7 @@ namespace GeoWorld.Editor
                 // instancing on the material: a build strips the instancing variants of a shader when no material has it on, and a terrain drawn
                 // instanced (above) with its shader stripped is not drawn at all
                 if(terrainShader!=null) root.terrain.materialTemplate=context.Save(new Material(terrainShader){name="Terrain URP",enableInstancing=true});
+                if(uncut!=null) Trenches(root,env,uncut,field,tile,settings,context,notes);
 
                 var roads=Group("Roads - select a road to edit",root.transform);
                 var rivers=Group("Rivers",root.transform);
@@ -569,6 +585,38 @@ namespace GeoWorld.Editor
             }
         }
 
+        // Trenches in 3D (GeoTrenchMesh): their meshes under a "Trenches" group, an object for each chunk with a collider, the
+        // ground drawn with the terrain's material (a pass for every four of its layers; GeoTrenchGround keeps it so in play),
+        // the walls the wall atlas.
+        static void Trenches(GeoWorldRoot root,EnvironmentData env,HeightField uncut,HeightField field,GeoTileJob tile,GenerationSettings settings,BuildContext context,List<string> notes)
+        {
+            var terrain=root.terrain;
+            if(!terrain)return;
+            var size=terrain.terrainData.size;var corner=terrain.transform.position;
+            var area=tile!=null?new Rect(tile.core.minX,tile.core.minZ,tile.core.Width,tile.core.Depth):new Rect(env.bounds.minX,env.bounds.minZ,env.bounds.Width,env.bounds.Depth);
+            float cell=Mathf.Max(field.bounds.Width,field.bounds.Depth)/(field.resolution-1);
+            var ground=context.TrenchGround(terrain);
+            var chunks=GeoTrenchMesh.Build(env.trenches,uncut.Sample,field.Sample,area,new Rect(corner.x,corner.z,size.x,size.z),cell,settings.chunkSize,ground.Length);
+            if(chunks.Count==0)return;
+            var group=Group("Trenches",root.transform);
+            group.gameObject.AddComponent<GeoTrenchGround>();
+            // sub-mesh 0 the ground's first pass, 1 the walls, 2.. its further passes
+            var materials=new Material[ground.Length+1];
+            materials[0]=ground[0];materials[1]=context.TrenchWalls;
+            for(int i=1;i<ground.Length;i++)materials[i+1]=ground[i];
+            long triangles=0;
+            foreach(var chunk in chunks)
+            {
+                // texture coordinates in 32 bits: the ground's are the terrain's (0-1 over a kilometre), 16 bits would shift them by metres
+                var mesh=context.Save(GeoMeshCompression.Compact(chunk.mesh,0));
+                var go=new GameObject(mesh.name);go.transform.SetParent(group,false);
+                go.AddComponent<MeshFilter>().sharedMesh=mesh;go.AddComponent<MeshRenderer>().sharedMaterials=materials;
+                go.AddComponent<MeshCollider>().sharedMesh=mesh;
+                triangles+=(mesh.GetIndexCount(0)+mesh.GetIndexCount(1))/3;
+            }
+            notes.Add($"Trenches in 3D: {chunks.Count} meshes, {triangles:N0} triangles (walls, floor, spoil and apron; the terrain under the slots cut lower).");
+        }
+
         class BuildContext
         {
             readonly Action<Object> save;
@@ -580,6 +628,55 @@ namespace GeoWorld.Editor
             public BuildContext(Action<Object> save)
             {this.save=save;shader=GeoAssets.Shader("Universal Render Pipeline/Lit")??GeoAssets.Shader("Standard");}
             public T Save<T>(T asset) where T:Object {save(asset);return asset;}
+            // the trenches' ground: copies of the terrain's material that draw a mesh as the terrain draws itself, a pass for every
+            // four of its layers (GeoTrenchGround)
+            public Material[] TrenchGround(Terrain terrain)
+            {
+                var passes=GeoTrenchGround.GroundMaterials(terrain,terrain.materialTemplate);
+                if(passes==null)return new[]{Mat("Trench ground",new Color(0.36f,0.31f,0.24f),0.05f)};
+                for(int i=0;i<passes.Length;i++){passes[i].name=i==0?"Trench ground":"Trench ground (pass "+(i+1)+")";Save(passes[i]);}
+                return passes;
+            }
+            // the trenches' walls: the wall atlas (Textures/Trenches, Tools~/Trenches/trench_textures.py: cut soil in its horizons,
+            // boards behind posts, wattle; GeoTrenchMesh maps each stretch of wall to a strip of it), or bare earth without it
+            public Material TrenchWalls
+            {
+                get
+                {
+                    const string name="Trench walls";
+                    if(materials.TryGetValue(name,out var cached))return cached;
+                    var material=new Material(shader){name=name,enableInstancing=true};
+                    var atlas=GeoAssets.Load<Texture2D>(GeoPaths.Package+"/Textures/Trenches/trench_walls_albedo.png");
+                    if(atlas)
+                    {
+                        material.SetTexture("_BaseMap",atlas);material.mainTexture=atlas;material.color=Color.white;
+                        if(material.HasProperty("_BaseColor"))material.SetColor("_BaseColor",Color.white);
+                        var atlasNormal=GeoAssets.Load<Texture2D>(GeoPaths.Package+"/Textures/Trenches/trench_walls_normal.png");
+                        if(atlasNormal){material.SetTexture("_BumpMap",atlasNormal);material.EnableKeyword("_NORMALMAP");material.SetFloat("_BumpScale",1f);}
+                        // R metallic (0), G occlusion, A smoothness: URP Lit's metallic-gloss map and occlusion map both
+                        var atlasMask=GeoAssets.Load<Texture2D>(GeoPaths.Package+"/Textures/Trenches/trench_walls_mask.png");
+                        if(atlasMask)
+                        {
+                            material.SetTexture("_MetallicGlossMap",atlasMask);material.EnableKeyword("_METALLICSPECGLOSSMAP");
+                            material.SetFloat("_Metallic",0);material.SetFloat("_Smoothness",1);material.SetFloat("_SmoothnessTextureChannel",0);
+                            material.SetTexture("_OcclusionMap",atlasMask);material.EnableKeyword("_OCCLUSIONMAP");material.SetFloat("_OcclusionStrength",1);
+                        }
+                        materials[name]=Save(material);return material;
+                    }
+                    var tint=new Color(0.5f,0.45f,0.4f);
+                    material.color=tint;if(material.HasProperty("_BaseColor"))material.SetColor("_BaseColor",tint);
+                    var diffuse=GeoTerrainTextures.HasLayer(2)?GeoAssets.Load<Texture2D>(GeoTerrainTextures.DiffusePath(2)):null;
+                    if(diffuse)
+                    {
+                        var scale=new Vector2(1/2.4f,1/2.4f);
+                        material.SetTexture("_BaseMap",diffuse);material.mainTexture=diffuse;material.SetTextureScale("_BaseMap",scale);
+                        var normal=GeoAssets.Load<Texture2D>(GeoTerrainTextures.NormalPath(2));
+                        if(normal){material.SetTexture("_BumpMap",normal);material.SetTextureScale("_BumpMap",scale);material.EnableKeyword("_NORMALMAP");material.SetFloat("_BumpScale",1f);}
+                    }
+                    material.SetFloat("_Smoothness",0.06f);
+                    materials[name]=Save(material);return material;
+                }
+            }
             Material Mat(string name,Color color,float smoothness=0.1f,bool texture=false)
             {
                 if(materials.TryGetValue(name,out var cached))return cached;

@@ -78,6 +78,9 @@ namespace GeoWorld
                 return new Result { exportJson = json, folder = env };
             }
             if (File.Exists(stamp)) File.Delete(stamp);
+            // the combat bake of what was there before belongs to that export, not to the one being extracted
+            string combat = Path.Combine(env, "combat.json");
+            if (File.Exists(combat)) File.Delete(combat);
             string arguments = $"cli.py --bbox {box} --out \"{json}\" --environment \"{env}\" --machine" + (radar ? "" : " --no-radar");
             var watch = Stopwatch.StartNew();
             var result = new Result { exportJson = json, folder = env };
