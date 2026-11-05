@@ -30,8 +30,20 @@ namespace _Game.Scripts.World
 
         public static Seasons Instance { get; private set; }
 
-        /// <summary>Сменилась пора года или снег (после Apply).</summary>
+        /// <summary>
+        /// Сменилась пора года или снег (в кадре после Apply): трава тайлов и точка взлёта пересчитываются (у точки — секунды
+        /// в одном кадре).
+        /// </summary>
         public static event Action Changed;
+
+        /// <summary>
+        /// Пора года или снег сменятся в следующем кадре (Changed): индикатор загрузки показывается заранее и успевает
+        /// отрисоваться до пересчёта. Шейдеры получают новую пору сразу.
+        /// </summary>
+        public static event Action Changing;
+
+        /// <summary>Changed ещё впереди (пора уже другая, трава и точка взлёта — ещё прежние).</summary>
+        public bool ChangePending { get; private set; }
 
         public Season Current { get; private set; } = Season.Summer;
 
@@ -39,6 +51,7 @@ namespace _Game.Scripts.World
         public float SnowCover { get; private set; }
 
         private bool _hasPendingDate = true;
+        private int _changeFrame;
 
         public void Apply(Season season, float snowCover)
         {
@@ -50,8 +63,12 @@ namespace _Game.Scripts.World
             _hasPendingDate = true;
             TryApplyDate();
 
-            if (changed)
-                Changed?.Invoke();
+            if (!changed)
+                return;
+
+            ChangePending = true;
+            _changeFrame = Time.frameCount;
+            Changing?.Invoke();
         }
 
         /// <summary>Вода этого вида подо льдом: зимой стоячая (озеро, болото, водохранилище); река течёт и не замерзает.</summary>
@@ -94,6 +111,13 @@ namespace _Game.Scripts.World
         {
             if (_hasPendingDate)
                 TryApplyDate();
+
+            // не в кадре Apply: тот кадр с индикатором загрузки должен успеть отрисоваться
+            if (ChangePending && Time.frameCount > _changeFrame)
+            {
+                ChangePending = false;
+                Changed?.Invoke();
+            }
         }
 
         private void Publish()
@@ -164,6 +188,7 @@ namespace _Game.Scripts.World
         {
             Instance = null;
             Changed = null;
+            Changing = null;
             ResetGlobals();
         }
     }

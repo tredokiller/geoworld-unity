@@ -47,6 +47,8 @@ namespace _Game.Scripts.World
         // заново — ~2 мс (до 4), по одному тайлу за проверку
         private const float ShowMargin = 150f;
         private const float HideMargin = 400f;
+        // трава, которую ждёт индикатор смены поры года (NearDressed)
+        private const float NearReadyDistance = 300f;
         private const float CheckInterval = 0.25f;
         private const float RuntimeDataDestroyDelay = 2f;
         // фоновых расчётов тайлов одновременно и слоёв травы, что ложатся в копию за кадр (~3.5 мс каждый при 512²)
@@ -140,6 +142,8 @@ namespace _Game.Scripts.World
             public TerrainData StaleCopy;
             // пора года и снег, по которым посчитан тайл (SeasonKey)
             public int Season;
+            // сборка сломалась (Abandon): без травы до выгрузки
+            public bool Failed;
         }
 
         // Всё, что нужно расчёту в фоновом потоке: без объектов Unity.
@@ -215,6 +219,45 @@ namespace _Game.Scripts.World
 
         // Идёт расчёт или сборка тайла (GrassBenchmark ждёт, пока трава вокруг камеры досчитается).
         public bool Busy => _running.Count > 0 || _reading > 0 || _building != null || _showPending;
+
+        /// <summary>
+        /// Трава у камеры готова: каждый тайл не дальше дальности травы, но не дальше NearReadyDistance (+ShowMargin), одет и с
+        /// рендерером травы (или сломан — он без травы до выгрузки). Индикатор смены поры года ждёт этого, а не всех тайлов до
+        /// dressDistance: с травой на 1–3 км ждать пришлось бы почти все загруженные тайлы, дальняя дорисуется после.
+        /// </summary>
+        public bool NearDressed
+        {
+            get
+            {
+                if (!dressWorld || _profile == null || !_hasEye)
+                    return true;
+
+                float limit = Square(Mathf.Min(grassDistance, NearReadyDistance) + ShowMargin);
+
+                foreach (Terrain terrain in Terrain.activeTerrains)
+                {
+                    // тайл с точкой взлёта рисует её генератор
+                    if (terrain == null || terrain.terrainData == null || DistanceToTile(terrain, _eye) > limit ||
+                        CustomSpawnRuntimeEnvironmentGenerator.IsRuntimeCopy(terrain.terrainData))
+                        continue;
+
+                    if (!_tiles.TryGetValue(terrain, out Tile tile))
+                        return false;
+
+                    if (tile.Failed)
+                        continue;
+
+                    // считается, читается спутник или собирается копия
+                    if (tile.Copy == null || tile.Job != null || tile.Counts != null)
+                        return false;
+
+                    if (tile.Terrain.terrainData == tile.Source || NatureRendererTerrain.GrassShown(terrain) == false)
+                        return false;
+                }
+
+                return true;
+            }
+        }
 
         public void Configure(FlyPointEnvironmentProfile profile) => _profile = profile;
 
@@ -608,6 +651,7 @@ namespace _Game.Scripts.World
         private void Abandon(Tile tile)
         {
             _building = null;
+            tile.Failed = true;
             tile.Counts = null;
 
             if (tile.Copy != null && (tile.Terrain == null || tile.Terrain.terrainData != tile.Copy))
@@ -1191,9 +1235,9 @@ namespace _Game.Scripts.World
         // генератор точки как исходные данные тайла, не трогаем: он вернёт её тайлу, а уберёт её выгрузка тайла.
         private void UndressAll()
         {
-            for (int i = _running.Count - 1; i >= 0; i--)
-                FinishJob(_running[i], wait: true);
-
+            // идущие расчёты не ждём (до ~10 с в главном потоке при смене поры года): их тайлы ниже уходят из _tiles, и
+            // результат, когда досчитается, никому не нужен
+            _running.Clear();
             _building = null;
             _gone.Clear();
 

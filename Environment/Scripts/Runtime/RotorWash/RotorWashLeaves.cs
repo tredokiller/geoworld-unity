@@ -73,10 +73,10 @@ namespace _Game.Scripts.Drone
         private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
         // сдутые листья — того же тона, что опад на земле (SeasonFoliage.hlsl): множитель (sRGB) ведёт текстуру листьев
         // тополя (линейная средняя 0.29, 0.18, 0.10) к среднему тону поры — осенью к средней из кучек (жёлтых, рыжих,
-        // ржавых, бурых, красных), летом к тёмно-бурым прошлогодним, весной к выцветшим серо-бурым, зимой к мокрым
+        // ржавых, бурых, красных), летом к тёмным серо-бурым прошлогодним, весной к выцветшим серо-бежевым, зимой к мокрым
         private static readonly Color AutumnLeafTint = new(0.72f, 0.68f, 0.55f);
-        private static readonly Color SpringLeafTint = new(0.63f, 0.71f, 0.81f);
-        private static readonly Color SummerLeafTint = new(0.58f, 0.64f, 0.7f);
+        private static readonly Color SpringLeafTint = new(0.59f, 0.72f, 0.88f);
+        private static readonly Color SummerLeafTint = new(0.49f, 0.58f, 0.69f);
         private static readonly Color WinterLeafTint = new(0.53f, 0.57f, 0.63f);
         // скорость падения листа в тихом воздухе (м/с)
         private static readonly Vector2 FallSpeed = new(0.7f, 1.4f);
