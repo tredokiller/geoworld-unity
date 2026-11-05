@@ -1,5 +1,7 @@
 using System;
+#if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
+#endif
 using UnityEngine;
 
 namespace _Game.Scripts.Locations.FlyPoints
@@ -10,9 +12,15 @@ namespace _Game.Scripts.Locations.FlyPoints
         [field: SerializeField] public string Name { private set; get; } = "Rocks";
         [field: SerializeField] public bool AsTerrainTrees { private set; get; }
         [field: SerializeField] public bool NearTreeGroups { private set; get; }
-        [field: SerializeField, MinMaxSlider(0f, 400f, true)] public Vector2 RadiusRange { private set; get; } = new(20f, 190f);
+#if ODIN_INSPECTOR
+        [field: MinMaxSlider(0f, 400f, true)]
+#endif
+        [field: SerializeField] public Vector2 RadiusRange { private set; get; } = new(20f, 190f);
         [field: SerializeField, Min(0f)] public float ClustersPerHectare { private set; get; } = 1f;
-        [field: SerializeField, MinMaxSlider(1, 30, true)] public Vector2Int ClusterSize { private set; get; } = new(2, 5);
+#if ODIN_INSPECTOR
+        [field: MinMaxSlider(1, 30, true)]
+#endif
+        [field: SerializeField] public Vector2Int ClusterSize { private set; get; } = new(2, 5);
         [field: SerializeField, Min(0.5f)] public float ClusterRadius { private set; get; } = 5f;
         [field: SerializeField, Range(0.1f, 2f)] public float Spacing { private set; get; } = 0.8f;
         // только на вытоптанной площадке и тропинке (камешки)

@@ -1,6 +1,8 @@
 using System;
 using _Game.Scripts.Enums;
+#if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
+#endif
 using UnityEngine;
 
 namespace _Game.Scripts.Locations.FlyPoints
@@ -8,14 +10,23 @@ namespace _Game.Scripts.Locations.FlyPoints
     [Serializable]
     public class FlyPointDetailEntry
     {
-        [field: SerializeField, AssetsOnly] public GameObject Prototype { private set; get; }
+#if ODIN_INSPECTOR
+        [field: AssetsOnly]
+#endif
+        [field: SerializeField] public GameObject Prototype { private set; get; }
         [field: SerializeField, Min(0f)] public float DensityPerSquareMeter { private set; get; } = 1f;
         [field: SerializeField, Range(0f, 1f)] public float PatchThreshold { private set; get; }
         [field: SerializeField, Min(1f)] public float PatchScale { private set; get; } = 12f;
         [field: SerializeField, Range(0f, 1f)] public float SoilDensity { private set; get; } = 0.25f;
         [field: SerializeField, Min(0f)] public float MinRadius { private set; get; } = 2f;
-        [field: SerializeField, MinMaxSlider(0.1f, 3f, true)] public Vector2 WidthRange { private set; get; } = new(0.8f, 1.2f);
-        [field: SerializeField, MinMaxSlider(0.1f, 3f, true)] public Vector2 HeightRange { private set; get; } = new(0.8f, 1.2f);
+#if ODIN_INSPECTOR
+        [field: MinMaxSlider(0.1f, 3f, true)]
+#endif
+        [field: SerializeField] public Vector2 WidthRange { private set; get; } = new(0.8f, 1.2f);
+#if ODIN_INSPECTOR
+        [field: MinMaxSlider(0.1f, 3f, true)]
+#endif
+        [field: SerializeField] public Vector2 HeightRange { private set; get; } = new(0.8f, 1.2f);
         [field: SerializeField] public Color HealthyColor { private set; get; } = Color.white;
         [field: SerializeField] public Color DryColor { private set; get; } = new(0.85f, 0.8f, 0.6f);
         [field: SerializeField, Min(0f)] public float NoiseSpread { private set; get; } = 0.3f;

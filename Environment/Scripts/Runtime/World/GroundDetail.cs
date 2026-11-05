@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using GeoWorld;
+#if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
+#endif
 using UnityEngine;
 using UnityEngine.Experimental.Rendering;
 
@@ -47,7 +49,9 @@ namespace _Game.Scripts.World
         private bool _has;
         private bool _initialized;
 
+#if ODIN_INSPECTOR
         [ShowInInspector, LabelText("Фактура земли")]
+#endif
         public bool Visible
         {
             get => _visible;

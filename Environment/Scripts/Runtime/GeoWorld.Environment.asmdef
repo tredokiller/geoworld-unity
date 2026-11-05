@@ -16,8 +16,7 @@
     "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [
-        "ENVIRO_3",
-        "ODIN_INSPECTOR"
+        "ENVIRO_3"
     ],
     "versionDefines": [],
     "noEngineReferences": false
