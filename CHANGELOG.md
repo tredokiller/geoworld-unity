@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.19.2
+
+- The environment layer without Odin Inspector: `GeoWorld.Environment` and `GeoWorld.Environment.Editor` need only `ENVIRO_3`. They needed `ODIN_INSPECTOR` too, and a project without Odin skipped them without a word: it had no world dressing at all. Odin's attributes are behind `#if ODIN_INSPECTOR`, so a project with Odin sees the same Inspectors; without it `Title` is Unity's `Header`, `Button` (Ground Wetness: wet now, dry now) is a `ContextMenu` item, and `MinMaxSlider`, `AssetsOnly` and `ShowInInspector` are left out. Serialized fields are unchanged.
+- The camera the world is seen through (`GeoWorldCamera`): a game that renders the world through a camera that is not `Camera.main` (an FPV camera rendering into a texture, one of several drones) gives it with `GeoWorldCamera.Use(camera)` and lets it go with `Release(camera)` (only the camera that is given: the next one is often given before the last one lets go). `Current` is that camera while it is on, otherwise `Camera.main`, as before. The environment layer follows it (grass dressing, forest floor, ground detail, wetness, road map, shadow range, water sky and shore, cloud shadows, rain; aerial haze takes it before Enviro's camera), and so do `GeoTileStreamer` and `GeoWorldPackageStreamer` without a target of their own. A game that gives none sees no change. `GeoBenchmark` keeps `Camera.main`: it flies that camera itself.
+- The world map data bake (roads, fields, leaf types: **Bake World Map Data**, **Bake Road / Field / Tree Leaf Areas**, the button of `WorldMapData`) stops when an export of the world is not on this machine (`WorldMapBaker.RequireExports`, `MissingExportException`), with an error that names the missing `environment.json` files, and writes nothing. Without any export it kept the old data with a note in the log; without some of a world's exports it baked the others and wrote the world's data without the missing exports' roads, fields and woods. After tile generation the world's report says the bake was not made and why.
+
 ## 1.19.1
 
 - From the Interceptor Drones game (changes made there after the move):
