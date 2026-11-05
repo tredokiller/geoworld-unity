@@ -22,7 +22,8 @@ namespace GeoWorld
         // The terrain's (or object's) Nature Renderer component, or null. By its type: a lookup by name (GetComponent("NatureRenderer"))
         // finds a script only by the class registry of the project's Assets, and with Nature Renderer's DLL in this package it
         // found nothing on terrains that had one, so a second was added (refused: one per object) and the grass of 9 of 10
-        // tiles failed in the Interceptor Drones game.
+        // tiles failed in the Interceptor Drones game; with the package's tests compiled the name also met their fake
+        // NatureRenderer first and package tiles got no trees or grass.
         public static Component Of(Component owner)
         {
             if (!owner) return null;

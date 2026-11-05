@@ -91,7 +91,7 @@ namespace GeoWorld.Editor
         internal static readonly string[] Shaders =
         {
             "Universal Render Pipeline/Lit", "Universal Render Pipeline/Simple Lit", "Universal Render Pipeline/Terrain/Lit", "GeoWorld/Road", "GeoWorld/Water",
-            "Hidden/TerrainEngine/GenerateNormalmap",
+            "GeoWorld/Wire", "GeoWorld/Home", "Hidden/TerrainEngine/GenerateNormalmap",
         };
 
         // What a package can refer to: meshes, materials, textures, prefabs (their root), the library assets and text stamps. Not
@@ -139,6 +139,8 @@ namespace GeoWorld.Editor
             Make("Terrain", "Universal Render Pipeline/Terrain/Lit");
             Make("Terrain normal map", "Universal Render Pipeline/Terrain/Lit", "_NORMALMAP");
             Make("Water", "GeoWorld/Water");
+            Make("Wire", "GeoWorld/Wire");
+            Make("Home", "GeoWorld/Home", "_NORMALMAP");
             return result;
         }
 

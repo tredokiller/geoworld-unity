@@ -287,12 +287,15 @@ float AsphaltVariant(float block, half wear)
     return clamp(round(wear * (count - 1) + (RoadHash(float2(block, 3), 81u) - 0.5) * 1.3), 0, count - 1);
 }
 
-// Полотно дороги поверх земли. road — доля полотна (снег на нём укатан), hollow — где на нём собирается вода (лужи).
+// Полотно дороги поверх земли. road — доля полотна (снег на нём укатан), hollow — где на нём собирается вода (лужи),
+// paved — доля асфальта и плитки (их рвут воронки, GroundRoadScars).
 void GroundRoad(inout InputData inputData, float2 dpdx, float2 dpdy, inout half3 albedo, inout half smoothness, inout half occlusion,
-    out half road, out half hollow)
+    out half road, out half hollow, out half paved)
 {
     road = 0;
     hollow = 0;
+    paved = 0;
+    half pavedShare = 0;
     float2 xz = inputData.positionWS.xz;
     RoadPoint r = SampleRoad(xz);
 
@@ -383,6 +386,7 @@ void GroundRoad(inout InputData inputData, float2 dpdx, float2 dpdy, inout half3
         half carriageway = max(1 - smoothstep(h - (r.curb ? 0.02 : 0.08), h + (r.curb ? 0.02 : 0.08), ax + edgeNoise), r.junction);
         half open = 1 - r.junction;
         cover = carriageway;
+        pavedShare = carriageway;
 
         [branch] if (_RoadAsphalt.z > 0.5)
         {
@@ -510,6 +514,7 @@ void GroundRoad(inout InputData inputData, float2 dpdx, float2 dpdy, inout half3
 
     cover *= r.window * r.fade;
     road = cover;
+    paved = r.kind == ROAD_PAVING ? cover : pavedShare * r.window * r.fade;
     hollow *= cover;
     albedo = lerp(albedo, colour, cover);
     smoothness = lerp(smoothness, surfaceSmoothness, cover);

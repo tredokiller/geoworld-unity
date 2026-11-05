@@ -169,7 +169,10 @@ namespace GeoWorld.Editor.Tests
                 if (hits.Count == 0) continue;
                 // the surface seen from above (another trench's edge may turn down under the terrain at the same place)
                 float seen = hits.Max();
-                bool inSlot = trenches.Any(t => Distance(t, p) < GeoTrenchSection.Of(t, 1f).half);
+                // the slot sways off the centreline by up to Sway: its edge band is neither surely slot nor surely spoil
+                bool inSlot = trenches.Any(t => Distance(t, p) < GeoTrenchSection.Of(t, 1f).half - GeoTrenchSection.Sway);
+                bool nearEdge = trenches.Any(t => Mathf.Abs(Distance(t, p) - GeoTrenchSection.Of(t, 1f).half) <= GeoTrenchSection.Sway);
+                if (!inSlot && nearEdge) continue;
                 if (inSlot)
                 {
                     // every corner of the height cell under p (any triangle of it) stands below the slot
@@ -240,6 +243,46 @@ namespace GeoWorld.Editor.Tests
             long east = Count(Build(trenches, uncut, field, new Rect(0, -32, 32, 64)));
             Assert.That(west + east, Is.EqualTo(whole));
             Assert.That(west, Is.GreaterThan(0)); Assert.That(east, Is.GreaterThan(0));
+        }
+
+        // a dugout dug out of the fire trench gets a roof: logs (the atlas's timber strip) across its pit, and, unless all of it
+        // fell in, soil over them standing above the ground; logs over a pit never stand below its floor
+        [Test] public void Dugout_HasARoofOfLogs()
+        {
+            var field = Field(); var uncut = Copy(field);
+            var trenches = new List<TrenchFeature>
+            {
+                Trench(GeoTrenchKind.Fire, 1f, 1.8f, 0.2f, new Vector2(-20, -1), new Vector2(20, -1)),
+            };
+            // dugouts at several places (each its own state by its place)
+            for (int i = 0; i < 6; i++) trenches.Add(Trench(GeoTrenchKind.Dugout, 2.2f, 2.0f, 0.4f, new Vector2(-15 + i * 6, -1), new Vector2(-15 + i * 6, 5)));
+            GeoCombatGround.Carve(field, new List<CraterFeature>(), trenches, null, null, new List<string>());
+            var meshes = Build(trenches, uncut, field, new Rect(-32, -32, 64, 64));
+            int logs = 0, lids = 0;
+            float lowestLog = float.MaxValue;
+            float logV0 = 4f / GeoTrenchMesh.WallStrips;
+            foreach (var mesh in meshes)
+            {
+                var v = mesh.vertices; var uv = mesh.uv;
+                var w = mesh.GetTriangles(1);
+                for (int i = 0; i < w.Length; i += 3)
+                    if (uv[w[i]].y > logV0 && uv[w[i + 1]].y > logV0 && uv[w[i + 2]].y > logV0)
+                    {
+                        logs++;
+                        foreach (int j in new[] { w[i], w[i + 1], w[i + 2] }) lowestLog = Mathf.Min(lowestLog, v[j].y - uncut.Sample(v[j].x, v[j].z));
+                    }
+                var g = mesh.GetTriangles(0);
+                for (int i = 0; i < g.Length; i += 3)
+                {
+                    var c = (v[g[i]] + v[g[i + 1]] + v[g[i + 2]]) / 3f;
+                    // over a dugout's pit (x near a dugout's line, y between 1 and 4) and above the ground: the lid
+                    bool overPit = Mathf.Abs(Mathf.Repeat(c.x + 15, 6) - (Mathf.Repeat(c.x + 15, 6) > 3 ? 6 : 0)) < 0.8f && c.z > 1f && c.z < 4f;
+                    if (overPit && c.y > uncut.Sample(c.x, c.z) + 0.1f) lids++;
+                }
+            }
+            Assert.That(logs, Is.GreaterThan(200), "log triangles");
+            Assert.That(lids, Is.GreaterThan(20), "lid triangles over the pits");
+            Assert.That(lowestLog, Is.GreaterThan(-GeoTrenchSection.Of(trenches[1], 1f).depth), "a log below the pit's floor");
         }
 
         [Test] public void Trenches_OpenIntoEachOther()

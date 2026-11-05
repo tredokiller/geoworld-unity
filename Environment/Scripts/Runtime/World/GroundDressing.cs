@@ -144,6 +144,8 @@ namespace _Game.Scripts.World
             public int Season;
             // сборка сломалась (Abandon): без травы до выгрузки
             public bool Failed;
+            // руины у тайла (с полосой 25 м), с которыми он посчитан (KeyOf): руины соседа приходят с его тайлом позже
+            public int RuinKey;
         }
 
         // Всё, что нужно расчёту в фоновом потоке: без объектов Unity.
@@ -161,6 +163,10 @@ namespace _Game.Scripts.World
             // в тех же узлах: 1 — поле брошено (там шли бои, CraterField.AbandonedAt): растёт как луг и бурьян, а не стерня;
             // null — брошенных нет
             public float[] Abandoned;
+            // в тех же узлах: пыль и крошка вокруг руин (RuinField, как RuinMap): трава и цветы там реже; null — руин рядом нет
+            public float[] Ruins;
+            // руины у тайла (копия RuinField): у их стен — обломки (записи NearRuins); null — руин рядом нет
+            public RuinField.Ruin[] RuinList;
             // оси дорог у тайла (RoadAreas); RoadsKnown — тайл в выгрузках дорог, клетки дорог карты земель не в счёт
             public RoadAreas.Segment[] Roads;
             public bool RoadsKnown;
@@ -201,6 +207,8 @@ namespace _Game.Scripts.World
             public bool OnGround;
             // пень, бревно, штабель: сколько занимает на земле (DetailSpacing), 0 — трава и мелочь, разводить не нужно
             public float Apart;
+            // обломки у руин (FlyPointDetailEntry.NearRuins): плотность — по близости стены руины (Rubble), земля и спутник не в счёт
+            public bool NearRuins;
             public int Seed;
         }
 
@@ -310,6 +318,7 @@ namespace _Game.Scripts.World
             _nextCheck = Time.unscaledTime + CheckInterval;
             ForgetUnloadedTiles();
             ReplaceStaleCopies();
+            RedressForRuins();
 
             if (!dressWorld || _profile == null)
                 return;
@@ -460,6 +469,62 @@ namespace _Game.Scripts.World
 
             _eye = eye;
             _hasEye = true;
+        }
+
+        // Руины приходят с тайлами: у тайла, одетого раньше соседа, у общего края не было полосы обломков и поредевшей
+        // травы от руин соседа, и он оставался таким до выгрузки. Когда RuinField меняется, тайл, у которого (с полосой
+        // 25 м) руины теперь другие, раздевается и одевается снова. Тайл, который держит генератор точки, не трогаем.
+        private int _ruinVersion = -1;
+        private static readonly List<RuinField.Ruin> KeyRuins = new();
+
+        private static int KeyOf(List<RuinField.Ruin> ruins)
+        {
+            unchecked
+            {
+                int key = ruins.Count;
+
+                foreach (RuinField.Ruin r in ruins)
+                    key = key * 31 + r.centre.GetHashCode() * 7 + (int)r.state;
+
+                return key;
+            }
+        }
+
+        private static int RuinKeyOf(Terrain terrain)
+        {
+            Vector3 origin = terrain.transform.position, size = terrain.terrainData.size;
+            RuinField.Query(new Rect(origin.x, origin.z, size.x, size.z), 25f, KeyRuins);
+            return KeyOf(KeyRuins);
+        }
+
+        private void RedressForRuins()
+        {
+            if (RuinField.Version == _ruinVersion)
+                return;
+
+            _ruinVersion = RuinField.Version;
+            _gone.Clear();
+
+            foreach (KeyValuePair<Terrain, Tile> pair in _tiles)
+            {
+                Tile tile = pair.Value;
+
+                if (pair.Key == null || tile.Job != null || tile.Copy == null || tile.Source == null || pair.Key.terrainData != tile.Copy ||
+                    tile.Counts != null || RuinKeyOf(pair.Key) == tile.RuinKey)
+                    continue;
+
+                NatureRendererTerrain.SwapGrass(pair.Key, tile.Source);
+                TerrainCollider collider = pair.Key.GetComponent<TerrainCollider>();
+
+                if (collider != null && collider.terrainData == tile.Copy)
+                    collider.terrainData = tile.Source;
+
+                Destroy(tile.Copy, RuntimeDataDestroyDelay);
+                _gone.Add(pair.Key);
+            }
+
+            foreach (Terrain terrain in _gone)
+                _tiles.Remove(terrain);
         }
 
         private static int SeasonKey() =>
@@ -696,6 +761,8 @@ namespace _Game.Scripts.World
                 int prototype = instances[i].prototypeIndex;
                 bool conifer = prototype >= 0 && prototype < conifers.Length && conifers[prototype];
                 treeLitter[i] = TreeLitterWeight(conifer, season == _Game.Scripts.Enums.Season.Autumn && !conifer && ForestFloor.BareInAutumn(trees[i].x, trees[i].y));
+                // посечённое войной (WarMap.TreeStrip, как шейдер деревьев) — листва и сучья под ним, сколько сорвано
+                treeLitter[i] = Mathf.Lerp(treeLitter[i], 1f, WarMap.TreeStrip(trees[i].x, trees[i].y));
             }
 
             for (int i = 0; i < details.Length; i++)
@@ -719,6 +786,7 @@ namespace _Game.Scripts.World
                     UnderSnow = detail.HiddenBySnow(season),
                     OnGround = detail.AlignToGround > 0f,
                     Apart = detail.KeepApart ? DetailSpacing.Radius(detail.Prototype) * detail.WidthRange.y : 0f,
+                    NearRuins = detail.NearRuins,
                     Seed = 7919 * (i + 1)
                 };
             }
@@ -740,6 +808,8 @@ namespace _Game.Scripts.World
                     Land = ReadLand(origin, size, out int landCells, out float[] abandoned),
                     LandCells = landCells,
                     Abandoned = abandoned,
+                    Ruins = ReadRuins(origin, size, landCells),
+                    RuinList = FoundRuins.Count > 0 ? FoundRuins.ToArray() : null,
                     Roads = ReadRoads(origin, size, out bool roadsKnown),
                     RoadsKnown = roadsKnown,
                     Craters = ReadCraters(origin, size),
@@ -754,6 +824,8 @@ namespace _Game.Scripts.World
                 }
             };
 
+            // руины, с которыми тайл посчитан (тот же запрос, что у ReadRuins): сменятся — тайл оденется заново
+            tile.RuinKey = KeyOf(FoundRuins);
             watch.Stop();
             tile.MainMilliseconds = watch.Elapsed.TotalMilliseconds;
             return tile;
@@ -872,11 +944,25 @@ namespace _Game.Scripts.World
 
             byte[][] counts = new byte[input.Entries.Length][];
 
+            // обломки у стен руин (записи NearRuins), по ячейкам — не по узлам карты земель: полоса у стены уже 10 м
+            float[] rubble = input.RuinList != null && System.Array.Exists(input.Entries, candidate => candidate.NearRuins)
+                ? Rubble(input.RuinList, input.Origin, n, cellX, cellZ)
+                : null;
+
             for (int e = 0; e < input.Entries.Length; e++)
             {
                 Entry entry = input.Entries[e];
                 byte[] layer = new byte[n * n];
                 counts[e] = layer;
+
+                if (entry.NearRuins)
+                {
+                    if (rubble != null)
+                        PlaceRubble(entry, input, rubble, road, snowFree, steepness, layer, n, cellX, cellZ, cellArea);
+
+                    continue;
+                }
+
                 // множитель вида по земле: луг, поле и его край, лес, болото и берег, посёлок, дороги, голая земля, залежь
                 float[] landScales = hasLand ? LandGroups.EntryScales(input.Land, landCount, landCount, entry.Land, input.Abandoned) : null;
 
@@ -916,6 +1002,10 @@ namespace _Game.Scripts.World
 
                         if (entry.UnderSnow && snowFree != null)
                             expected *= snowFree[cell];
+
+                        // на пыли и крошке у руин трава и цветы реже (RuinMap рисует там серую пыль)
+                        if (input.Ruins != null && hasLand)
+                            expected *= 1f - 0.8f * LandGroups.Sample(input.Ruins, landCount, landCount, LandNode(x, n, input.LandCells), gz);
 
                         if (entry.OnGround && steepness != null)
                             expected *= FlyPointDetailEntry.GroundSlopeScale(steepness[cell]);
@@ -1043,6 +1133,162 @@ namespace _Game.Scripts.World
             }
 
             return land;
+        }
+
+        // Пыль и крошка вокруг руин (RuinField; та же пыль, что у RuinMap) в узлах решётки земли, на главном потоке.
+        // null — руин рядом нет (или у мира нет карты земель).
+        private static readonly List<RuinField.Ruin> FoundRuins = new();
+
+        // Обломки у руин по ячейкам слоя (записи NearRuins): у стены разрушенного здания 1, тяжело повреждённого 0.7,
+        // повреждённого 0.25, к 3 м + 0.12 высоты (до 10 м) — нуль, по квадрату расстояния; внутри контура нет. Фоновый
+        // поток: только массивы и RuinField.Distance. null — ни одной ячейки у руин.
+        private static float[] Rubble(RuinField.Ruin[] ruins, Vector2 origin, int n, float cellX, float cellZ)
+        {
+            var result = new float[n * n];
+            var inside = new bool[n * n];
+            bool any = false;
+
+            // inside any outline: none (a neighbour's band reached into the footprint of a ruin standing next to it)
+            foreach (RuinField.Ruin r in ruins)
+            {
+                int ix0 = Mathf.Max(0, Mathf.FloorToInt((r.bounds.xMin - origin.x) / cellX));
+                int ix1 = Mathf.Min(n - 1, Mathf.FloorToInt((r.bounds.xMax - origin.x) / cellX));
+                int iz0 = Mathf.Max(0, Mathf.FloorToInt((r.bounds.yMin - origin.y) / cellZ));
+                int iz1 = Mathf.Min(n - 1, Mathf.FloorToInt((r.bounds.yMax - origin.y) / cellZ));
+
+                for (int z = iz0; z <= iz1; z++)
+                for (int x = ix0; x <= ix1; x++)
+                    if (RuinField.Distance(r, new Vector2(origin.x + (x + 0.5f) * cellX, origin.y + (z + 0.5f) * cellZ)) <= 0.3f)
+                        inside[z * n + x] = true;
+            }
+
+            foreach (RuinField.Ruin r in ruins)
+            {
+                float peak = r.state >= GeoConditionState.Destroyed ? 1f : r.state >= GeoConditionState.HeavilyDamaged ? 0.7f : 0.25f;
+                float reach = Mathf.Min(10f, 3f + 0.12f * r.height);
+                int x0 = Mathf.Max(0, Mathf.FloorToInt((r.bounds.xMin - reach - origin.x) / cellX));
+                int x1 = Mathf.Min(n - 1, Mathf.FloorToInt((r.bounds.xMax + reach - origin.x) / cellX));
+                int z0 = Mathf.Max(0, Mathf.FloorToInt((r.bounds.yMin - reach - origin.y) / cellZ));
+                int z1 = Mathf.Min(n - 1, Mathf.FloorToInt((r.bounds.yMax + reach - origin.y) / cellZ));
+
+                for (int z = z0; z <= z1; z++)
+                for (int x = x0; x <= x1; x++)
+                {
+                    var p = new Vector2(origin.x + (x + 0.5f) * cellX, origin.y + (z + 0.5f) * cellZ);
+                    if (inside[z * n + x])
+                        continue;
+
+                    float d = RuinField.Distance(r, p);
+
+                    if (d <= 0.3f || d >= reach)
+                        continue;
+
+                    float t = 1f - d / reach, v = peak * t * t;
+                    int i = z * n + x;
+
+                    if (v > result[i])
+                    {
+                        result[i] = v;
+                        any = true;
+                    }
+                }
+            }
+
+            return any ? result : null;
+        }
+
+        // Слой записи обломков: плотность × близость стены руины; на полотне дороги вдвое реже, зимой мелочь под снегом.
+        private static void PlaceRubble(Entry entry, Input input, float[] rubble, float[] road, float[] snowFree, float[] steepness, byte[] layer,
+            int n, float cellX, float cellZ, float cellArea)
+        {
+            for (int z = 0; z < n; z++)
+            {
+                float worldZ = input.Origin.y + (z + 0.5f) * cellZ;
+
+                for (int x = 0; x < n; x++)
+                {
+                    int cell = z * n + x;
+                    float near = rubble[cell];
+
+                    if (near <= 0.001f)
+                        continue;
+
+                    float worldX = input.Origin.x + (x + 0.5f) * cellX;
+                    float expected = entry.Density * entry.Season * input.Density * cellArea * near;
+
+                    if (road != null)
+                        expected *= 1f - 0.5f * road[cell];
+
+                    if (entry.UnderSnow && snowFree != null)
+                        expected *= snowFree[cell];
+
+                    if (entry.OnGround && steepness != null)
+                        expected *= FlyPointDetailEntry.GroundSlopeScale(steepness[cell]);
+
+                    if (entry.ClumpStrength > 0f)
+                        expected *= Mathf.Lerp(1f, SmoothStep(0.3f, 0.8f, Contrasted(worldX, worldZ, entry.ClumpScale, entry.Seed + 1)) * 2f,
+                            entry.ClumpStrength);
+
+                    if (expected <= 0f)
+                        continue;
+
+                    int cellWorldX = Mathf.FloorToInt(worldX / cellX);
+                    int cellWorldZ = Mathf.FloorToInt(worldZ / cellZ);
+                    int whole = (int)expected;
+                    int extra = Hash01(cellWorldX, cellWorldZ, entry.Seed + 2) < expected - whole ? 1 : 0;
+                    layer[cell] = (byte)Mathf.Min(whole + extra, MaxDetailPerCell);
+                }
+            }
+        }
+
+        private static float[] ReadRuins(Vector3 origin, Vector3 size, int cells)
+        {
+            FoundRuins.Clear();
+
+            if (cells <= 0)
+            {
+                // без карты земель — только обломки (их ячейки свои, не узлы карты)
+                RuinField.Query(new Rect(origin.x, origin.z, size.x, size.z), 25f, FoundRuins);
+                return null;
+            }
+
+            RuinField.Query(new Rect(origin.x, origin.z, size.x, size.z), 25f, FoundRuins);
+
+            if (FoundRuins.Count == 0)
+                return null;
+
+            int count = cells + 2 * LandMargin;
+            float stepX = size.x / cells, stepZ = size.z / cells;
+            var dust = new float[count * count];
+
+            foreach (RuinField.Ruin r in FoundRuins)
+            {
+                bool destroyed = r.state >= GeoConditionState.Destroyed, heavy = r.state >= GeoConditionState.HeavilyDamaged;
+                float peak = destroyed ? 1f : heavy ? 0.8f : 0.4f;
+                float reach = Mathf.Min(20f, destroyed ? 6f + 0.6f * r.height : heavy ? 4f + 0.4f * r.height : 2f + 0.15f * r.height);
+                int x0 = Mathf.Max(0, Mathf.FloorToInt((r.bounds.xMin - reach - origin.x) / stepX + LandMargin - 0.5f));
+                int x1 = Mathf.Min(count - 1, Mathf.CeilToInt((r.bounds.xMax + reach - origin.x) / stepX + LandMargin - 0.5f));
+                int z0 = Mathf.Max(0, Mathf.FloorToInt((r.bounds.yMin - reach - origin.z) / stepZ + LandMargin - 0.5f));
+                int z1 = Mathf.Min(count - 1, Mathf.CeilToInt((r.bounds.yMax + reach - origin.z) / stepZ + LandMargin - 0.5f));
+
+                for (int z = z0; z <= z1; z++)
+                for (int x = x0; x <= x1; x++)
+                {
+                    var point = new Vector2(origin.x + (x - LandMargin + 0.5f) * stepX, origin.z + (z - LandMargin + 0.5f) * stepZ);
+                    float d = RuinField.Distance(r, point);
+
+                    if (d >= reach)
+                        continue;
+
+                    float t = d / reach, v = peak * (1f - t * t * (3f - 2f * t));
+                    int i = z * count + x;
+
+                    if (v > dust[i])
+                        dust[i] = v;
+                }
+            }
+
+            return dust;
         }
 
         // Оси дорог у тайла и за его краем на RoadReach (бревно у края тайла не ляжет на дорогу соседнего), на главном потоке;

@@ -21,6 +21,9 @@ namespace GeoWorld.Editor
         // the crest's place, as a share of the way from the edge to the toe; the heap's height at the edge, as a share of
         // the crest's; the widest a heap spreads, as a share of the mean; the apron past the toe at least; the turn-down
         public const float CrestShare = 0.3f, LipShare = 0.45f, WidestSpread = 1.35f, ApronMin = 0.15f, TuckWidth = 0.3f;
+        // how far the mesh's slot may stand off the centreline: its walls sway along the trench (Wobble) and their top edge
+        // crumbles outward (LipCrumble); the cut under the slot reaches that much farther
+        public const float Wobble = 0.08f, LipCrumble = 0.07f, Sway = Wobble + LipCrumble;
 
         public GeoTrenchSection(float width, float depth, float age, float lip)
         {
@@ -96,12 +99,12 @@ namespace GeoWorld.Editor
         }
 
         // The highest a terrain node d metres from the centreline may stand (relative to its ground) so that no terrain
-        // triangle it is a corner of rises through the slot: the lowest surface within a cell's diagonal of it (Surface
-        // never falls, so that is the nearest point's). Infinity when its triangles all lie past the edge, under the spoil
-        // and the apron, which stand above the ground: the terrain keeps its height there.
+        // triangle it is a corner of rises through the slot: the lowest surface within a cell's diagonal (and the slot's
+        // Sway) of it (Surface never falls, so that is the nearest point's). Infinity when its triangles all lie past the
+        // edge, under the spoil and the apron, which stand above the ground: the terrain keeps its height there.
         public float Cap(float d, float diagonal)
         {
-            float a = Mathf.Max(0, d - diagonal);
+            float a = Mathf.Max(0, d - diagonal - Sway);
             return a >= half ? float.PositiveInfinity : Surface(a);
         }
     }
@@ -130,8 +133,9 @@ namespace GeoWorld.Editor
         const float Step = 1f;
         const int CapSpokes = 10;
         const float FanStep = 12f * Mathf.Deg2Rad;
-        // the wall atlas: strips 0 and 1 bare soil, 2 boards, 3 wattle; each 4 m along
-        public const int WallStrips = 4;
+        // the wall atlas: strips 0 and 1 bare soil, 2 boards, 3 wattle, 4 round timber (a dugout's roof logs); each 4 m along
+        public const int WallStrips = 5;
+        const int BoardStrip = 2, LogStrip = 4;
         const float StripLength = 4f;
 
         public sealed class Chunk
@@ -152,6 +156,10 @@ namespace GeoWorld.Editor
             public float openFrom, openTo = float.PositiveInfinity;
             // arc positions where another trench's walls cross this one's (cross-sections there: crisp openings)
             public readonly List<float> extra = new List<float>();
+            // arc positions where the walls must stand where the centreline says (junctions, open and closed ends): the sway
+            // dies out toward them, so an opening meets the other trench's walls and an end its rounded cap
+            public readonly List<float> calm = new List<float>();
+            public float length;
             // how much of the banks is bare spoil (fresh 1, grown over less)
             public float soil;
             // which side's bank is the higher (the parapet), and by how much
@@ -280,6 +288,11 @@ namespace GeoWorld.Editor
             Junctions(lines);
             foreach (var line in lines)
             {
+                line.length = Length(line.points);
+                line.calm.Add(0); line.calm.Add(line.length);
+                line.calm.AddRange(line.extra);
+                if (line.openStart) line.calm.Add(line.openFrom);
+                if (line.openEnd) line.calm.Add(line.openTo);
                 float minX = float.MaxValue, minZ = float.MaxValue, maxX = float.MinValue, maxZ = float.MinValue;
                 foreach (var p in line.points) { minX = Mathf.Min(minX, p.x); maxX = Mathf.Max(maxX, p.x); minZ = Mathf.Min(minZ, p.y); maxZ = Mathf.Max(maxZ, p.y); }
                 float r = line.section.tuckEnd + 1;
@@ -298,6 +311,7 @@ namespace GeoWorld.Editor
                 var others = new Others();
                 foreach (var other in lines) if (other != line && other.bounds.Overlaps(line.bounds)) others.lines.Add(other);
                 Sweep(line, ground, terrain, area, uvArea, others.lines.Count > 0 ? others : null, DraftAt);
+                if (line.feature.kind == GeoTrenchKind.Dugout) Roof(line, ground, area, uvArea, DraftAt);
             }
             var chunks = new List<Chunk>();
             var keys = new List<Vector2Int>(drafts.Keys);
@@ -553,6 +567,15 @@ namespace GeoWorld.Editor
             }
             stations.Add((count - 2, arcAt[count - 1] - arcAt[count - 2]));
 
+            // the walls sway a little along the trench (dug by hand or by a bucket, never ruled): a station's centre moves off
+            // the line, both sides by the same, at a corner along the bisector of the two segments' normals
+            Vector2 Swayed(int segment, float along, bool atCorner)
+            {
+                var a = points[segment];
+                var dir = (points[segment + 1] - a).normalized;
+                var off = atCorner ? (Left((a - points[segment - 1]).normalized) + Left(dir)).normalized : Left(dir);
+                return a + dir * along + off * SwayAt(line, arcAt[segment] + along);
+            }
             // how far along each side's wall its texture has run at the line's end (right side: [0], left: [1])
             var wallRun = new float[2];
             for (int side = 1; side >= -1; side -= 2)
@@ -561,10 +584,11 @@ namespace GeoWorld.Editor
                 var rows = new List<Row>();
                 foreach (var (segment, along) in stations)
                 {
-                    var a = points[segment]; var b = points[segment + 1];
-                    var dir = (b - a).normalized;
+                    var b = points[segment + 1];
+                    var dir = (b - points[segment]).normalized;
                     var normal = Left(dir) * side;
                     bool atCorner = along < 1e-4f && segment > 0 && corners[segment].real;
+                    var a = Swayed(segment, along, atCorner);
                     if (atCorner)
                     {
                         var corner = corners[segment];
@@ -586,7 +610,7 @@ namespace GeoWorld.Editor
                         }
                         continue;
                     }
-                    rows.Add(new Row { at = a + dir * along, normal = normal, arc = arcAt[segment] + along, along = along, scale = 1, segment = segment });
+                    rows.Add(new Row { at = a, normal = normal, arc = arcAt[segment] + along, along = along, scale = 1, segment = segment });
                 }
                 wallRun[side > 0 ? 1 : 0] = SweepSide(line, side, rows, corners, arcAt, ground, terrain, area, uvArea, others, draftAt);
             }
@@ -649,8 +673,10 @@ namespace GeoWorld.Editor
                     if (r.mitred != (pass == 0)) continue;
                     var heap = HeapAt(line, r.arc, side);
                     Columns(heap, s, offset, share);
-                    // the wall's top is the heap's first column, to the bit
-                    float top = HeapHeight(heap, 0, Rough(At(r, s.half)));
+                    // the top edge crumbled outward and a little lower here; the wall's top is the heap's first column, to the bit
+                    float lip = LipAt(line, r.arc, side);
+                    offset[0] = lip;
+                    float top = HeapHeight(heap, 0, Rough(At(r, s.half + lip))) - 0.8f * lip;
                     for (int c = 0; c < 2; c++)
                     {
                         float o = c == 0 ? 0 : s.floorHalf;
@@ -663,7 +689,7 @@ namespace GeoWorld.Editor
                     }
                     for (int w = 0; w < WallRows.Length; w++)
                     {
-                        float o = Mathf.Lerp(s.floorHalf, s.half, WallRows[w]);
+                        float o = Mathf.Lerp(s.floorHalf, s.half + lip, WallRows[w]);
                         if (Take(wall, k, w, o)) continue;
                         var p = At(r, o);
                         wall.position[k * WallRows.Length + w] = Raised(p, WallHeight(s, WallRows[w], top), ground);
@@ -741,6 +767,28 @@ namespace GeoWorld.Editor
                 case GeoTrenchKind.Communication: return h < 0.6f ? 0 : 1;
                 default: return h < 0.38f ? 0 : h < 0.62f ? 1 : h < 0.86f ? 2 : 3;
             }
+        }
+
+        // how much a trench's centre sways off its line arc metres along it (±Wobble over 3-6 m), dying out toward its calm
+        // places (junctions within 2.5 m, its ends within 1.5 m)
+        static float SwayAt(Line line, float arc) =>
+            GeoTrenchSection.Wobble * (2 * Noise1(line.seed + 17, arc / 4.6f, 31) - 1) * Calm(line, arc);
+
+        // how far one side's top edge has crumbled outward there (0 on about half the length, up to LipCrumble)
+        static float LipAt(Line line, float arc, int side) =>
+            GeoTrenchSection.LipCrumble * Mathf.Max(0, 2 * Noise1(line.seed + 23, arc / 1.3f + side * 7.7f, 33 + side) - 1) * Calm(line, arc);
+
+        static float Calm(Line line, float arc)
+        {
+            float calm = 1;
+            foreach (float at in line.calm)
+            {
+                bool end = at <= 1e-3f || at >= line.length - 1e-3f;
+                float d = Mathf.Abs(arc - at), reach = end ? 1.5f : 2.5f;
+                float t = Mathf.Clamp01((d - 0.2f) / (reach - 0.2f));
+                calm = Mathf.Min(calm, t * t * (3 - 2 * t));
+            }
+            return calm;
         }
 
         static float Noise1(int seed, float x, int channel)
@@ -894,6 +942,244 @@ namespace GeoWorld.Editor
                 Strip(draft, draft.tuck, groundGrid, m, Floor + ApronColumn, Floor + TuckColumn, true, others, -1, Floor + ApronColumn, Floor);
                 Strip(draft, draft.walls, wallGrid, m, 0, WallRows.Length - 1, true, others, strip);
             }
+        }
+
+        // A dugout's roof (GeoTrenchKind.Dugout): logs laid across its pit from wall to wall, from about a metre in from where
+        // it opens into its trench (the way in) to its closed end, and a lid of soil heaped over them, sloping down past that
+        // end. The battle over, most have fallen in: whole (30 %), a span of 1-2 m sagged into the pit (45 %: logs snapped in
+        // the middle, their halves down at the break, some gone, no soil over them, the soil that fell in heaped on the floor),
+        // or all but the end logs (25 %). The logs are the wall atlas's timber strip (sub-mesh 1, their snapped ends its
+        // boards), the lid and the fallen soil the ground (sub-mesh 0, the trench's own soil).
+        static void Roof(Line line, Func<float, float, float> ground, Rect area, Rect uvArea, Func<Vector2, Draft> draftAt)
+        {
+            var s = line.section;
+            var points = line.points;
+            float total = line.length;
+            // the way in: at an open end (the start when the dugout stands on its own); the closed end gets the lid's slope
+            float from = line.openStart ? line.openFrom + 1.1f : line.openEnd ? 0 : 1.1f;
+            float to = line.openEnd ? line.openTo - 1.1f : total;
+            bool closedEnd = !line.openEnd, closedStart = !line.openStart && line.openEnd;
+            if (to - from < 1.2f) return;
+            var middle = PointAt(points, 0.5f * (from + to));
+            if (!area.Contains(middle)) return;
+            var draft = draftAt(middle);
+            float state = Hash(line.seed, 41, 7);
+            float fallFrom = float.MaxValue, fallTo = float.MinValue;
+            if (state >= 0.75f) { fallFrom = from + 0.5f; fallTo = to - 0.45f; }
+            else if (state >= 0.3f)
+            {
+                float mid = Mathf.Lerp(from, to, 0.3f + 0.4f * Hash(line.seed, 42, 7)), span = 0.5f + 0.5f * Hash(line.seed, 43, 7);
+                fallFrom = Mathf.Max(from + 0.35f, mid - span); fallTo = Mathf.Min(to - 0.35f, mid + span);
+            }
+            bool Fallen(float arc) => arc > fallFrom && arc < fallTo;
+            const float Log = 0.105f, Seat = 0.03f;   // a log's mean radius; how far it sits into the ground at its ends
+            // the logs: 18-24 cm thick, touching, from 30-40 cm past one wall's edge to past the other's
+            int k = 0;
+            for (float arc = from + 0.12f; arc < to - 0.08f; k++)
+            {
+                float r = Log + 0.03f * (Hash(line.seed, 100 + k, 8) - 0.5f);
+                var p = PointAt(points, arc);
+                var dir = TangentAt(points, arc);
+                var axis = (Left(dir) + dir * 0.07f * (Hash(line.seed, 300 + k, 8) - 0.5f)).normalized;   // not quite square
+                float reach = s.half + 0.3f + 0.1f * Hash(line.seed, 200 + k, 8);
+                Vector2 pl = p - axis * reach, pr = p + axis * reach;
+                var l = new Vector3(pl.x, ground(pl.x, pl.y) - Seat + r, pl.y);
+                var rr = new Vector3(pr.x, ground(pr.x, pr.y) - Seat + r, pr.y);
+                if (!Fallen(arc)) LogMesh(draft, l, rr, r, Hash(line.seed, 600 + k, 8), false, false);
+                else if (Hash(line.seed, 400 + k, 8) > 0.3f)
+                {
+                    // snapped in the middle, the halves down at the break, not quite meeting
+                    float sag = Mathf.Min(s.depth - 0.3f, 0.5f + 0.7f * Hash(line.seed, 500 + k, 8));
+                    var d3 = new Vector3(dir.x, 0, dir.y);
+                    var mid = (l + rr) * 0.5f + Vector3.down * sag;
+                    LogMesh(draft, l, mid + d3 * 0.04f + Vector3.up * 0.05f * Hash(line.seed, 700 + k, 8), r, Hash(line.seed, 600 + k, 8), false, true);
+                    LogMesh(draft, rr, mid - d3 * 0.04f, r, Hash(line.seed, 650 + k, 8), false, true);
+                }
+                arc += 2 * r + 0.015f + 0.03f * Hash(line.seed, 800 + k, 8);
+            }
+            // the lid: soil heaped over the whole stretches, each from the way in (or the fallen span) to the closed end (or it)
+            if (fallFrom < fallTo)
+            {
+                if (fallFrom - from > 0.4f) Lid(line, ground, uvArea, draft, from, fallFrom, closedStart, false);
+                if (to - fallTo > 0.4f) Lid(line, ground, uvArea, draft, fallTo, to, false, closedEnd);
+                FallenSoil(line, ground, uvArea, draft, fallFrom, fallTo);
+            }
+            else Lid(line, ground, uvArea, draft, from, to, closedStart, closedEnd);
+        }
+
+        // A log from a to b: a six-sided cylinder in the timber strip (u along it, v round it); a snapped end (broken) gets a
+        // cap in the boards (light split wood).
+        static void LogMesh(Draft draft, Vector3 a, Vector3 b, float r, float phase, bool capA, bool capB)
+        {
+            const int Sides = 6;
+            var axis = b - a;
+            float length = axis.magnitude;
+            if (length < 0.05f) return;
+            axis /= length;
+            var n1 = Vector3.Cross(axis, Vector3.up);
+            if (n1.sqrMagnitude < 1e-4f) n1 = Vector3.Cross(axis, Vector3.right);
+            n1.Normalize();
+            var n2 = Vector3.Cross(axis, n1);
+            int start = draft.vertices.Count;
+            float turn = phase * Mathf.PI * 2;
+            for (int i = 0; i <= Sides; i++)
+            {
+                float angle = turn + Mathf.PI * 2 * i / Sides;
+                var o = n1 * Mathf.Cos(angle) + n2 * Mathf.Sin(angle);
+                float v = (LogStrip + 0.015f + 0.97f * i / Sides) / WallStrips;
+                draft.vertices.Add(a + o * r); draft.normals.Add(o); draft.uvs.Add(new Vector2(phase * 3, v)); draft.soil.Add(Vector2.zero);
+                draft.vertices.Add(b + o * r); draft.normals.Add(o); draft.uvs.Add(new Vector2(phase * 3 + length / StripLength, v)); draft.soil.Add(Vector2.zero);
+            }
+            for (int i = 0; i < Sides; i++)
+            {
+                int a0 = start + 2 * i, b0 = a0 + 1, a1 = a0 + 2, b1 = a0 + 3;
+                draft.walls.Add(a0); draft.walls.Add(a1); draft.walls.Add(b0);
+                draft.walls.Add(a1); draft.walls.Add(b1); draft.walls.Add(b0);
+            }
+            void Cap(Vector3 at, Vector3 outward)
+            {
+                int centre = draft.vertices.Count;
+                float vBoard = (BoardStrip + 0.4f) / WallStrips;
+                draft.vertices.Add(at); draft.normals.Add(outward); draft.uvs.Add(new Vector2(0.5f, vBoard)); draft.soil.Add(Vector2.zero);
+                for (int i = 0; i < Sides; i++)
+                {
+                    float angle = turn + Mathf.PI * 2 * i / Sides;
+                    var o = n1 * Mathf.Cos(angle) + n2 * Mathf.Sin(angle);
+                    draft.vertices.Add(at + o * r); draft.normals.Add(outward);
+                    draft.uvs.Add(new Vector2(0.5f + 0.03f * Mathf.Cos(angle), vBoard + 0.01f * Mathf.Sin(angle))); draft.soil.Add(Vector2.zero);
+                }
+                bool forward = Vector3.Dot(outward, axis) > 0;
+                for (int i = 0; i < Sides; i++)
+                {
+                    int p0 = centre + 1 + i, p1 = centre + 1 + (i + 1) % Sides;
+                    draft.walls.Add(centre);
+                    if (forward) { draft.walls.Add(p0); draft.walls.Add(p1); } else { draft.walls.Add(p1); draft.walls.Add(p0); }
+                }
+            }
+            if (capA) Cap(a, -axis);
+            if (capB) Cap(b, axis);
+        }
+
+        // The soil over a stretch of a dugout's roof (from..to along the line): a low mound over the logs whose edges dip under
+        // the heaps beside the pit; a front face of bare soil (the wall atlas) where the stretch ends open, a slope down past
+        // a closed end over the pit's rounded end.
+        static void Lid(Line line, Func<float, float, float> ground, Rect uvArea, Draft draft, float from, float to, bool slopeAtStart, bool slopeAtEnd)
+        {
+            var s = line.section;
+            const int Columns = 9;
+            float width = s.half + 0.65f, top = 2 * 0.105f - 0.03f;   // the logs' top above the ground
+            float soil = 0.24f;
+            // rows along the stretch every half metre, past a closed end three more down the slope
+            var arcs = new List<float>();
+            int n = Mathf.Max(1, Mathf.CeilToInt((to - from) / 0.5f));
+            for (int i = 0; i <= n; i++) arcs.Add(Mathf.Lerp(from, to, (float)i / n));
+            var grid = new Grid(arcs.Count + (slopeAtStart ? 3 : 0) + (slopeAtEnd ? 3 : 0), Columns);
+            int row = 0;
+            // the lid's own mound covers the pit and the logs' ends; past the pit's edge it lies on the heap beside it (just over
+            // it, in its colour) and its outer edge dips under it, so the two meet without a crease (as a mound of its own it
+            // stood on the heaps like a plate); down the slope past a closed end it is its own mound sinking under the ground
+            float inner = s.half + 0.3f;
+            void Row(Vector2 at, Vector2 across, float arc, float fall)
+            {
+                var heapLeft = HeapAt(line, arc, 1); var heapRight = HeapAt(line, arc, -1);
+                for (int c = 0; c < Columns; c++)
+                {
+                    float x = Mathf.Lerp(-width, width, (float)c / (Columns - 1)), ax = Mathf.Abs(x);
+                    var p = at + across * x;
+                    float own = top + soil * Mathf.Pow(Mathf.Cos(0.5f * Mathf.PI * Mathf.Min(1, ax / inner)), 2);
+                    float h = own, share = line.soil * 0.85f;
+                    if (fall <= 0 && ax > s.half)
+                    {
+                        var heap = x > 0 ? heapLeft : heapRight;
+                        float t = (ax - s.half) / heap.width;
+                        float under = HeapHeight(heap, t, Rough(p));
+                        bool edge = c == 0 || c == Columns - 1;
+                        h = edge ? under - 0.03f : Mathf.Max(own, under + 0.015f);
+                        if (edge || own <= under + 0.015f) share = SoilShare(line, t, heap);
+                    }
+                    h = Mathf.Lerp(h, -0.12f, fall);
+                    int i = row * Columns + c;
+                    grid.position[i] = Raised(p, h, ground);
+                    grid.facing[i] = Vector3.up;
+                    grid.uv[i] = TerrainUv(p, uvArea);
+                    grid.soil[i] = new Vector2(share * (1 - fall), 0);
+                }
+                row++;
+            }
+            var startDir = TangentAt(line.points, from); var endDir = TangentAt(line.points, to);
+            if (slopeAtStart)
+                for (int i = 3; i >= 1; i--) Row(PointAt(line.points, from) - startDir * (s.half * 0.45f * i), Left(startDir), from, i / 3f);
+            foreach (float arc in arcs) Row(PointAt(line.points, arc), Left(TangentAt(line.points, arc)), arc, 0);
+            if (slopeAtEnd)
+                for (int i = 1; i <= 3; i++) Row(PointAt(line.points, to) + endDir * (s.half * 0.45f * i), Left(endDir), to, i / 3f);
+            // the rows run along the line and the columns to its left (x grows leftward): the quads face up unflipped
+            for (int k = 0; k + 1 < grid.rows; k++) Strip(draft, draft.ground, grid, k, 0, Columns - 1, false, null, -1);
+            // the open faces: bare soil from the lid's edge down to the logs' underside, facing out of the lid
+            if (!slopeAtStart) Face(draft, grid, 0, -startDir, ground);
+            if (!slopeAtEnd) Face(draft, grid, grid.rows - 1, endDir, ground);
+        }
+
+        // a lid's open face at grid row k: from its surface down past the logs' underside, in the atlas's bare soil (strip 0)
+        static void Face(Draft draft, Grid grid, int k, Vector2 outward, Func<float, float, float> ground)
+        {
+            int columns = grid.columns, start = draft.vertices.Count;
+            var normal = new Vector3(outward.x, 0, outward.y);
+            float u = 0;
+            for (int c = 0; c < columns; c++)
+            {
+                var topPoint = grid.position[k * columns + c];
+                var bottom = new Vector3(topPoint.x, Mathf.Min(topPoint.y - 0.05f, ground(topPoint.x, topPoint.z) - 0.1f), topPoint.z);
+                if (c > 0) u += Vector3.Distance(topPoint, grid.position[k * columns + c - 1]);
+                // the soil strip's middle (chernozem over loess), not its top with the turf's grass fringe
+                draft.vertices.Add(bottom); draft.normals.Add(normal); draft.uvs.Add(new Vector2(u / StripLength, (0.015f + 0.97f * 0.3f) / WallStrips)); draft.soil.Add(Vector2.zero);
+                draft.vertices.Add(topPoint); draft.normals.Add(normal); draft.uvs.Add(new Vector2(u / StripLength, (0.015f + 0.97f * 0.62f) / WallStrips)); draft.soil.Add(Vector2.zero);
+            }
+            for (int c = 0; c + 1 < columns; c++)
+            {
+                int b0 = start + 2 * c, t0 = b0 + 1, b1 = b0 + 2, t1 = b0 + 3;
+                // facing outward: try one winding, turn it if its normal points in
+                var n = Vector3.Cross(draft.vertices[b1] - draft.vertices[b0], draft.vertices[t0] - draft.vertices[b0]);
+                if (Vector3.Dot(n, normal) >= 0) { draft.walls.Add(b0); draft.walls.Add(b1); draft.walls.Add(t0); draft.walls.Add(b1); draft.walls.Add(t1); draft.walls.Add(t0); }
+                else { draft.walls.Add(b0); draft.walls.Add(t0); draft.walls.Add(b1); draft.walls.Add(b1); draft.walls.Add(t0); draft.walls.Add(t1); }
+            }
+        }
+
+        // the soil that fell in with a roof's span, heaped on the pit's floor under it (fresh spoil)
+        static void FallenSoil(Line line, Func<float, float, float> ground, Rect uvArea, Draft draft, float from, float to)
+        {
+            var s = line.section;
+            const int Columns = 7;
+            int n = Mathf.Max(2, Mathf.CeilToInt((to - from) / 0.4f));
+            var grid = new Grid(n + 1, Columns);
+            for (int i = 0; i <= n; i++)
+            {
+                float arc = Mathf.Lerp(from, to, (float)i / n), along = Mathf.Sin(Mathf.PI * i / n);
+                var at = PointAt(line.points, arc); var across = Left(TangentAt(line.points, arc));
+                for (int c = 0; c < Columns; c++)
+                {
+                    float x = Mathf.Lerp(-s.floorHalf, s.floorHalf, (float)c / (Columns - 1)) * 0.96f;
+                    float rise = 0.45f * along * Mathf.Cos(0.5f * Mathf.PI * x / s.floorHalf) * (0.8f + 0.4f * Rough(at + across * x) * 0.5f);
+                    var p = at + across * x;
+                    int j = i * Columns + c;
+                    grid.position[j] = Raised(p, -s.depth + Mathf.Max(0.02f, rise), ground);
+                    grid.facing[j] = Vector3.up;
+                    grid.uv[j] = TerrainUv(p, uvArea);
+                    grid.soil[j] = new Vector2(1, 0.3f);
+                }
+            }
+            for (int k = 0; k < n; k++) Strip(draft, draft.ground, grid, k, 0, Columns - 1, false, null, -1);
+        }
+
+        // the direction of a line at an arc position
+        static Vector2 TangentAt(List<Vector2> line, float arc)
+        {
+            for (int i = 0; i + 1 < line.Count; i++)
+            {
+                float length = Vector2.Distance(line[i], line[i + 1]);
+                if (arc <= length || i + 2 == line.Count) return (line[i + 1] - line[i]).normalized;
+                arc -= length;
+            }
+            return Vector2.right;
         }
 
         // The point of a trench's centreline nearest p, and the direction of the line there; false when p lies past an end of

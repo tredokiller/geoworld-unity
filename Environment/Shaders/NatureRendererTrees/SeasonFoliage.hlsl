@@ -31,7 +31,14 @@ half SeasonFoliageAlpha(half alpha, half3 texel, float2 uv)
 {
     float2 footprint = max(abs(ddx(uv)), abs(ddy(uv)));
 
-    [branch] if (!SeasonIsTreeLeaves() || !SeasonTreeBare())
+    [branch] if (!SeasonIsTreeLeaves())
+        return alpha;
+
+    // голое по поре — все листья прочь; посечённое войной — листья целых веточек атласа (клетка 1/8) по его доле
+    bool bare = SeasonTreeBare();
+    half strip = bare ? 0 : SeasonWarStrip();
+
+    [branch] if (!bare && (strip <= 0.0 || !SeasonWarGone(uv, 8.0, strip)))
         return alpha;
 
     float2 texels = footprint * _BaseColorMap_TexelSize.zw * _Tiling_and_Offset.xy;
@@ -39,7 +46,8 @@ half SeasonFoliageAlpha(half alpha, half3 texel, float2 uv)
     return alpha * lerp(1.0, haze, SeasonLeafShare(texel));
 }
 
-half3 SeasonFoliageColour(half3 colour)
+// uv: the same as SeasonFoliageAlpha's — leaves of the atlas cells the war took are coloured like a bare crown
+half3 SeasonFoliageColourCells(half3 colour, float2 uv, bool cells)
 {
     half luminance = SeasonLuminance(colour);
 
@@ -85,7 +93,24 @@ half3 SeasonFoliageColour(half3 colour)
     [branch] if (SeasonTreeBare())
         return SeasonBareColour(colour);
 
-    return SeasonTreeLeafColour(colour);
+    // посечённое войной: совсем голое — как голое по поре, иначе оставшиеся листья подсохли
+    half strip = SeasonWarStrip();
+
+    [branch] if (strip >= 0.999 || (cells && strip > 0.0 && SeasonWarGone(uv, 8.0, strip)))
+        return SeasonBareColour(colour);
+
+    return SeasonWarLeafColour(SeasonTreeLeafColour(colour), strip);
+}
+
+half3 SeasonFoliageColour(half3 colour, float2 uv)
+{
+    return SeasonFoliageColourCells(colour, uv, true);
+}
+
+// without uv (no per-cell decision): a stripped crown dried as a whole
+half3 SeasonFoliageColour(half3 colour)
+{
+    return SeasonFoliageColourCells(colour, float2(0.0, 0.0), false);
 }
 
 #endif

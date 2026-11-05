@@ -108,6 +108,9 @@ namespace GeoWorld.Editor
         // clear of what stands around it (surround: the tile with its margin) and only the export's own edge (outer)
         // keeps them back. Null: bounds.
         [JsonIgnore] public GeoBounds surround, outer;
+        // The export has a combat bake of its own (combat.json next to it): its settlements get the war's look where it
+        // was, power lines along their streets everywhere (GeoPowerLines).
+        [JsonIgnore] public bool battlefield;
     }
     [Serializable] public class BuildingFeature
     {

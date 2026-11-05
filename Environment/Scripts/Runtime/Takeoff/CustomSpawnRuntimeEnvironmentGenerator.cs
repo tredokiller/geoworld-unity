@@ -1615,6 +1615,10 @@ namespace _Game.Scripts.Locations
 
         private void ApplyDetailLayer(int[,] counts, DetailGrid grid, FlyPointDetailEntry entry, int entryIndex)
         {
+            // обломки у руин площадка сама не кладёт: только мир за её краем (GroundDressing, у стен руин)
+            if (entry.NearRuins)
+                return;
+
             // в поле, в лесу и на голой земле — разная трава и цветы (профиль: TreeCoverScale, BareGroundScale); по поре года
             // и снегу — как у травы тайлов (Seasons; под снегом — по его узору, SnowFree)
             Seasons seasons = Seasons.Instance;
@@ -1786,7 +1790,7 @@ namespace _Game.Scripts.Locations
 
             foreach (FlyPointDetailEntry entry in details)
             {
-                if (entry == null || entry.Prototype == null || _detailCount >= maxDetailInstances)
+                if (entry == null || entry.Prototype == null || entry.NearRuins || _detailCount >= maxDetailInstances)
                     continue;
 
                 float area = Mathf.PI * Mathf.Max(0f, radius * radius - entry.MinRadius * entry.MinRadius);

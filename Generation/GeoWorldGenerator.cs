@@ -471,7 +471,12 @@ namespace GeoWorld
             // the combat bake next to the export changes every tile it reaches (only when there is one: exports without it keep
             // their hash); its time stamp says nothing about what is in it
             var combat = GeoCombatFile.Read(envPath);
-            if (combat != null) { combat.created = null; text.Append("combat.json=").Append(GeoWorldPackage.Sha256(Newtonsoft.Json.JsonConvert.SerializeObject(combat))).Append('|'); }
+            if (combat != null)
+            {
+                combat.created = null;
+                text.Append("combat.json=").Append(GeoWorldPackage.Sha256(Newtonsoft.Json.JsonConvert.SerializeObject(combat))).Append('|');
+                text.Append(GeoWarLook.Version).Append('|');
+            }
             text.Append(GeoAssets.Key(settings.homeLibrary)).Append('|').Append(GeoAssets.Key(settings.ruinLibrary)).Append('|');
             text.Append(tileSize.ToString("R", CultureInfo.InvariantCulture));
             return GeoWorldPackage.Sha256(text.ToString());

@@ -57,6 +57,11 @@ namespace _Game.Scripts.World
                     if (group == FlyPointLandGroup.Field && BordersOtherThanField(classes, countX, countZ, x, z))
                         group = FlyPointLandGroup.FieldEdge;
 
+                    // обочина улицы брошенного посёлка (клетка дороги у застройки: полотно вырезано по оси, остаётся обочина)
+                    // зарастает, как двор; дороги в поле и в лесу — как были
+                    if (group == FlyPointLandGroup.Track && abandoned != null && abandoned[index] > 0f && BordersTown(classes, countX, countZ, x, z))
+                        group = FlyPointLandGroup.Settlement;
+
                     float value = scales.Of(group);
 
                     // лес, болото и дороги на брошенной земле — как были
@@ -111,6 +116,24 @@ namespace _Game.Scripts.World
             float south = Mathf.Lerp(lattice[z0 * countX + x0], lattice[z0 * countX + x1], tx);
             float north = Mathf.Lerp(lattice[z1 * countX + x0], lattice[z1 * countX + x1], tx);
             return Mathf.Lerp(south, north, tz);
+        }
+
+        // Рядом (8 соседей) застройка: город или здание.
+        private static bool BordersTown(byte[] classes, int countX, int countZ, int x, int z)
+        {
+            for (int dz = -1; dz <= 1; dz++)
+            for (int dx = -1; dx <= 1; dx++)
+            {
+                int nx = x + dx, nz = z + dz;
+
+                if ((dx == 0 && dz == 0) || nx < 0 || nz < 0 || nx >= countX || nz >= countZ)
+                    continue;
+
+                if ((GeoLandClass)classes[nz * countX + nx] is GeoLandClass.Urban or GeoLandClass.Building)
+                    return true;
+            }
+
+            return false;
         }
 
         // Рядом (8 соседей) земля другая, чем поле, и карта о ней знает.

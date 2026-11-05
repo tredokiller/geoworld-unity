@@ -14,6 +14,11 @@ namespace GeoWorld.Editor
         public Vector3 position;
         public float yaw, height, width, length;
         public bool segment;
+        // After the battle (GeoPropDamage): 0 intact, 1 damaged (leaning, panels gone, chipped), 2 broken (snapped, knocked
+        // over, flattened, breached), 3 a wall down to its rubble. lean: degrees from upright about its foot, toward the
+        // azimuth leanToward (degrees, 0 = +z).
+        public int damage;
+        public float lean, leanToward;
     }
 
     // PNG rows are north to south; Unity GetPixels32 starts at the bottom of the image.
@@ -100,9 +105,10 @@ namespace GeoWorld.Editor
         const float NearCell=60;
 
         // baked: the props become part of chunks of mesh (a merged city), so there can be far more of them,
-        // and fences and walls are made of longer pieces.
+        // and fences and walls are made of longer pieces. beyond: receives the generated power poles just past the bounds
+        // (in the tile's margin) that a span of wires from a pole in the bounds reaches (GeoPowerLines).
         public static List<PropPlacement> Plan(EnvironmentData env,BuildingsData buildings,GenerationSettings settings,
-            CanopyMask canopy,List<string> notes,IEnumerable<GeoPlacedProp> retained=null,bool baked=false)
+            CanopyMask canopy,List<string> notes,IEnumerable<GeoPlacedProp> retained=null,bool baked=false,List<PropPlacement> beyond=null)
         {
             var result=new List<PropPlacement>();var clear=new Clearance();var ids=new HashSet<string>();
             int limit=Mathf.Clamp(settings.maxProps,100,baked?MaxBaked:MaxObjects);bool capped=false;
@@ -163,6 +169,22 @@ namespace GeoWorld.Editor
                 foreach(var t in Sorted(env.trees.Where(t=>t!=null),t=>t.id))
                     Add(new PropPlacement{id=t.id,kind="tree",source="mapped",evidence=t.id,rotationSource="generated",
                         position=new Vector3(t.x,0,t.z),height=Positive(t.height,7),width=Positive(t.crown,4),yaw=Sample(t.id,settings.decorationSeed)*360});
+            // a battlefield's settlements: power lines along their streets of houses (generated, labelled so; GeoPowerLines),
+            // before the street decoration and the trees, so that they keep off the poles (which neighbouring tiles plan
+            // alike) and not the other way round; a pole past the bounds only keeps the rest off its spot
+            if(env.battlefield)
+            {
+                var mappedPoles=new Clearance();
+                foreach(var p in env.props.Where(p=>p!=null&&p.type=="power_pole"&&Valid(p.x,p.z,around)))mappedPoles.Circle(new Vector2(p.x,p.z),15);
+                foreach(var pole in GeoPowerLines.Candidates(env,buildings,settings.decorationSeed,around))
+                {
+                    if(!mappedPoles.Free(XZ(pole.position),1)||!GeoPowerLines.Nudge(pole,q=>clear.Free(XZ(q),0.7f)))continue;
+                    if(Valid(pole.position.x,pole.position.z,bounds)){if(!Add(pole))continue;}
+                    else if(beyond!=null)beyond.Add(pole);
+                    clear.Circle(XZ(pole.position),0.7f);
+                }
+            }
+
             if(settings.streetDecoration)
             {
                 var litTypes=new HashSet<string>{"residential","living_street","unclassified","primary","secondary","tertiary","service"};
@@ -197,7 +219,6 @@ namespace GeoWorld.Editor
                     }
                 }
             }
-
             void Segments(BarrierFeature barrier,string kind)
             {
                 var points=GeoData.Points(barrier.points);int index=0;
