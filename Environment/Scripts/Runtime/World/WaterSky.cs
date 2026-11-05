@@ -1,4 +1,5 @@
 using Enviro;
+using GeoWorld;
 using UnityEngine;
 
 namespace _Game.Scripts.World
@@ -49,7 +50,7 @@ namespace _Game.Scripts.World
             if (_enviroProbe == null && !CreateProbe())
                 return;
 
-            Camera camera = Camera.main;
+            Camera camera = GeoWorldCamera.Current;
 
             if (camera != null)
                 _probeObject.transform.position = camera.transform.position;

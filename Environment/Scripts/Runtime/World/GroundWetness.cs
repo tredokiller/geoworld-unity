@@ -2,7 +2,9 @@ using System.Collections.Generic;
 using _Game.Scripts.Drone;
 using _Game.Scripts.Locations;
 using GeoWorld;
+#if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
+#endif
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -255,7 +257,11 @@ namespace _Game.Scripts.World
                                $"far={(_far.Has ? _far.Origin.ToString("F0") : "none")} farBuilding={_far.BuildingRow} " +
                                $"wetMaterials={_wetMaterials.Count} overview={_overviewLayers.Count}";
 
+#if ODIN_INSPECTOR
         [Button("Мокро сейчас (лужи полные)")]
+#else
+        [ContextMenu("Мокро сейчас (лужи полные)")]
+#endif
         private void WetNow()
         {
             _soak = 1f;
@@ -263,7 +269,11 @@ namespace _Game.Scripts.World
             PuddleLevel = 1f;
         }
 
+#if ODIN_INSPECTOR
         [Button("Сухо сейчас")]
+#else
+        [ContextMenu("Сухо сейчас")]
+#endif
         private void DryNow()
         {
             _soak = 0f;
@@ -508,7 +518,7 @@ namespace _Game.Scripts.World
         // ближнему строить нечего.
         private void UpdateLand()
         {
-            Camera camera = Camera.main;
+            Camera camera = GeoWorldCamera.Current;
 
             if (camera == null)
                 return;

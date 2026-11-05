@@ -2,7 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using _Game.Scripts.Enums;
+#if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
+#endif
+using GeoWorld;
 using UnityEngine;
 
 namespace _Game.Scripts.World
@@ -142,7 +145,9 @@ namespace _Game.Scripts.World
         private int _treesInMap;
         private bool _visible = true;
 
+#if ODIN_INSPECTOR
         [ShowInInspector, LabelText("Лесная подстилка")]
+#endif
         public bool Visible
         {
             get => _visible;
@@ -208,7 +213,7 @@ namespace _Game.Scripts.World
                 return;
 
             _nextCheck = Time.unscaledTime + CheckInterval;
-            Camera camera = Camera.main;
+            Camera camera = GeoWorldCamera.Current;
 
             if (camera == null)
                 return;

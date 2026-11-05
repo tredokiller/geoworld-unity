@@ -33,9 +33,10 @@ namespace _Game.Scripts.World
             if (streamer == null)
                 return true;
 
+            Camera camera = GeoWorldCamera.Current;
             Transform target = streamer.target != null
                 ? streamer.target
-                : Camera.main != null ? Camera.main.transform : null;
+                : camera != null ? camera.transform : null;
 
             return target != null && IsSurfaceLoadedAt(target.position);
         }

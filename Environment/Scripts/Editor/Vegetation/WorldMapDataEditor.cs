@@ -23,9 +23,9 @@ namespace _Game.Scripts.Editor.Vegetation
             {
                 if (GUILayout.Button(new GUIContent("Bake roads, fields and leaf types",
                         "From the world's exports (environment.json of its parts); roads are snapped to the tiles' satellite imagery, " +
-                        "a few minutes for a large world. Generating tiles bakes it again. Without the exports on this machine the data stays."),
+                        "a few minutes for a large world. Generating tiles bakes it again. Without the exports on this machine it stops with an error and the data stays."),
                         GUILayout.Height(24)))
-                    Debug.Log("[WorldMapBaker] " + WorldMapBaker.Bake(world), data);
+                    WorldMapBaker.Log("WorldMapBaker", () => WorldMapBaker.Bake(world), data);
             }
         }
     }

@@ -1,4 +1,5 @@
 using Enviro;
+using GeoWorld;
 using UnityEngine;
 
 namespace _Game.Scripts.World
@@ -145,7 +146,7 @@ namespace _Game.Scripts.World
         // Скорость главной камеры по её перемещению за кадр, сглаженно; смена камеры и телепорт — с нуля.
         private Vector3 CameraVelocity()
         {
-            Camera camera = Camera.main;
+            Camera camera = GeoWorldCamera.Current;
             float deltaTime = Time.deltaTime;
 
             if (camera == null || deltaTime <= 0f)

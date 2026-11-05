@@ -57,7 +57,7 @@ namespace GeoWorld
 
         void OnDestroy() => Close();
 
-        Vector3 Where => target ? target.position : Camera.main ? Camera.main.transform.position : Vector3.zero;
+        Vector3 Where => target ? target.position : GeoWorldCamera.Current is var camera && camera ? camera.transform.position : Vector3.zero;
 
         void Update()
         {
