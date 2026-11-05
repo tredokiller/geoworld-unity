@@ -12,18 +12,39 @@ float SeasonCrossAlpha(float alpha, float2 uv, half3 texel)
 {
     float2 footprint = max(abs(ddx(uv)), abs(ddy(uv)));
 
-    [branch] if (!SeasonTreeBare())
+    // голое по поре; посечённое войной — листья клеток карточки (1/16: пятна кроны) по его доле (SeasonTrees.hlsl)
+    bool bare = SeasonTreeBare();
+    half strip = bare ? 0 : SeasonWarStrip();
+
+    [branch] if (!bare && (strip <= 0.0 || !SeasonWarGone(uv, 16.0, strip)))
         return alpha;
 
     return alpha * lerp(1.0, SeasonTwigHaze(uv, footprint), SeasonLeafShare(texel));
 }
 
+// uv: the same as SeasonCrossAlpha's — the cells the war took are coloured like a bare crown (their twig haze grey-brown),
+// the rest of the crown dried by its strip
+half3 SeasonCrossColour(half3 colour, float2 uv)
+{
+    [branch] if (SeasonTreeBare())
+        return SeasonBareColour(colour);
+
+    half strip = SeasonWarStrip();
+
+    [branch] if (strip >= 0.999 || (strip > 0.0 && SeasonWarGone(uv, 16.0, strip)))
+        return SeasonBareColour(colour);
+
+    return SeasonWarLeafColour(SeasonTreeLeafColour(colour), strip);
+}
+
+// without uv (no per-cell decision): a stripped crown dried as a whole
 half3 SeasonCrossColour(half3 colour)
 {
     [branch] if (SeasonTreeBare())
         return SeasonBareColour(colour);
 
-    return SeasonTreeLeafColour(colour);
+    half strip = SeasonWarStrip();
+    return strip >= 0.999 ? SeasonBareColour(colour) : SeasonWarLeafColour(SeasonTreeLeafColour(colour), strip);
 }
 
 #endif

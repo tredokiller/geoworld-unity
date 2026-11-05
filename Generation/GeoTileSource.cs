@@ -36,7 +36,8 @@ namespace GeoWorld.Editor
         {
             var main = fragments[0];
             var env = new EnvironmentData { format = main.env.format, version = main.env.version, origin = main.env.origin, bounds = main.core,
-                terrain = main.env.terrain, materials = main.env.materials, surround = main.env.surround, outer = plan.Outer() };
+                terrain = main.env.terrain, materials = main.env.materials, surround = main.env.surround, outer = plan.Outer(),
+                battlefield = fragments.Any(f => f.env.battlefield) };
             var buildings = new BuildingsData { format = main.buildings.format, version = main.buildings.version, origin = main.buildings.origin, area = new BuildingArea { bounds = main.core } };
             var levels = new List<float>();
             var pieces = new List<PathBuild>(); var rivers = new List<PathBuild>();
@@ -158,6 +159,8 @@ namespace GeoWorld.Editor
                 GeoCombatFile.PathFor(environmentPath) })
                 if (!string.IsNullOrEmpty(file) && File.Exists(file)) { var info = new FileInfo(file); text.Append(info.Name).Append(info.Length).Append(info.LastWriteTimeUtc.Ticks).Append('|'); }
             if (blend != null) text.Append(blend.Fingerprint(part));
+            // a battlefield's tiles also draw its settlements after the battle (GeoWarLook)
+            if (File.Exists(GeoCombatFile.PathFor(environmentPath))) text.Append(GeoWarLook.Version).Append('|');
             s.files = text.ToString();
             return s;
 
@@ -193,7 +196,7 @@ namespace GeoWorld.Editor
             Func<float, float, bool> owns = shared ? (Func<float, float, bool>)((x, z) => plan.OwnerOf(x, z) == part) : (x, z) => true;
             var area = new Rect(reach.minX, reach.minZ, reach.Width, reach.Depth);
             var e = new EnvironmentData { format = env.format, version = env.version, origin = env.origin, bounds = core, terrain = env.terrain,
-                materials = env.materials, surround = around, outer = env.bounds };
+                materials = env.materials, surround = around, outer = env.bounds, battlefield = env.battlefield };
             e.roads = Pick(env.roads, roadBox, area); e.waterways = Pick(env.waterways, waterwayBox, area); e.railways = Pick(env.railways, railBox, area);
             e.areas = Pick(env.areas, areaBox, area); e.barriers = Pick(env.barriers, barrierBox, area);
             e.hedges = Pick(env.hedges, hedgeBox, area); e.treeRows = Pick(env.treeRows, rowBox, area);

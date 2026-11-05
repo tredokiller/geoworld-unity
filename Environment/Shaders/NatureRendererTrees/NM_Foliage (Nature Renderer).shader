@@ -1747,7 +1747,7 @@ Shader "NatureManufacture/URP/Foliage/Foliage (Nature Renderer)"
             float _Property_c9e554ec47c0438293381e2fb7a44e1a_Out_0_Float = _AlphaCutoff;
             #endif
             surface.BaseColor = _WindColorMix_5d4dc45857e3dd8ca33a43847d50fb10_Out_0_Vector3;
-            surface.BaseColor = FieldWindColour(SeasonFoliageColour(surface.BaseColor), IN.AbsoluteWorldSpacePosition);
+            surface.BaseColor = FieldWindColour(SeasonFoliageColour(surface.BaseColor, IN.uv0.xy), IN.AbsoluteWorldSpacePosition);
             surface.NormalTS = _Branch_e2c9f7b4fdc07489a683f02a81570adb_Out_3_Vector3;
             surface.Emission = float3(0, 0, 0);
             surface.Specular = _Multiply_4d4b4289f1cb5589b44634e9d411b0c5_Out_2_Vector3;
@@ -3583,7 +3583,7 @@ Shader "NatureManufacture/URP/Foliage/Foliage (Nature Renderer)"
             float _Property_c9e554ec47c0438293381e2fb7a44e1a_Out_0_Float = _AlphaCutoff;
             #endif
             surface.BaseColor = _WindColorMix_5d4dc45857e3dd8ca33a43847d50fb10_Out_0_Vector3;
-            surface.BaseColor = SeasonFoliageColour(surface.BaseColor);
+            surface.BaseColor = SeasonFoliageColour(surface.BaseColor, IN.uv0.xy);
             surface.NormalTS = _Branch_e2c9f7b4fdc07489a683f02a81570adb_Out_3_Vector3;
             surface.Emission = float3(0, 0, 0);
             surface.Specular = _Multiply_4d4b4289f1cb5589b44634e9d411b0c5_Out_2_Vector3;
@@ -9258,7 +9258,7 @@ Shader "NatureManufacture/URP/Foliage/Foliage (Nature Renderer)"
             float _Property_c9e554ec47c0438293381e2fb7a44e1a_Out_0_Float = _AlphaCutoff;
             #endif
             surface.BaseColor = _WindColorMix_5d4dc45857e3dd8ca33a43847d50fb10_Out_0_Vector3;
-            surface.BaseColor = SeasonFoliageColour(surface.BaseColor);
+            surface.BaseColor = SeasonFoliageColour(surface.BaseColor, IN.uv0.xy);
             surface.Emission = float3(0, 0, 0);
             surface.Alpha = _UseDistanceAlphaBlend_173e6e4b17903a8f97816f95fe3dfb5e_Out_0_Float;
             surface.Alpha = SeasonFoliageAlpha(surface.Alpha, _SampleTexture2D_6250ee6e80a681818bc417bd1fc7e3da_RGBA_0_Vector4.rgb, IN.uv0.xy);
@@ -13452,7 +13452,7 @@ Shader "NatureManufacture/URP/Foliage/Foliage (Nature Renderer)"
             float _Property_c9e554ec47c0438293381e2fb7a44e1a_Out_0_Float = _AlphaCutoff;
             #endif
             surface.BaseColor = _WindColorMix_5d4dc45857e3dd8ca33a43847d50fb10_Out_0_Vector3;
-            surface.BaseColor = SeasonFoliageColour(surface.BaseColor);
+            surface.BaseColor = SeasonFoliageColour(surface.BaseColor, IN.uv0.xy);
             surface.Alpha = _UseDistanceAlphaBlend_173e6e4b17903a8f97816f95fe3dfb5e_Out_0_Float;
             surface.Alpha = SeasonFoliageAlpha(surface.Alpha, _SampleTexture2D_6250ee6e80a681818bc417bd1fc7e3da_RGBA_0_Vector4.rgb, IN.uv0.xy);
             surface.AlphaClipThreshold = _Property_c9e554ec47c0438293381e2fb7a44e1a_Out_0_Float;

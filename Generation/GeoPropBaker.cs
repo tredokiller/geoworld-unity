@@ -23,7 +23,8 @@ namespace GeoWorld.Editor
             public int props, trees;
         }
 
-        sealed class Model { public Dictionary<Color, MeshDraft> drafts; public Vector3 size; }
+        // size: of the kind's intact model (a broken one is scaled as the intact one would be); bounds: of this model
+        sealed class Model { public Dictionary<Color, MeshDraft> drafts; public Vector3 size; public Bounds bounds; }
 
         // A low-poly tree, 7 m tall and 4 m across, as one smooth-shaded mesh: a trunk and a crown of two cones.
         internal sealed class TreeModel { public Vector3[] vertices, normals; public bool[] trunk; public int[] triangles; }
@@ -40,15 +41,22 @@ namespace GeoWorld.Editor
                 if (!GeoData.Finite(p.position.x) || !GeoData.Finite(p.position.y) || !GeoData.Finite(p.position.z)) continue;
                 var key = new Vector2Int(Mathf.FloorToInt(p.position.x / size), Mathf.FloorToInt(p.position.z / size));
                 if (!chunks.TryGetValue(key, out var chunk)) chunks[key] = chunk = new Chunk();
-                var rotation = Quaternion.Euler(0, GeoData.Finite(p.yaw) ? p.yaw : 0, 0);
+                // its yaw, and its lean after the battle (GeoPropDamage); a prop lying on its side is lifted onto the ground
+                var rotation = GeoPropDamage.Rotation(p);
                 if (p.kind == "tree") { tree = tree ?? MakeTree(); AppendTree(chunk, tree, p, rotation, seed); chunk.trees++; }
-                else if (p.segment) AppendDrafts(chunk, Segment(p), Matrix4x4.TRS(p.position, rotation, Vector3.one));
+                else if (p.segment)
+                {
+                    var drafts = Segment(p, seed);
+                    float lift = GeoPropDamage.Lift(rotation, Bounds(drafts), Vector3.one, p.lean);
+                    AppendDrafts(chunk, drafts, Matrix4x4.TRS(p.position + Vector3.up * lift, rotation, Vector3.one));
+                }
                 else
                 {
-                    if (!models.TryGetValue(p.kind, out var model)) models[p.kind] = model = MakeModel(p.kind);
-                    float sx = p.width > 0 && GeoData.Finite(p.width) ? p.width / Mathf.Max(model.size.x, 0.01f) : 1;
-                    float sy = p.height > 0 && GeoData.Finite(p.height) ? p.height / Mathf.Max(model.size.y, 0.01f) : 1;
-                    AppendDrafts(chunk, model.drafts, Matrix4x4.TRS(p.position, rotation, new Vector3(sx, sy, 1)));
+                    string name = GeoPropDamage.ModelKey(p, seed);
+                    if (!models.TryGetValue(name, out var model)) models[name] = model = MakeModel(p.kind, p.damage, GeoPropDamage.Variant(p, seed));
+                    var scale = GeoPropBuilder.Scale(p, model.size);
+                    float lift = GeoPropDamage.Lift(rotation, model.bounds, scale, p.lean);
+                    AppendDrafts(chunk, model.drafts, Matrix4x4.TRS(p.position + Vector3.up * lift, rotation, scale));
                 }
                 chunk.props++;
             }
@@ -92,17 +100,24 @@ namespace GeoWorld.Editor
 
         // ------------------------------------------------------------------ models
 
-        static Model MakeModel(string kind)
+        static Model MakeModel(string kind, int damage, float variant)
         {
-            var drafts = GeoPropBuilder.Drafts(kind);
+            var drafts = GeoPropBuilder.Drafts(kind, damage, variant);
+            return new Model { drafts = drafts, size = GeoPropBuilder.IntactSize(kind), bounds = Bounds(drafts) };
+        }
+
+        internal static Bounds Bounds(Dictionary<Color, MeshDraft> drafts)
+        {
             Vector3 min = Vector3.one * float.MaxValue, max = Vector3.one * float.MinValue;
             foreach (var draft in drafts.Values)
                 foreach (var v in draft.vertices) { min = Vector3.Min(min, v); max = Vector3.Max(max, v); }
-            return new Model { drafts = drafts, size = drafts.Count == 0 ? Vector3.one : max - min };
+            if (min.x > max.x) return new Bounds(Vector3.zero, Vector3.one);
+            var bounds = new Bounds(); bounds.SetMinMax(min, max); return bounds;
         }
 
         // A fence, wall or hedge piece in real dimensions: z is its length, so a long piece is not a stretched model.
-        static Dictionary<Color, MeshDraft> Segment(PropPlacement p)
+        // A wall section after the battle has its own shape (WallRemains); a fence's damage is its lean.
+        internal static Dictionary<Color, MeshDraft> Segment(PropPlacement p, int seed)
         {
             var drafts = new Dictionary<Color, MeshDraft>();
             MeshDraft Draft(Color c) { if (!drafts.TryGetValue(c, out var d)) drafts[c] = d = new MeshDraft(); return d; }
@@ -111,7 +126,10 @@ namespace GeoWorld.Editor
             float l = Mathf.Max(0.1f, GeoData.Finite(p.length) ? p.length : 1f);
             switch (p.kind)
             {
-                case "wall": GeoPropBuilder.AddBox(Draft(GeoPropBuilder.Concrete), 0, h / 2, 0, w, h, l); break;
+                case "wall":
+                    if (p.damage != GeoPropDamage.Intact && !(p.lean > 0)) WallRemains(drafts, p, seed, w, h, l);
+                    else GeoPropBuilder.AddBox(Draft(GeoPropBuilder.Concrete), 0, h / 2, 0, w, h, l);
+                    break;
                 case "hedge": GeoPropBuilder.AddBox(Draft(GeoPropBuilder.Leaf), 0, h / 2, 0, w, h, l); break;
                 default: // fence and guard rail: a post at each end and rails between
                     var metal = Draft(GeoPropBuilder.Metal);
@@ -126,6 +144,60 @@ namespace GeoWorld.Editor
                     break;
             }
             return drafts;
+        }
+
+        // A wall section after the battle (GeoPropDamage): chipped along its top (damaged), breached 1–2.4 m wide with its
+        // edges broken off (broken), or a ragged stump of it (rubble); in columns of about 0.5 m, each its own height, and
+        // chunks of it at its foot, in the breach and on both sides. A panel knocked flat is the section's lean instead.
+        static void WallRemains(Dictionary<Color, MeshDraft> drafts, PropPlacement p, int seed, float w, float h, float l)
+        {
+            MeshDraft Draft(Color c) { if (!drafts.TryGetValue(c, out var d)) drafts[c] = d = new MeshDraft(); return d; }
+            float R(int channel) => GeoPropPlanner.Sample(p.id, seed, channel);
+            var concrete = GeoPropBuilder.Concrete;
+            var wall = Draft(concrete);
+            int columns = Mathf.Max(2, Mathf.RoundToInt(l / 0.5f));
+            float step = l / columns;
+            float centre = (R(51) - 0.5f) * l * 0.5f, half = Mathf.Min(0.5f + 0.7f * R(52), l * 0.4f);
+            var heights = new float[columns];
+            for (int k = 0; k < columns; k++)
+            {
+                float z = -l / 2 + (k + 0.5f) * step, r = GeoPropPlanner.Sample(p.id + "/" + k, seed, 53);
+                float f;
+                if (p.damage == GeoPropDamage.Damaged) f = r < 0.55f ? 1 : 1 - 0.32f * (r - 0.55f) / 0.45f;
+                else if (p.damage == GeoPropDamage.Broken)
+                {
+                    float dz = Mathf.Abs(z - centre);
+                    if (dz < half) f = 0.03f + 0.14f * r;
+                    else if (dz < half + 1) f = Mathf.Lerp(0.25f, 1, dz - half) * (0.75f + 0.25f * r);
+                    else f = r < 0.7f ? 1 : 1 - 0.25f * (r - 0.7f) / 0.3f;
+                }
+                else f = 0.06f + 0.3f * r;
+                heights[k] = Mathf.Clamp01(f) * h;
+            }
+            // runs of columns of one height as one box
+            for (int k = 0; k < columns;)
+            {
+                int end = k + 1;
+                while (end < columns && Mathf.Approximately(heights[end], heights[k])) end++;
+                if (heights[k] > 0.01f) GeoPropBuilder.AddBox(wall, 0, heights[k] / 2, -l / 2 + (k + end) * step / 2, w, heights[k], (end - k) * step);
+                k = end;
+            }
+            if (p.damage == GeoPropDamage.Damaged && R(54) > 0.5f) return;
+            int count = p.damage == GeoPropDamage.Damaged ? 1 + (int)(R(55) * 2) : p.damage == GeoPropDamage.Broken ? 6 + (int)(R(55) * 5) : 8 + (int)(R(55) * 7);
+            var dark = Draft(new Color(concrete.r * 0.82f, concrete.g * 0.82f, concrete.b * 0.82f));
+            var pale = Draft(new Color(concrete.r * 1.08f, concrete.g * 1.08f, concrete.b * 1.08f));
+            for (int i = 0; i < count; i++)
+            {
+                string id = p.id + "/rubble/" + i;
+                float a = GeoPropPlanner.Sample(id, seed, 61), b = GeoPropPlanner.Sample(id, seed, 62), c = GeoPropPlanner.Sample(id, seed, 63), e = GeoPropPlanner.Sample(id, seed, 64);
+                float z = p.damage == GeoPropDamage.Broken ? centre + (a - 0.5f) * 2 * (half + 0.6f) : (a - 0.5f) * l;
+                bool gap = p.damage == GeoPropDamage.Broken && Mathf.Abs(z - centre) < half;
+                // in the breach anywhere across it, elsewhere on either side of the wall, most of them close to it
+                float x = gap ? (b - 0.5f) * 2 * (w / 2 + 0.2f + 0.9f * c) : (b < 0.5f ? -1 : 1) * (w / 2 + 0.05f + 1.1f * c * c);
+                float size = 0.15f + 0.4f * e, tall = size * (0.4f + 0.4f * b);
+                var turn = Quaternion.Euler((c - 0.5f) * 40, a * 360, (e - 0.5f) * 40);
+                GeoPropBuilder.AddBox(e < 0.6f ? dark : pale, new Vector3(x, tall * 0.3f, Mathf.Clamp(z, -l / 2, l / 2)), turn, size, tall, size * (0.7f + 0.6f * c));
+            }
         }
 
         internal static TreeModel MakeTree()

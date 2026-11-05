@@ -20,6 +20,41 @@ bool SeasonTreeBare()
     return _Evergreen < 0.5 && (_Season.w > 0.5 || (_Season.z > 0.5 && SeasonTreeRandom(41u) < 0.3));
 }
 
+// Война (WarMap.cs): посечённость места у корня — окно 8192 м вокруг камеры, 8 м на тексель, читается LOAD (без сэмплера);
+// крона дерева — своим случаем по корню: saturate(посечённость × 1.6 − случай). В самом пекле больше половины деревьев —
+// голые ветки, остальные с прореженной листвой; где боёв не было (_WarTreesOn = 0) — ничего. И у хвойных: хвоя — зелёные
+// тексели, остаются сухие сучья. Та же формула на CPU — WarMap.TreeStrip (лесная подстилка, опад).
+TEXTURE2D(_WarMap);
+float4 _WarMapRect;   // x0, z0 окна, 1 / его размер, текселей по стороне
+float _WarTreesOn;
+
+half SeasonWarStrip()
+{
+    [branch] if (_WarTreesOn < 0.5)
+        return 0;
+
+    float3 pivot = TransformObjectToWorld(float3(0.0, 0.0, 0.0));
+    float2 uv = (pivot.xz - _WarMapRect.xy) * _WarMapRect.z;
+
+    [branch] if (any(uv < 0.0) || any(uv >= 1.0))
+        return 0;
+
+    half s = LOAD_TEXTURE2D(_WarMap, (int2)(uv * _WarMapRect.w)).r;
+    return saturate(s * 1.6 - SeasonTreeRandom(45u));
+}
+
+// Сорван ли войной лист в клетке атласа (cells клеток на сторону: целые веточки-спрайты, а не дыры в листе), у дерева со
+// своей посечённостью strip (1 — сорвано всё).
+bool SeasonWarGone(float2 uv, float cells, half strip)
+{
+    [branch] if (strip >= 0.999)
+        return true;
+
+    int2 cell = (int2)floor(uv * cells);
+    return GenerateHashedRandomFloat(uint3(asuint(cell.x), asuint(cell.y), asuint((int)(SeasonTreeRandom(46u) * 65535.0)))) < strip;
+}
+
+
 // Насколько тексель листвы — лист (0 — ветка, кора, сухой лист; 1 — зелёный лист, и в тени тоже).
 half SeasonLeafShare(half3 texel)
 {
@@ -41,6 +76,12 @@ half SeasonTwigHaze(float2 uv, float2 footprint)
 half3 SeasonBareColour(half3 colour)
 {
     return lerp(colour, SeasonLuminance(colour) * half3(0.8, 0.7, 0.62), SeasonLeafShare(colour));
+}
+
+// Листва посечённого дерева: оставшиеся листья подсохли (бурее и тусклее), сильнее у сильнее посечённого.
+half3 SeasonWarLeafColour(half3 colour, half strip)
+{
+    return lerp(colour, SeasonLuminance(colour) * half3(1.05, 0.85, 0.5), 0.55 * strip * SeasonLeafShare(colour));
 }
 
 // Листва дерева по поре: осенью — его цвет (сохраняя рисунок текстуры), весной — молодая: светлая, салатовая, у каждого

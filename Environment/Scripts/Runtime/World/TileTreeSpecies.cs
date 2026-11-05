@@ -138,7 +138,7 @@ namespace _Game.Scripts.World
                     if (terrain == null || loader == null || Pending.Contains(terrain))
                         continue;
 
-                    Behaviour natureRenderer = terrain.GetComponent("NatureRenderer") as Behaviour;
+                    Behaviour natureRenderer = GeoWorld.GeoNatureRenderer.Of(terrain) as Behaviour;
                     Tile tile = new()
                     {
                         Terrain = terrain, Loader = loader, Start = start, StartWasEnabled = start.enabled,

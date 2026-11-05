@@ -228,7 +228,8 @@ namespace _Game.Scripts.World
         // Кроны террейнов окна (новые и изменившиеся — читаются заново); подпись — что в окне сейчас.
         private int Refresh(Rect window)
         {
-            int signature = 17 + _objectTreesVersion * 7919;
+            // и посечённость войной (WarMap): у посечённой кроны тень реже
+            int signature = 17 + _objectTreesVersion * 7919 + WarMap.Version * 104729;
             _gone.Clear();
 
             foreach (Terrain terrain in _crowns.Keys)
@@ -455,6 +456,8 @@ namespace _Game.Scripts.World
                 int z1 = Mathf.Min(n - 1, Mathf.FloorToInt((tree.y + far - origin.y) / step));
                 bool conifer = tree.w > 0.5f && tree.w < 1.5f;
                 bool bare = tree.w > 1.5f;
+                // крона, посечённая войной, затеняет меньше (как шейдер деревьев: WarMap.TreeStrip — бит в бит)
+                float shade = 1f - 0.6f * WarMap.TreeStrip(tree.x, tree.y);
 
                 for (int z = z0; z <= z1; z++)
                 {
@@ -471,7 +474,7 @@ namespace _Game.Scripts.World
                         int i = z * n + x;
                         float leaves = 1f - Smooth(radius * 0.8f, far, d);
                         litter[i] += leaves;
-                        crown[i] += 1f - Smooth(radius * 0.6f, radius * 1.05f, d);
+                        crown[i] += (1f - Smooth(radius * 0.6f, radius * 1.05f, d)) * shade;
 
                         if (conifer)
                             needles[i] += leaves;

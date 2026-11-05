@@ -1,4 +1,4 @@
-"""Trench wall textures for GeoWorld (GeoTrenchMesh's walls): one atlas of four strips, each 4 m along a wall (tiling) and the
+"""Trench wall textures for GeoWorld (GeoTrenchMesh's walls): one atlas of five strips, each 4 m along a wall (tiling) and the
 wall's height up it (0 at the foot, 1 at the top edge):
 
   0  bare cut soil: turf and root mat at the top, dark chernozem with fine roots, then yellow-brown loess loam with the
@@ -6,12 +6,15 @@ wall's height up it (0 at the foot, 1 at the top edge):
   1  the same, another stretch: wetter, more slumped, more stones
   2  boards laid flat behind round posts (the common revetment), weathered, some broken or gone, soil above them
   3  wattle: rods woven round stakes, grey bark, soil above
+  4  round timber for a dugout's roof: 4 m along a log, once round it (0 its underside, 0.5 its top), weathered grey bark,
+     soil from the cover left on its top and mud on its underside
 
 Built from photo scans already in the package (Poly Haven, CC0: brown_mud_03, dry_mud_field_001, grass_ground in
-Environment/Textures/Ground/PolyHaven): their pattern (brightness against their own mean) under the colours of the soil
-horizons, the rest (roots, tool marks, boards, rods) drawn here. Writes Textures/Trenches/trench_walls_albedo.png (sRGB),
-_normal.png (OpenGL, as Unity), _mask.png (R metallic 0, G occlusion, A smoothness: URP Lit's metallic-gloss and
-occlusion maps both).
+Environment/Textures/Ground/PolyHaven; jolcham_oak_bark_01 as the greyed oak_dead_bark of Environment/Vegetation/Generated/Oak):
+their pattern (brightness against their own mean) under the colours of the soil horizons, the rest (roots, tool marks, boards,
+rods) drawn here. Writes Textures/Trenches/trench_walls_albedo.png (sRGB), _normal.png (OpenGL, as Unity), _mask.png (R metallic
+0, G occlusion, A smoothness: URP Lit's metallic-gloss and occlusion maps both). The image is 2048 x 2560 (five strips of 512);
+Unity scales it to the nearest power of two (2048 square), the strips' share of it stays.
 
     py -I Tools~/Trenches/trench_textures.py <package folder>
 """
@@ -22,7 +25,7 @@ import numpy as np
 from PIL import Image
 
 W, H = 2048, 512          # a strip: 4 m along x 1.3 m up
-STRIPS = 4
+STRIPS = 5
 PX = W / 4.0              # pixels a metre along
 PY = H / 1.3              # pixels a metre up
 
@@ -337,6 +340,40 @@ def wattle_strip(rng, sources, base):
     return c
 
 
+def logs_strip(rng, sources, bark):
+    """Round timber: the bark scan once round the log (y: 0 the underside, 0.5 the top) and three times along its 4 m (x);
+    greyed and weathered, mud on the underside, soil of the cover on the top, a few cracks along the grain."""
+    colour, height, gloss = bark
+    bh, bw = colour.shape[:2]                  # the scan: x round the trunk (0.6 m), y along it (1.2 m)
+    ys, xs = np.mgrid[0:H, 0:W].astype(np.float32)
+    along = (xs / (W / 3.0)) % 1.0 * bh        # the scan's y along the log
+    round_ = (ys / H) % 1.0 * bw               # the scan's x round it
+    y0 = np.floor(along).astype(int) % bh; x0 = np.floor(round_).astype(int) % bw
+    c = Canvas()
+    c.albedo = colour[y0, x0].copy()
+    c.height = height[y0, x0].copy()
+    c.smooth = gloss[y0, x0].copy() * 0.6
+    # weathered: greyer and a little lighter, as timber left out for a season or two
+    lum = luminance(c.albedo)[..., None]
+    c.albedo = (c.albedo * 0.55 + lum * 0.45) * np.array([1.0, 0.98, 0.95]) * 1.1
+    v = ys / H
+    mud, field, _ = sources
+    soil = field(0, 37)[..., :3]
+    # the underside lay in the mud (v about 0), the top (v about 0.5) under the soil of the cover: patches of it left on
+    cover = np.clip(np.cos((v - 0.5) * 2 * np.pi), 0, 1) ** 2 * np.clip(noise(rng, 18, 6, 3) * 1.6 - 0.35, 0, 1)
+    under = np.clip(np.cos(v * 2 * np.pi), 0, 1) ** 3 * 0.55
+    dirt = np.clip(cover + under, 0, 0.9)[..., None]
+    c.albedo = c.albedo * (1 - dirt) + soil * 0.8 * dirt
+    c.height = c.height * (1 - dirt[..., 0] * 0.5) + 0.35 * dirt[..., 0]
+    # a few dry cracks along the grain
+    for _ in range(14):
+        row = rng.uniform(0, H); length = rng.uniform(0.3, 1.4) * PX; x = rng.uniform(0, W)
+        cols = (np.arange(int(x), int(x + length)) % W)
+        wob = (np.sin(np.arange(len(cols)) / rng.uniform(40, 90)) * rng.uniform(1, 3) + row).astype(int) % H
+        c.albedo[wob, cols] *= 0.55; c.height[wob, cols] = 0.0
+    return c
+
+
 def normals(height, strength):
     """OpenGL normal map from a height field (x wraps; v up = image rows going up)."""
     hx = (np.roll(height, -1, axis=1) - np.roll(height, 1, axis=1)) * 0.5
@@ -374,6 +411,9 @@ def main():
     b = soil_strip(rng, sources, wet=0.6, slump=0.8, stones=1.6); strips.append(b)
     strips.append(boards_strip(rng, sources, soil_strip(rng, sources, wet=0.3)))
     strips.append(wattle_strip(rng, sources, soil_strip(rng, sources, wet=0.2)))
+    oak = os.path.join(package, 'Environment', 'Vegetation', 'Generated', 'Oak')
+    bark_mask = np.asarray(Image.open(os.path.join(oak, 'oak_dead_bark_mask.png')).convert('RGBA'), np.float32) / 255.0
+    strips.append(logs_strip(rng, sources, (load_linear(os.path.join(oak, 'oak_dead_bark_albedo.png')), bark_mask[..., 2], bark_mask[..., 3])))
     albedo = np.zeros((H * STRIPS, W, 3), np.float32)
     normal = np.zeros((H * STRIPS, W, 3), np.float32)
     mask = np.zeros((H * STRIPS, W, 4), np.float32)

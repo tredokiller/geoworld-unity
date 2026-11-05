@@ -1143,7 +1143,7 @@ Shader "NatureManufacture/URP/Foliage/Cross (Nature Renderer)"
             float _Property_6e0a4c80174dd586b0af901b561bdf0c_Out_0_Float = _AORemapMax;
             float _Property_eb06f9239ca79d8cb88e48352999147c_Out_0_Float = _AlphaCutoff;
             surface.BaseColor = (_Multiply_08bc0d428783878796fa48443ec54fa6_Out_2_Vector4.xyz);
-            surface.BaseColor = SeasonCrossColour(surface.BaseColor);
+            surface.BaseColor = SeasonCrossColour(surface.BaseColor, IN.uv0.xy);
             surface.NormalTS = _NormalStrength_97757db4000a6e8faa4fd7b8e1772a8f_Out_2_Vector3;
             surface.Emission = float3(0, 0, 0);
             surface.Specular = (_Multiply_c69313900a4a8781a4ff6361b3dccd1f_Out_2_Vector4.xyz);
@@ -2330,7 +2330,7 @@ Shader "NatureManufacture/URP/Foliage/Cross (Nature Renderer)"
             float _Property_6e0a4c80174dd586b0af901b561bdf0c_Out_0_Float = _AORemapMax;
             float _Property_eb06f9239ca79d8cb88e48352999147c_Out_0_Float = _AlphaCutoff;
             surface.BaseColor = (_Multiply_08bc0d428783878796fa48443ec54fa6_Out_2_Vector4.xyz);
-            surface.BaseColor = SeasonCrossColour(surface.BaseColor);
+            surface.BaseColor = SeasonCrossColour(surface.BaseColor, IN.uv0.xy);
             surface.NormalTS = _NormalStrength_97757db4000a6e8faa4fd7b8e1772a8f_Out_2_Vector3;
             surface.Emission = float3(0, 0, 0);
             surface.Specular = (_Multiply_c69313900a4a8781a4ff6361b3dccd1f_Out_2_Vector4.xyz);
@@ -6429,7 +6429,7 @@ Shader "NatureManufacture/URP/Foliage/Cross (Nature Renderer)"
             Unity_Multiply_float4_float4(_SampleTexture2D_51476b09426e1b8a9ba59ad0707eaf3a_RGBA_0_Vector4, _Lerp_9dafda8c247ac585bf333045384b652e_Out_3_Vector4, _Multiply_08bc0d428783878796fa48443ec54fa6_Out_2_Vector4);
             float _Property_eb06f9239ca79d8cb88e48352999147c_Out_0_Float = _AlphaCutoff;
             surface.BaseColor = (_Multiply_08bc0d428783878796fa48443ec54fa6_Out_2_Vector4.xyz);
-            surface.BaseColor = SeasonCrossColour(surface.BaseColor);
+            surface.BaseColor = SeasonCrossColour(surface.BaseColor, IN.uv0.xy);
             surface.Emission = float3(0, 0, 0);
             surface.Alpha = _SampleTexture2D_51476b09426e1b8a9ba59ad0707eaf3a_A_7_Float;
             surface.Alpha = SeasonCrossAlpha(surface.Alpha, IN.uv0.xy, _SampleTexture2D_51476b09426e1b8a9ba59ad0707eaf3a_RGBA_0_Vector4.rgb);
@@ -9465,7 +9465,7 @@ Shader "NatureManufacture/URP/Foliage/Cross (Nature Renderer)"
             Unity_Multiply_float4_float4(_SampleTexture2D_51476b09426e1b8a9ba59ad0707eaf3a_RGBA_0_Vector4, _Lerp_9dafda8c247ac585bf333045384b652e_Out_3_Vector4, _Multiply_08bc0d428783878796fa48443ec54fa6_Out_2_Vector4);
             float _Property_eb06f9239ca79d8cb88e48352999147c_Out_0_Float = _AlphaCutoff;
             surface.BaseColor = (_Multiply_08bc0d428783878796fa48443ec54fa6_Out_2_Vector4.xyz);
-            surface.BaseColor = SeasonCrossColour(surface.BaseColor);
+            surface.BaseColor = SeasonCrossColour(surface.BaseColor, IN.uv0.xy);
             surface.Alpha = _SampleTexture2D_51476b09426e1b8a9ba59ad0707eaf3a_A_7_Float;
             surface.Alpha = SeasonCrossAlpha(surface.Alpha, IN.uv0.xy, _SampleTexture2D_51476b09426e1b8a9ba59ad0707eaf3a_RGBA_0_Vector4.rgb);
             surface.AlphaClipThreshold = _Property_eb06f9239ca79d8cb88e48352999147c_Out_0_Float;

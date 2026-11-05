@@ -21,6 +21,8 @@
 
 #include "Puddles.hlsl"
 #include "FieldRows.hlsl"
+// война (WarMap): колеи техники по земле (GroundTracks зовётся после пыли руин, до воронок и снега)
+#include "GroundWar.hlsl"
 #include "../FieldWind.hlsl"
 #include "../Water/WaterInteraction.hlsl"
 #include "../Seasons.hlsl"
@@ -105,6 +107,12 @@ half3 GroundIce(float2 p, float footprint, out half smoothness, out half snowSha
 // воронки по карте воронок (CraterMap): в GroundWetness после дорог (воронка рвёт и полотно), до снега; лёд прудков — GroundIce
 #include "GroundCraters.hlsl"
 
+// земля вокруг руин (RuinMap): пыль, крошка, обломки — после дорог (пыль ложится и на полотно), до воронок и снега
+#include "GroundRuins.hlsl"
+
+// асфальт после боёв: разбит у воронок, грязь с полей (WarMap) — после полотна, до пыли руин и воронок
+#include "GroundRoadScars.hlsl"
+
 // water — доля воды луж и болот в пикселе (для живого неба в отражении, PuddleSky)
 void GroundWetness(inout InputData inputData, half3 geometryNormalWS, inout half3 albedo, inout half smoothness, inout half occlusion, out half water)
 {
@@ -147,7 +155,15 @@ void GroundWetness(inout InputData inputData, half3 geometryNormalWS, inout half
     // полотно дорог: асфальт, гравий, грунтовка с колеями, тропинки (GroundRoads.hlsl); roadHollow — где на нём стоит вода
     half roadSurface;
     half roadHollow;
-    GroundRoad(inputData, dpdx, dpdy, albedo, smoothness, occlusion, roadSurface, roadHollow);
+    half roadPaved;
+    GroundRoad(inputData, dpdx, dpdy, albedo, smoothness, occlusion, roadSurface, roadHollow, roadPaved);
+    GroundRoadScars(inputData, dpdx, dpdy, roadPaved, albedo, smoothness, occlusion);
+
+    // вокруг руин: цементная пыль, крошка бетона и кирпича, обломки у стены (GroundRuins.hlsl); голая — мокнет как земля
+    GroundRuins(inputData, dpdx, dpdy, albedo, smoothness, occlusion, bare);
+
+    // где шли бои — колеи гусениц и колёс по земле (GroundWar.hlsl), процедурно: и сквозь пыль руин, но не по полотну дорог
+    GroundTracks(positionWS, dpdx, dpdy, groundGreenness, roadSurface, litter, albedo, inputData.normalWS);
 
     // воронки: рельеф мелких, тёмные чаши, свежий выброс, вода в них — и в сухую погоду (её доля — для живого неба)
     half craterBowl;

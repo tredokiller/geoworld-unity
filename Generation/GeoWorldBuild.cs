@@ -351,9 +351,10 @@ namespace GeoWorld.Editor
                     var streets=new GeoStreets(env.roads);
                     // a city is baked into chunks of mesh; a village keeps one editable object per building
                     bool merged=GeoCityBuilder.ShouldMerge(settings,buildings.buildings.Count);
+                    // a battlefield's homes where the fighting was are worn (GeoHomeWear)
                     if(merged)
                         root.buildingCount+=GeoCityBuilder.Build(buildings.buildings,env.bounds,group,p=>field.Sample(p.x,p.z),obj=>context.Save(obj),notes,settings,
-                            f=>Progress("Baking buildings",0.63f+0.22f*f),buildings.buildings.Count,streets);
+                            f=>Progress("Baking buildings",0.63f+0.22f*f),buildings.buildings.Count,streets,env.battlefield?new GeoPropDamage.War(env,buildings,settings.applyCondition):null);
                     var edited=BuildingEdits(replace);
                     int index=0,skipped=0;var ruins=new Dictionary<string,int>();
                     GeoRuinFit.ClearCache();

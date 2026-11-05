@@ -41,6 +41,11 @@ namespace _Game.Scripts.World
             if (environment == null || terrain == null || !Application.isPlaying)
                 return;
 
+            // дороги на земле рисует слой окружения (RoadMap по осям WorldMapData): меши дорог и перекрёстков пакета
+            // ложились поверх них вторым полотном; мосты и насыпи остаются
+            if (environment.GetComponent<RoadMap>() != null && RoadAreas.Instance != null)
+                HideGroundRoads(handle.Root);
+
             GeoInstancedMeshes trees = FindTrees(handle.Root);
 
             if (trees == null || !PlantOnTerrain(trees, terrain))
@@ -52,10 +57,36 @@ namespace _Game.Scripts.World
                 environment.TreeSpecies.Process(terrain);
 
             // Nature Renderer рисует деревья, с которыми начал: уже стоящий — заново
-            if (terrain.GetComponent("NatureRenderer") != null)
+            if (GeoNatureRenderer.Of(terrain) != null)
                 GeoNatureRenderer.Refresh(terrain);
             else
                 GeoNatureRenderer.Ensure(terrain);
+        }
+
+        // Куски дорог и перекрёстков тайла (GeoWorldBuild: «Roads x_z | материал», «Junctions x_z | материал» в группе дорог)
+        public static int HideGroundRoads(GameObject root)
+        {
+            int hidden = 0;
+
+            foreach (Transform group in root.GetComponentsInChildren<Transform>(true))
+            {
+                if (!group.name.StartsWith("Roads - ", System.StringComparison.Ordinal))
+                    continue;
+
+                foreach (Transform piece in group)
+                {
+                    if (!piece.name.StartsWith("Roads ", System.StringComparison.Ordinal) && !piece.name.StartsWith("Junctions ", System.StringComparison.Ordinal))
+                        continue;
+
+                    if (piece.TryGetComponent(out MeshRenderer renderer) && renderer.enabled)
+                    {
+                        renderer.enabled = false;
+                        hidden++;
+                    }
+                }
+            }
+
+            return hidden;
         }
 
         private static GeoInstancedMeshes FindTrees(GameObject root)

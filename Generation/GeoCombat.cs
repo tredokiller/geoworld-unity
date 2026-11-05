@@ -16,6 +16,14 @@ namespace GeoWorld.Editor
 
     // What a trench is: a fire trench (along a tree line, zigzag), a communication trench (back to cover), a dugout's pit
     // (its roof gone), an anti-tank ditch.
+    // What a battlefield's tiles draw besides the ground (the settlements after the battle: GeoPropDamage, GeoPowerLines,
+    // GeoHomeWear): part of the fingerprint of every tile and package with a combat bake, so a change of it rebuilds only
+    // those (a world without a battlefield keeps its tiles). Bump it when they draw differently.
+    public static class GeoWarLook
+    {
+        public const string Version = "war-look-1"; // 1: street props after the battle, power lines, worn homes
+    }
+
     public static class GeoTrenchKind
     {
         public const int Fire = 0, Communication = 1, Dugout = 2, AntiTank = 3;
@@ -103,6 +111,7 @@ namespace GeoWorld.Editor
                 Debug.LogWarning("Geo World: " + PathFor(environmentPath) + " was baked from another export (origin or bounds differ) and is not used.");
                 return;
             }
+            env.battlefield = true;
             env.trenches.AddRange(file.trenches);
             if (file.craters.Count == 0) return;
             if (env.craters.Count == 0) { env.craters.AddRange(file.craters); return; }
@@ -367,7 +376,7 @@ namespace GeoWorld.Editor
             {
                 if (t?.points == null || t.points.Length < 4 || !(t.depth > 0)) continue;
                 var section = GeoTrenchSection.Of(t, cell);
-                float reach = section.half + diagonal;
+                float reach = section.half + diagonal + GeoTrenchSection.Sway;
                 bool touched = false;
                 // the centreline the mesh follows (GeoTrenchMesh.Centreline: no spikes)
                 var points = GeoTrenchMesh.Centreline(t);

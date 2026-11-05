@@ -33,10 +33,12 @@ namespace GeoWorld.Editor
             (settings.buildingMode == GeoBuildingMode.Auto && buildingCount > settings.mergeAbove);
 
         // Returns the number of buildings baked. `group` receives one child per chunk. streets (optional) turns ruin
-        // models to face their street.
+        // models to face their street. war (optional, a battlefield's): the homes where the fighting was are worn (GeoHomeWear).
         public static int Build(IEnumerable<BuildingFeature> sources, GeoBounds bounds, Transform group, Func<Vector3, float> ground,
-            Action<Object> save, List<string> notes, GenerationSettings settings, Action<float> progress, int total, GeoStreets streets = null)
+            Action<Object> save, List<string> notes, GenerationSettings settings, Action<float> progress, int total, GeoStreets streets = null,
+            GeoPropDamage.War war = null)
         {
+            var wear = new GeoHomeWear(war, save);
             Func<Vector2, Vector2?> street = streets != null && !streets.Empty ? p => streets.Toward(p) : (Func<Vector2, Vector2?>)null;
             var chunks = new Dictionary<Vector2Int, Chunk>();
             var temp = new GameObject("Geo building (temporary)") { hideFlags = HideFlags.HideAndDontSave };
@@ -79,7 +81,8 @@ namespace GeoWorld.Editor
                                 homeGroup = new GameObject("Homes " + key.x + "_" + key.y).transform; homeGroup.SetParent(group, false);
                                 homeGroups[key] = homeGroup;
                             }
-                            PlaceHome(building, context, depth, temp.transform, homeGroup, source.id);
+                            int level = wear.Level(new Vector2(source.x, source.z), GeoBuildingDamage.StateOf(building));
+                            PlaceHome(building, context, depth, temp.transform, homeGroup, source.id, wear, level);
                             AppendPlinth(chunk, building, context, depth, temp.transform.localToWorldMatrix);
                             instanced += building.homeParts != null && building.homeParts.Count > 0 ? building.homeParts.Count : 1;
                         }
@@ -152,6 +155,8 @@ namespace GeoWorld.Editor
                 if (instanced > 0) notes.Add(instanced + " homes are instances of the library's models (an object each with the model's own meshes and a transform), not copies of their geometry. " +
                                              "They are kept as a list in the world's asset and made when the scene loads (a few per frame while playing), not saved in the scene.");
                 if (reduced && (ruins.Count > 0 || homes.Count > 0)) notes.Add("Ruin and home models are drawn with their reduced copies: " + GeoModelDetail.Summary(reduced));
+                var worn = wear.Note();
+                if (worn != null) notes.Add(worn);
             }
             return count;
         }
@@ -228,20 +233,22 @@ namespace GeoWorld.Editor
 
         // One object per home, its renderers the library's own meshes and materials (the GPU Resident Drawer draws the
         // thousands of them that share a mesh and material together).
-        static void PlaceHome(GeoBuilding building, GeoBuildingContext context, float depth, Transform frame, Transform parent, string id)
+        static void PlaceHome(GeoBuilding building, GeoBuildingContext context, float depth, Transform frame, Transform parent, string id,
+            GeoHomeWear wear = null, int level = 0)
         {
             var parts = building.homeParts;
             if (parts == null || parts.Count == 0)
             {
-                PlaceHome(building, building.home, GeoRuinFit.FrameOf(context.outline), building.homeTurn, building.homeMirror, depth, frame, parent, id);
+                PlaceHome(building, building.home, GeoRuinFit.FrameOf(context.outline), building.homeTurn, building.homeMirror, depth, frame, parent, id, wear, level);
                 return;
             }
             // a row of sections or the rectangles of an L, T or U: one home object for each
             for (int i = 0; i < parts.Count; i++)
-                PlaceHome(building, parts[i].model, parts[i].frame, parts[i].turn, parts[i].mirror, depth, frame, parent, i == 0 ? id : id + " #" + (i + 1));
+                PlaceHome(building, parts[i].model, parts[i].frame, parts[i].turn, parts[i].mirror, depth, frame, parent, i == 0 ? id : id + " #" + (i + 1), wear, level);
         }
 
-        static void PlaceHome(GeoBuilding building, GeoHomeModelAsset model, GeoRuinFit.Frame rectangle, bool turn, bool mirrored, float depth, Transform frame, Transform parent, string id)
+        static void PlaceHome(GeoBuilding building, GeoHomeModelAsset model, GeoRuinFit.Frame rectangle, bool turn, bool mirrored, float depth, Transform frame, Transform parent, string id,
+            GeoHomeWear wear = null, int level = 0)
         {
             HomeInstance(building, model, rectangle, turn, mirrored, depth, out var body, out var roof, out var variant, out var roofMaterial);
             var home = new GameObject("Home " + model.id + " | " + id).transform;
@@ -256,6 +263,10 @@ namespace GeoWorld.Editor
                 // sub-mesh 0 the model's baked atlas, 1 the roof surface in the export's roof material (as GeoHomes.Build)
                 var materials = new Material[mesh.subMeshCount];
                 for (int s = 0; s < materials.Length; s++) materials[s] = s == 1 && roofMaterial ? roofMaterial : model.material;
+                // after the battle: the same textures on the worn shader (a home out of the fighting keeps them as they are)
+                if (wear != null && level > 0)
+                    for (int s = 0; s < materials.Length; s++)
+                        materials[s] = wear.Material(materials[s], level, s == 1 && roofMaterial, model.eaveHeight);
                 go.AddComponent<MeshRenderer>().sharedMaterials = materials;
             }
             Part("Body", model.body, body);

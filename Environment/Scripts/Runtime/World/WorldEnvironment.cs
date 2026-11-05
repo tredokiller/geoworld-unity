@@ -70,6 +70,10 @@ namespace _Game.Scripts.World
             Ensure<WaterShore>();
             Ensure<RoadMap>();
             Ensure<CraterMap>();
+            // посечённость войной (деревья): по воронкам и руинам загруженных тайлов
+            Ensure<WarMap>();
+            // пыль, крошка и обломки вокруг руин (GroundRuins.hlsl)
+            Ensure<RuinMap>();
             Ensure<GroundDetail>();
             Ensure<ForestFloor>();
             Seasons = Ensure<Seasons>();
