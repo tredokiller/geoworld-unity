@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.20.0
 
 - Battlefields: an area after a finished battle (no fighting goes on: no fire, smoke or artillery), from its satellite imagery and its map. The combat bake (`GeoCombatBake`) runs once for an export, before any tile is built, and writes `combat.json` next to its `environment.json` (`GeoCombatFile`, format `geo-combat` 2): **Bake battlefield** in the Geo Tiled World's Inspector (every export of the world, then Rebuild changed tiles), `GeoWorldRequest.battlefield` (and `combat` for its settings, `GeoCombatSettings`) for world packages, or `GeoCombatBake.Run`. The file names the export it was baked from (origin and bounds): next to another export it is ignored with a warning, and extracting the area again deletes it. It is part of every tile's fingerprint and of a package's input hash; a bake that changes nothing leaves the file as it was. `ReadEnvironment` and `ReadBuildings` merge it (their new `combat` argument, true by default); `environment.json` may carry `craters[]` and `trenches[]` of its own (`CraterFeature`, `TrenchFeature`).
   - Craters seen on the imagery (`GeoCraterDetector`, read in pieces of a kilometre with a 100 m overlap at 0.49 m a pixel through `GeoSatellite.Pixels`): pits from about 2 m across up to bomb craters, with fresh ejecta and water in them. Reading data out of imagery needs a licence that allows it (Esri World Imagery's terms do not for this use); `GeoCombatSettings.detect` turns it off.
