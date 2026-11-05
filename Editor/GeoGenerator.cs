@@ -105,12 +105,14 @@ namespace GeoWorld.Editor
                 group=Group("Buildings",world.transform);int count=0;
                 bool merged=GeoCityBuilder.ShouldMerge(world.settings,data.buildings.Count);
                 if(merged)count+=GeoCityBuilder.Build(data.buildings,bounds,group,p=>terrain.SampleHeight(p)+position.y,obj=>AssetDatabase.AddObjectToAsset(obj,path),notes,world.settings,null,data.buildings.Count,streets);
-                var ruins=new Dictionary<string,int>();GeoRuinFit.ClearCache();
+                var ruins=new Dictionary<string,int>();GeoRuinFit.ClearCache();GeoHomePlan.ClearCache();
+                var site=merged?null:GeoHomeSites.For(data.buildings,streets,world.settings);
                 foreach(var source in merged?new List<BuildingFeature>():data.buildings)
                 {
                     if(!ValidBuilding(source)||!bounds.Contains(source.x,source.z))continue;
                     edits.TryGetValue(source.id??"",out var previous);
-                    CountRuin(ruins,GeoBuildingBuilder.Create(ForSettings(source,world.settings),group,p=>terrain.SampleHeight(p)+position.y,obj=>AssetDatabase.AddObjectToAsset(obj,path),notes,previous,world.settings,streets));count++;
+                    var feature=ForSettings(source,world.settings);if(site!=null&&site.IsOutbuilding(feature.id))feature=GeoHomeSites.AsOutbuilding(feature);
+                    CountRuin(ruins,GeoBuildingBuilder.Create(feature,group,p=>terrain.SampleHeight(p)+position.y,obj=>AssetDatabase.AddObjectToAsset(obj,path),notes,previous,world.settings,streets,site));count++;
                 }
                 count+=CopyCustomBuildings(world,group,p=>terrain.SampleHeight(p)+position.y,obj=>AssetDatabase.AddObjectToAsset(obj,path),notes,world.settings);
                 if(ruins.Count>0)notes.Add(GeoCityBuilder.RuinNote(ruins));

@@ -44,6 +44,8 @@ namespace GeoWorld
         public GeoRuinLibrary ruinLibrary;
         [Tooltip("Draw buildings with intact-building models from the home library, fitted to each footprint, with the roofs of the export: those not known to be damaged, or all that still stand (damaged ones too, without their soot). Buildings no model fits keep the style's walls and roof.")]
         public GeoHomeUse homeModels = GeoHomeUse.IntactAndUnknown;
+        [Tooltip("Outlines the export calls houses by their size alone (Microsoft's, bare building=yes) that stand in the yard of a bigger house, behind it from the street, are drawn as outbuildings (summer kitchens, sheds, barns) instead of houses with porches to the street.")]
+        public bool yardOutbuildings = true;
         [Tooltip("The home models to choose from (Tools > Geo World > Import home models). Empty: the style's walls and roof only.")]
         public GeoHomeLibrary homeLibrary;
         [Tooltip("Metres of a ruin's yard and debris kept around its footprint, at most (a big building may keep up to a fifth of its width). Less keeps streets and neighbours clear.")]

@@ -13,6 +13,9 @@ namespace GeoWorld.Editor
         public float Width => maxX - minX;
         public float Depth => maxZ - minZ;
         public bool Contains(float x, float z) => x >= minX && x <= maxX && z >= minZ && z <= maxZ;
+        // Whether a building centred here is built by these bounds: one standing on the line between two tiles is the
+        // upper tile's (the lower edges are in, the upper ones out), not built by both.
+        public bool Owns(float x, float z) => x >= minX && x < maxX && z >= minZ && z < maxZ;
     }
     [Serializable] public class GeoOrigin { public double lat, lon; }
     [Serializable] public class HeightmapInfo
@@ -117,6 +120,10 @@ namespace GeoWorld.Editor
         public GeoMappedAppearance mappedAppearance;
         public GeoBuildingCondition condition;
         public GeoRoofInfo roof; // shape, ridge, rise, colour with their sources; absent in older exports
+        // where the outline comes from ("osm", "microsoft") and how its category was found ("tag", "guessed" from its shape);
+        // absent in older exports
+        public string source, categorySource;
+        public BuildingFeature Clone() => (BuildingFeature)MemberwiseClone();
     }
     [Serializable] public class BuildingArea { public GeoBounds bounds; }
     [Serializable] public class BuildingsData

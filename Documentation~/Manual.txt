@@ -794,6 +794,25 @@ stretched further (0.6-1.72), and an L, T or U footprint becomes its rectangles 
 a model of the building's kind first, then of a related one. Each part is a model of its own (GeoBuilding.homeParts), an
 instance and a plinth of its own in a merged city. Bakhmut's centre: 8 of 291 standing buildings keep procedural walls
 (108 before), Klishchiivka's 4 of 48 (18).
+Fitting a home model (GeoHomeLibrary.ChooseFit). A model is fitted by its plan (GeoHomePlan): what it covers seen from
+above with the building's roof, from its meshes, as its box and a few rectangles (main block, wing, porch, a summer kitchen
+in line). The whole plan is stretched over the footprint's smallest rectangle, because an outline traced from the imagery
+is the roof seen from above and already holds the porch: stretched by its walls, as before, a model reached past the
+footprint by up to 5.6 m (28 of the 38 models by 1.5 m or more) and stood in the next house. Each model is tried eight ways
+round: its front to either long side or, turned a quarter (Home Quarter), to either end, mirrored or not. The way that
+costs least wins: the stretch (proportions kept within 1.28 times), how unlike the outline the plan is (an L footprint
+takes an L model with its wing where the outline's is), and where the front looks: towards a street along a long side,
+else to the south (the yard side of a house with its gable to the street). A street is a road people live along, not a
+footway, path or field track. A way whose plan reaches into another building's outline (more than 0.3 m²), or leaves a
+fifth of itself outside its own, is out; the outlines decide, so a building is fitted the same in every tile that sees
+it. An instanced home stands on a plinth under its body's plan, not under the footprint's whole rectangle.
+Yard outbuildings (Yard Outbuildings, on): a Microsoft outline or a bare building=yes the export calls a house by its
+size alone is drawn as a shed (N31-N34, never a house model) when it stands in a bigger house's yard: a house 1.2 times
+its size within 30 m and 3 m or more nearer the street (with no street near, one 1.5 times its size; under 45 m², a house
+1.6 times its size within 15 m). Mapped houses stay houses.
+Where two exports of a tiled world meet, the buildings a tile takes from both are made to stand apart as the extractor
+does within one export (GeoBuildingConflicts: OpenStreetMap over Microsoft, the larger over the smaller; one half under
+another is dropped, else cut along its wall), so a house mapped in one part and detected in the other is built once.
 
 Merged city. One object per building does not scale to a city. Building Mode Auto switches to Merged above Merge Above
 buildings (2500), and always in a tiled world: buildings are built with the same code as editable ones (footprint, roof, facade, damage) and baked into

@@ -356,13 +356,16 @@ namespace GeoWorld.Editor
                             f=>Progress("Baking buildings",0.63f+0.22f*f),buildings.buildings.Count,streets);
                     var edited=BuildingEdits(replace);
                     int index=0,skipped=0;var ruins=new Dictionary<string,int>();
-                    GeoRuinFit.ClearCache();
+                    GeoRuinFit.ClearCache();GeoHomePlan.ClearCache();
+                    // every outline keeps the home models out of it
+                    var site=merged?null:GeoHomeSites.For(buildings.buildings,streets,settings);
                     foreach(var building in merged?new List<BuildingFeature>():buildings.buildings)
                     {
                         if(index++%100==0) Progress("Placing buildings "+index+" / "+buildings.buildings.Count,0.63f+0.22f*index/Mathf.Max(1,buildings.buildings.Count));
-                        if(!ValidBuilding(building)||!env.bounds.Contains(building.x,building.z)) { skipped++;continue; }
+                        if(!ValidBuilding(building)||!env.bounds.Owns(building.x,building.z)) { skipped++;continue; }
                         edited.TryGetValue(building.id??"",out var previous);
-                        CountRuin(ruins,GeoBuildingBuilder.Create(ForSettings(building,settings),group,p=>field.Sample(p.x,p.z),obj=>context.Save(obj),notes,previous,settings,streets));root.buildingCount++;
+                        var feature=ForSettings(building,settings);if(site!=null&&site.IsOutbuilding(feature.id))feature=GeoHomeSites.AsOutbuilding(feature);
+                        CountRuin(ruins,GeoBuildingBuilder.Create(feature,group,p=>field.Sample(p.x,p.z),obj=>context.Save(obj),notes,previous,settings,streets,site));root.buildingCount++;
                     }
                     root.buildingCount+=CopyCustomBuildings(replace,group,p=>field.Sample(p.x,p.z),obj=>context.Save(obj),notes,settings);
                     if(ruins.Count>0) notes.Add(GeoCityBuilder.RuinNote(ruins));

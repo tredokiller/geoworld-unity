@@ -177,7 +177,7 @@ namespace GeoWorld.Editor
 
         // settings: the generation settings that pick a ruin model for an automatic building (null keeps its ruin as it is);
         // streets turns the model's front towards the nearest road.
-        public static GeoBuilding Create(BuildingFeature source,Transform parent,Func<Vector3,float> ground,Action<Object> save,List<string> notes,GeoBuilding edited=null,GenerationSettings settings=null,GeoStreets streets=null)
+        public static GeoBuilding Create(BuildingFeature source,Transform parent,Func<Vector3,float> ground,Action<Object> save,List<string> notes,GeoBuilding edited=null,GenerationSettings settings=null,GeoStreets streets=null,GeoHomeSite site=null)
         {
             GameObject go=edited?Object.Instantiate(edited.gameObject):new GameObject((source.category??"Building")+" | "+(string.IsNullOrEmpty(source.name)?source.id:source.name));
             if(edited)go.name=edited.name;
@@ -188,7 +188,8 @@ namespace GeoWorld.Editor
                 var building=edited?go.GetComponent<GeoBuilding>():go.AddComponent<GeoBuilding>();
                 if(!edited)Import(building,source,notes);
                 GeoRuins.Assign(building,settings,streets!=null&&!streets.Empty?p=>streets.Toward(p):(Func<Vector2,Vector2?>)null);
-                GeoHomes.Assign(building,settings,streets!=null&&!streets.Empty?p=>streets.Toward(p):(Func<Vector2,Vector2?>)null);
+                // the outlines around it keep a home model out of the neighbours (site; the streets alone without one)
+                GeoHomes.Assign(building,settings,site??(streets!=null&&!streets.Empty?new GeoHomeSite{street=p=>streets.Toward(p)}:null));
                 if(building.generatedGeometry)Object.DestroyImmediate(building.generatedGeometry.gameObject);
                 building.generatedGeometry=null;
                 var context=new GeoBuildingContext(building);

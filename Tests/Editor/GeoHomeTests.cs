@@ -276,5 +276,137 @@ namespace GeoWorld.Editor.Tests
                 }
             }
         }
+
+        // ------------------------------------------------------------------ plans: what a model covers from above
+
+        // Several boxes (x0, x1, y0, y1, z0, z1) as one mesh on one sub-mesh, like a body with its porch or wing.
+        Mesh Blocks(int sub, params float[][] boxes)
+        {
+            var parts = boxes.Select(b => Box(b[0], b[1], b[2], b[3], b[4], b[5], sub)).ToArray();
+            var mesh = Keep(new Mesh());
+            var combine = parts.Select(p => new CombineInstance { mesh = p, subMeshIndex = sub, transform = Matrix4x4.identity }).ToArray();
+            mesh.CombineMeshes(combine, true, false);
+            // the combined triangles back on the sub-mesh the model asks for
+            var triangles = mesh.triangles;
+            mesh.subMeshCount = 2;
+            mesh.SetTriangles(sub == 0 ? triangles : new int[0], 0); mesh.SetTriangles(sub == 1 ? triangles : new int[0], 1);
+            mesh.RecalculateBounds();
+            return mesh;
+        }
+
+        // A 10 x 7 m house (walls to 2.8 m) and what it has beyond its walls: a porch, a wing.
+        GeoHomeModelAsset Extended(string id, params float[][] extra)
+        {
+            var model = Model(id);
+            var blocks = new List<float[]> { new[] { -5f, 5f, 0, 2.8f, -3.5f, 3.5f } };
+            blocks.AddRange(extra);
+            model.body = Blocks(0, blocks.ToArray());
+            return model;
+        }
+
+        static bool Within(IList<Vector2> outline, Vector2 p, float tolerance)
+        {
+            if (GeoPolygon.Contains(outline, p)) return true;
+            for (int i = 0; i < outline.Count; i++)
+            {
+                Vector2 a = outline[i], b = outline[(i + 1) % outline.Count], ab = b - a;
+                float t = Mathf.Clamp01(Vector2.Dot(p - a, ab) / Mathf.Max(1e-6f, ab.sqrMagnitude));
+                if (Vector2.Distance(p, a + ab * t) <= tolerance) return true;
+            }
+            return false;
+        }
+
+        // every vertex of the baked model (the building's local space) in the footprint, a few centimetres either way
+        void AssertWithinFootprint(GeoBuilding building, GeoHomeModelAsset model, string message)
+        {
+            var outline = GeoPolygon.Clean(building.footprint);
+            using (var output = GeoHomes.Build(new GeoBuildingContext(building), 0.2f))
+                foreach (var part in output.parts)
+                    foreach (var v in part.mesh.vertices)
+                        Assert.IsTrue(Within(outline, new Vector2(v.x, v.z), 0.05f), message + ": " + new Vector2(v.x, v.z) + " is outside the footprint");
+        }
+
+        [Test] public void APlanHoldsWhatAModelHasBeyondItsWalls()
+        {
+            var model = Extended("T01", new[] { -1.5f, 1.5f, 0, 2.4f, 3.5f, 5.5f });   // a porch 2 m deep in front
+            var plan = GeoHomePlan.Of(model, "gabled_along");
+            Assert.AreEqual(10f, plan.bounds.width, 0.2f);
+            Assert.AreEqual(-3.5f, plan.bounds.yMin, 0.2f);
+            Assert.AreEqual(5.5f, plan.bounds.yMax, 0.2f, "the porch is part of the plan");
+            Assert.AreEqual(70 + 6, plan.area, 3f, "the walls' rectangle and the porch, not the box around them");
+            Assert.GreaterOrEqual(plan.rects.Length, 2);
+        }
+
+        [Test] public void AModelWithAPorchStaysInsideItsFootprint()
+        {
+            var model = Extended("T01", new[] { -1.5f, 1.5f, 0, 2.4f, 3.5f, 5.5f });
+            var building = Building(length: 12, width: 10.8f, turn: 30);
+            building.homeLibrary = Library(model);
+            GeoHomes.Assign(building, new GenerationSettings { homeLibrary = building.homeLibrary, homeModels = GeoHomeUse.IntactAndUnknown }, (GeoHomeSite)null);
+            Assert.AreEqual(model, building.home, "a 12 x 10.8 m footprint holds the 10 x 9 m plan stretched 1.2 times");
+            AssertWithinFootprint(building, model, "porch");
+        }
+
+        [Test] public void AnLModelTurnsItsWingToTheWingOfTheOutline()
+        {
+            // main block 12 x 8 m and a wing behind it at one end; the footprint has its wing at the other end, in front
+            var model = Model("T01", length: 12, width: 8);
+            model.body = Blocks(0, new[] { -6f, 6f, 0, 2.8f, -4f, 4f }, new[] { 2f, 6f, 0, 2.8f, -6.5f, -4f });
+            model.variants = new[] { Box(-6, 6, 2.8f, 5.0f, -4, 4, 1), Box(-6, 6, 2.8f, 3.2f, -4, 4, 1) };
+            var building = Building(turn: 0);
+            building.footprint = new List<Vector2> { new Vector2(-6, -4), new Vector2(6, -4), new Vector2(6, 4), new Vector2(-2, 4), new Vector2(-2, 6.5f), new Vector2(-6, 6.5f) };
+            var library = Library(model);
+            var fit = library.ChooseFit(building, GeoPolygon.Clean(building.footprint), GeoHomeUse.IntactAndUnknown, null);
+            Assert.AreEqual(model, fit.model);
+            Assert.IsTrue(fit.turn && !fit.mirror && !fit.quarter, "turned round, the wing comes to the outline's wing (" + fit.turn + ", " + fit.mirror + ", " + fit.quarter + ")");
+            building.home = fit.model; building.homeLibrary = library; building.homeTurn = fit.turn; building.homeMirror = fit.mirror; building.homeQuarter = fit.quarter;
+            AssertWithinFootprint(building, model, "wing");
+        }
+
+        [Test] public void AModelKeepsOutOfTheNeighboursOutline()
+        {
+            // an L footprint (0.84 of its rectangle) and a neighbour standing in the corner the L leaves open
+            var building = Building(turn: 0);
+            building.footprint = new List<Vector2> { new Vector2(-6, -4), new Vector2(6, -4), new Vector2(6, 4), new Vector2(-2, 4), new Vector2(-2, 6.5f), new Vector2(-6, 6.5f) };
+            var outline = GeoPolygon.Clean(building.footprint);
+            var box = Model("T01", length: 12, width: 10.5f);
+            Assert.AreEqual(box, Library(box).Choose(building, outline, GeoHomeUse.IntactAndUnknown), "alone, a plain box may fill the corner");
+            var site = new GeoHomeSite();
+            var world = building.transform;
+            site.Add("osm/way/7", new[] { new Vector2(-1.8f, 4.2f), new Vector2(6, 4.2f), new Vector2(6, 9), new Vector2(-1.8f, 9) }
+                .Select(p => { var w = world.TransformPoint(new Vector3(p.x, 0, p.y)); return new Vector2(w.x, w.z); }).ToArray());
+            Assert.IsNull(Library(box).ChooseFit(building, outline, GeoHomeUse.IntactAndUnknown, site).model, "the box would stand in the neighbour's house");
+            var l = Model("T02", length: 12, width: 8);
+            l.body = Blocks(0, new[] { -6f, 6f, 0, 2.8f, -4f, 4f }, new[] { 2f, 6f, 0, 2.8f, -6.5f, -4f });
+            l.variants = new[] { Box(-6, 6, 2.8f, 5.0f, -4, 4, 1), Box(-6, 6, 2.8f, 3.2f, -4, 4, 1) };
+            Assert.AreEqual(l, Library(box, l).ChooseFit(building, outline, GeoHomeUse.IntactAndUnknown, site).model, "the L leaves the corner free");
+        }
+
+        [Test] public void TheFrontFacesTheStreetAlongTheLongSideElseTheSouth()
+        {
+            var model = Model();
+            var building = Building(length: 12, width: 8.4f, turn: 0);
+            var library = Library(model);
+            var outline = GeoPolygon.Clean(building.footprint);
+            var north = new GeoHomeSite { street = p => new Vector2(0, 1) };
+            var fit = library.ChooseFit(building, outline, GeoHomeUse.IntactAndUnknown, north);
+            Assert.Greater(Vector2.Dot(GeoHomes.Front(GeoRuinFit.FrameOf(outline), fit.quarter, fit.turn), new Vector2(0, 1)), 0.9f, "the street to the north");
+            var none = library.ChooseFit(building, outline, GeoHomeUse.IntactAndUnknown, new GeoHomeSite());
+            Assert.Greater(Vector2.Dot(GeoHomes.Front(GeoRuinFit.FrameOf(outline), none.quarter, none.turn), new Vector2(0, -1)), 0.9f, "no street: to the south");
+            var east = new GeoHomeSite { street = p => new Vector2(1, 0) };
+            var gable = library.ChooseFit(building, outline, GeoHomeUse.IntactAndUnknown, east);
+            Assert.Greater(Vector2.Dot(GeoHomes.Front(GeoRuinFit.FrameOf(outline), gable.quarter, gable.turn), new Vector2(0, -1)), 0.9f, "the gable to the street: the porch to the south, into the yard");
+        }
+
+        [Test] public void FootwaysPathsAndTracksAreNotStreets()
+        {
+            LineFeature Road(string type, string kind, float z) => new LineFeature { type = type, kind = kind, points = new[] { -50f, z, 50f, z } };
+            var streets = new GeoStreets(new[] { Road("footway", "path", 3), Road("track", "road", -4), Road("residential", "road", 20) });
+            var toward = streets.Toward(Vector2.zero);
+            Assert.IsNotNull(toward);
+            Assert.Greater(toward.Value.y, 0.99f, "the residential street 20 m to the north, not the footway at 3 m nor the track at 4 m");
+            Assert.IsFalse(GeoStreets.IsStreet(Road("path", "path", 0)));
+            Assert.IsTrue(GeoStreets.IsStreet(Road("service", "road", 0)));
+        }
     }
 }

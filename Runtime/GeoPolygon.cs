@@ -83,5 +83,63 @@ namespace GeoWorld
             {var a=points[i];var b=points[j];if((a.y>p.y)!=(b.y>p.y)&&p.x<(b.x-a.x)*(p.y-a.y)/(b.y-a.y)+a.x)inside=!inside;}
             return inside;
         }
+
+        // A rectangle turned in the plane: its centre, the unit direction of its first side (u; the second, v, is square to
+        // it) and half its sides along each.
+        public struct Box
+        {
+            public Vector2 centre,u;public float halfU,halfV;
+            public Vector2 V=>new Vector2(-u.y,u.x);
+            public float Area=>4*halfU*halfV;
+            public Box(Vector2 centre,Vector2 u,float halfU,float halfV){this.centre=centre;this.u=u;this.halfU=halfU;this.halfV=halfV;}
+            public Vector2 Corner(int i)
+            {
+                float a=i==0||i==3?-halfU:halfU,b=i<2?-halfV:halfV;
+                return centre+u*a+V*b;
+            }
+            public Rect Bounds
+            {
+                get
+                {
+                    float ex=Mathf.Abs(u.x)*halfU+Mathf.Abs(u.y)*halfV,ey=Mathf.Abs(u.y)*halfU+Mathf.Abs(u.x)*halfV;
+                    return new Rect(centre.x-ex,centre.y-ey,ex*2,ey*2);
+                }
+            }
+        }
+
+        // The area of an outline (any simple polygon, either winding) inside a box: Sutherland-Hodgman against the box's four
+        // sides. The clipped polygon of a concave outline may run along a side twice, which adds nothing to its area.
+        public static float AreaInside(IList<Vector2> outline,Box box,List<Vector2> scratchA=null,List<Vector2> scratchB=null)
+        {
+            if(outline==null||outline.Count<3)return 0;
+            var a=scratchA??new List<Vector2>();var b=scratchB??new List<Vector2>();
+            a.Clear();
+            var v=box.V;
+            foreach(var p in outline){var d=p-box.centre;a.Add(new Vector2(Vector2.Dot(d,box.u),Vector2.Dot(d,v)));}
+            ClipAxis(a,b,0,box.halfU,true);ClipAxis(b,a,0,-box.halfU,false);
+            ClipAxis(a,b,1,box.halfV,true);ClipAxis(b,a,1,-box.halfV,false);
+            return a.Count<3?0:Mathf.Abs(Area(a));
+        }
+
+        // keeps the side of x (axis 0) or y (axis 1) below the plane (above it for a lower plane)
+        static void ClipAxis(List<Vector2> input,List<Vector2> output,int axis,float plane,bool below)
+        {
+            output.Clear();
+            for(int i=0;i<input.Count;i++)
+            {
+                var current=input[i];var next=input[(i+1)%input.Count];
+                float dc=(plane-current[axis])*(below?1:-1),dn=(plane-next[axis])*(below?1:-1);
+                if(dc>=0)output.Add(current);
+                if((dc>=0)!=(dn>=0))output.Add(Vector2.Lerp(current,next,dc/(dc-dn)));
+            }
+        }
+
+        // The area two boxes share.
+        public static float Overlap(Box a,Box b,List<Vector2> scratchA=null,List<Vector2> scratchB=null,List<Vector2> corners=null)
+        {
+            var c=corners??new List<Vector2>(4);c.Clear();
+            for(int i=0;i<4;i++)c.Add(a.Corner(i));
+            return AreaInside(c,b,scratchA,scratchB);
+        }
     }
 }

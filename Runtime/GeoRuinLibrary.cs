@@ -271,7 +271,7 @@ namespace GeoWorld
 
         // The largest all-true rectangle of a raster (row j, column i at j * nu + i): for each row the run of true cells
         // above every column as a histogram, and its largest rectangle with a stack. Ties go to the first found.
-        static RectInt LargestRectangle(bool[] cells, int nu, int nv)
+        internal static RectInt LargestRectangle(bool[] cells, int nu, int nv)
         {
             var heights = new int[nu + 1];
             var stack = new int[nu + 1];

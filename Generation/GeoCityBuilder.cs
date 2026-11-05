@@ -38,6 +38,10 @@ namespace GeoWorld.Editor
             Action<Object> save, List<string> notes, GenerationSettings settings, Action<float> progress, int total, GeoStreets streets = null)
         {
             Func<Vector2, Vector2?> street = streets != null && !streets.Empty ? p => streets.Toward(p) : (Func<Vector2, Vector2?>)null;
+            // every outline given (those around the bounds too) keeps the home models out of it
+            var given = sources as ICollection<BuildingFeature> ?? new List<BuildingFeature>(sources);
+            sources = given;
+            var site = GeoHomeSites.For(given, streets, settings);
             var chunks = new Dictionary<Vector2Int, Chunk>();
             var temp = new GameObject("Geo building (temporary)") { hideFlags = HideFlags.HideAndDontSave };
             int count = 0, skipped = 0, damaged = 0, index = 0;
@@ -47,7 +51,7 @@ namespace GeoWorld.Editor
             // homes are only stretched, never cut: each is drawn as the library's own mesh with its own transform
             var homeGroups = new Dictionary<Vector2Int, Transform>();
             int instanced = 0;
-            GeoRuinFit.ClearCache();
+            GeoRuinFit.ClearCache(); GeoHomePlan.ClearCache();
             // thousands of copies of the library models: drawn with their reduced versions
             var reduced = settings.reducedModels && (settings.ruinLibrary || settings.homeLibrary)
                 ? GeoGeneration.Target.ReducedModels(settings.ruinLibrary, settings.homeLibrary) : null;
@@ -57,15 +61,17 @@ namespace GeoWorld.Editor
                 foreach (var listed in sources)
                 {
                     if (progress != null && index++ % 250 == 0) progress(index / (float)Mathf.Max(1, total));
-                    if (!GeoWorldBuild.ValidBuilding(listed) || !bounds.Contains(listed.x, listed.z)) { skipped++; continue; }
+                    if (!GeoWorldBuild.ValidBuilding(listed) || !bounds.Owns(listed.x, listed.z)) { skipped++; continue; }
                     var source = listed;
                     var building = temp.AddComponent<GeoBuilding>();
                     try
                     {
                         source = GeoWorldBuild.ForSettings(source, settings);
+                        // a guessed "house" in a bigger house's yard is drawn as an outbuilding
+                        if (site.IsOutbuilding(source.id)) source = GeoHomeSites.AsOutbuilding(source);
                         GeoBuildingBuilder.Import(building, source, null);
                         GeoRuins.Assign(building, settings, street);
-                        GeoHomes.Assign(building, settings, street);
+                        GeoHomes.Assign(building, settings, site);
                         Simplify(building, source);
                         var context = new GeoBuildingContext(building);
                         GeoBuildingBuilder.Ground(building, context, ground, out float baseY, out float depth);
@@ -191,20 +197,19 @@ namespace GeoWorld.Editor
         // differs: a baked home pulls its lowest vertices down to the foundation, an instance stands on a plinth.
         public static void HomeInstance(GeoBuilding building, GeoBuildingContext context, float depth,
             out Matrix4x4 body, out Matrix4x4 roof, out Mesh variant, out Material roofMaterial) =>
-            HomeInstance(building, building.home, GeoRuinFit.FrameOf(context.outline), building.homeTurn, building.homeMirror, depth,
+            HomeInstance(building, building.home, GeoRuinFit.FrameOf(context.outline), building.homeQuarter, building.homeTurn, building.homeMirror, depth,
                 out body, out roof, out variant, out roofMaterial);
 
         // the same for one model on one rectangle of the building (a part of GeoHomeLibrary.Cover)
-        public static void HomeInstance(GeoBuilding building, GeoHomeModelAsset model, GeoRuinFit.Frame frame, bool turn, bool mirrored, float depth,
+        public static void HomeInstance(GeoBuilding building, GeoHomeModelAsset model, GeoRuinFit.Frame frame, bool quarter, bool turn, bool mirrored, float depth,
             out Matrix4x4 body, out Matrix4x4 roof, out Mesh variant, out Material roofMaterial)
         {
             var roofInfo = building.roofInfo;
-            string name = GeoHomeModel.VariantFor(roofInfo?.shape, roofInfo?.renderAs, roofInfo?.ridge, model.defaultVariant);
-            if (model.Variant(name) == null) name = model.defaultVariant;
+            string name = GeoHomes.VariantOf(building, model);
             float roofRise = roofInfo != null && GeoRoofInfo.Has(roofInfo.rise) ? roofInfo.rise : building.roofHeight;
             bool flat = name == "flat";
             float height = GeoHomes.DrawnHeight(model, building.height, roofRise, flat);
-            var p = GeoHomes.Measure(model, frame, height, roofRise, flat, turn, mirrored, depth);
+            var p = GeoHomes.Measure(model, name, frame, quarter, height, roofRise, flat, turn, mirrored, depth);
             float flip = p.turn ? -1f : 1f, mirror = p.mirror ? -1f : 1f;
             var x = new Vector4(p.axis.x, 0, p.axis.y, 0) * (p.sx * flip * mirror);
             var z = new Vector4(p.across.x, 0, p.across.y, 0) * (p.sz * flip);
@@ -233,17 +238,17 @@ namespace GeoWorld.Editor
             var parts = building.homeParts;
             if (parts == null || parts.Count == 0)
             {
-                PlaceHome(building, building.home, GeoRuinFit.FrameOf(context.outline), building.homeTurn, building.homeMirror, depth, frame, parent, id);
+                PlaceHome(building, building.home, GeoRuinFit.FrameOf(context.outline), building.homeQuarter, building.homeTurn, building.homeMirror, depth, frame, parent, id);
                 return;
             }
             // a row of sections or the rectangles of an L, T or U: one home object for each
             for (int i = 0; i < parts.Count; i++)
-                PlaceHome(building, parts[i].model, parts[i].frame, parts[i].turn, parts[i].mirror, depth, frame, parent, i == 0 ? id : id + " #" + (i + 1));
+                PlaceHome(building, parts[i].model, parts[i].frame, parts[i].quarter, parts[i].turn, parts[i].mirror, depth, frame, parent, i == 0 ? id : id + " #" + (i + 1));
         }
 
-        static void PlaceHome(GeoBuilding building, GeoHomeModelAsset model, GeoRuinFit.Frame rectangle, bool turn, bool mirrored, float depth, Transform frame, Transform parent, string id)
+        static void PlaceHome(GeoBuilding building, GeoHomeModelAsset model, GeoRuinFit.Frame rectangle, bool quarter, bool turn, bool mirrored, float depth, Transform frame, Transform parent, string id)
         {
-            HomeInstance(building, model, rectangle, turn, mirrored, depth, out var body, out var roof, out var variant, out var roofMaterial);
+            HomeInstance(building, model, rectangle, quarter, turn, mirrored, depth, out var body, out var roof, out var variant, out var roofMaterial);
             var home = new GameObject("Home " + model.id + " | " + id).transform;
             home.SetParent(parent, false);
             void Part(string name, Mesh mesh, Matrix4x4 local)
@@ -305,19 +310,27 @@ namespace GeoWorld.Editor
         static readonly Color Plinth = new Color(0.45f, 0.44f, 0.40f);
 
         // A plain plinth under an instanced home on sloping ground, from the ground's lowest point under the footprint up
-        // into the walls, just inside the footprint's rectangle (or each part's, so the inside corner of an L stays open).
+        // into the walls, just inside the rectangles of the model's body where it stands (GeoHomePlan of the body alone: the
+        // walls, porches and wings, not the eaves), so the inside corner of an L and the yard beside a porch stay open.
         static void AppendPlinth(Chunk chunk, GeoBuilding building, GeoBuildingContext context, float depth, Matrix4x4 toWorld)
         {
-            if (building.homeParts == null || building.homeParts.Count == 0) AppendPlinth(chunk, GeoRuinFit.FrameOf(context.outline), depth, toWorld);
-            else foreach (var part in building.homeParts) AppendPlinth(chunk, part.frame, depth, toWorld);
+            if (building.homeParts == null || building.homeParts.Count == 0)
+                AppendPlinth(chunk, building, building.home, GeoRuinFit.FrameOf(context.outline), building.homeQuarter, building.homeTurn, building.homeMirror, depth, toWorld);
+            else foreach (var part in building.homeParts) AppendPlinth(chunk, building, part.model, part.frame, part.quarter, part.turn, part.mirror, depth, toWorld);
         }
 
-        static void AppendPlinth(Chunk chunk, GeoRuinFit.Frame frame, float depth, Matrix4x4 toWorld)
+        static void AppendPlinth(Chunk chunk, GeoBuilding building, GeoHomeModelAsset model, GeoRuinFit.Frame frame, bool quarter, bool turn, bool mirror, float depth, Matrix4x4 toWorld)
         {
-            if (depth < 0.05f) return;
-            float halfL = frame.length * 0.5f - 0.02f, halfW = frame.width * 0.5f - 0.02f;
+            if (depth < 0.05f || !model) return;
+            var layout = GeoHomes.Layout(GeoHomePlan.Of(model, GeoHomes.VariantOf(building, model)), frame, quarter, turn, mirror);
+            foreach (var box in GeoHomes.Boxes(GeoHomePlan.Of(model.body), layout)) AppendPlinth(chunk, box, depth, toWorld);
+        }
+
+        static void AppendPlinth(Chunk chunk, GeoPolygon.Box box, float depth, Matrix4x4 toWorld)
+        {
+            float halfL = box.halfU - 0.02f, halfW = box.halfV - 0.02f;
             if (halfL <= 0 || halfW <= 0) return;
-            Vector2 a = frame.axis, b = frame.Across, c = frame.centre;
+            Vector2 a = box.u, b = box.V, c = box.centre;
             var corners = new[] { c - a * halfL - b * halfW, c + a * halfL - b * halfW, c + a * halfL + b * halfW, c - a * halfL + b * halfW };
             var uv = PaletteUv(Plinth);
             for (int i = 0; i < 4; i++)

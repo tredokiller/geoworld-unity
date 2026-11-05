@@ -38,16 +38,33 @@ namespace GeoWorld
         // How far a model may be stretched when it is the last way to draw a standing building with a model (Cover): no
         // model of the kind fits within MinStretch..MaxStretch, nor as a row of sections.
         public const float LooseMinStretch = 0.6f, LooseMaxStretch = 1.72f;
+        // How much a model's proportions may change: its length and its width are stretched apart, and 1.4 one way with 0.72
+        // the other drew a house almost twice as long for its width (log of the ratio; 0.25 is 1.28 times, 0.4 1.5 times).
+        public const float MaxDistortion = 0.25f, LooseMaxDistortion = 0.4f;
+        // What a model turned a quarter (its front to an end of the footprint) costs, so the authored way round is the rule.
+        public const float QuarterCost = 0.15f;
+        // What a plan unlike the footprint costs per share of their union that is not shared (1 - intersection / union).
+        public const float ShapeCost = 1f;
+        // The share of a model's plan that may lie outside its footprint (a box model on a footprint that fills 0.8 of its
+        // rectangle), and the area in square metres it may reach into another building's outline.
+        public const float MaxOutside = 0.2f, MaxIntoNeighbour = 0.3f;
+        // What the front costs turned away from the side it should face: a street along the long side, else the south
+        // (the yard side of a house with its gable to the street, where the porch and the windows of a hata look).
+        public const float StreetFacing = 0.3f, SunFacing = 0.12f;
 
-        // The model that needs the least stretching for the building's footprint, or null when none fits (not a
-        // rectangle, damaged beyond what the use allows, wrong kind, too different in size). The pick depends only on the
-        // building's ID.
-        public GeoHomeModelAsset Choose(GeoBuilding building, IList<Vector2> outline, GeoHomeUse use)
+        // The model that fits the building's footprint best, or null when none fits (not a rectangle, damaged beyond what
+        // the use allows, wrong kind, too different in size). The pick depends only on the building and its neighbours.
+        public GeoHomeModelAsset Choose(GeoBuilding building, IList<Vector2> outline, GeoHomeUse use) => ChooseFit(building, outline, use, null).model;
+
+        // The same with the way round: a model's plan (GeoHomePlan) is stretched onto the footprint's rectangle in each of
+        // eight ways (its front to either long side or, turned a quarter, to either end, and mirrored or not), and the way
+        // that fits the outline best, keeps out of the neighbours' outlines (site) and faces the street wins.
+        public GeoHomeFit ChooseFit(GeoBuilding building, IList<Vector2> outline, GeoHomeUse use, GeoHomeSite site)
         {
-            if (!Covers(building, outline, use)) return null;
+            if (!Covers(building, outline, use)) return default;
             var frame = GeoRuinFit.FrameOf(outline);
-            if (frame.fill < 0.8f) return null;
-            return Pick(building, frame, false, false, null);
+            if (frame.fill < 0.8f) return default;
+            return Pick(building, frame, outline, false, false, null, Surroundings.Of(building, frame, site));
         }
 
         // A standing building no single model fits, still drawn with models: its rectangle as a row of two to four
@@ -57,17 +74,22 @@ namespace GeoWorld
         // well. A model of the building's kind first, then of a related one (GeoRuinLibrary.RelatedTo). Null when some part
         // is left without a model (the building keeps its procedural walls). On Bakhmut's centre this draws 4 / 5 of the
         // standing buildings the single models leave out.
-        public List<GeoHomePart> Cover(GeoBuilding building, IList<Vector2> outline, GeoHomeUse use)
+        public List<GeoHomePart> Cover(GeoBuilding building, IList<Vector2> outline, GeoHomeUse use) => Cover(building, outline, use, null);
+
+        public List<GeoHomePart> Cover(GeoBuilding building, IList<Vector2> outline, GeoHomeUse use, GeoHomeSite site)
         {
             if (!Covers(building, outline, use)) return null;
             var frame = GeoRuinFit.FrameOf(outline);
-            var rectangles = frame.fill >= 0.8f ? new List<GeoRuinFit.Frame> { frame } : GeoRuins.Parts(outline, frame, 0.85f);
+            bool whole = frame.fill >= 0.8f;
+            var rectangles = whole ? new List<GeoRuinFit.Frame> { frame } : GeoRuins.Parts(outline, frame, 0.85f);
             if (rectangles == null) return null;
+            var around = Surroundings.Of(building, frame, site);
             var parts = new List<GeoHomePart>();
             GeoHomeModelAsset first = null;
             foreach (var rectangle in rectangles)
             {
-                var cover = CoverRectangle(building, rectangle, first);
+                // a part is a rectangle inside the outline: its model is fitted to that rectangle
+                var cover = CoverRectangle(building, rectangle, whole ? outline : Corners(rectangle), first, around);
                 if (cover == null) return null;
                 if (!first) first = cover[0].model;
                 parts.AddRange(cover);
@@ -75,25 +97,44 @@ namespace GeoWorld
             return parts;
         }
 
-        List<GeoHomePart> CoverRectangle(GeoBuilding building, GeoRuinFit.Frame frame, GeoHomeModelAsset prefer)
+        List<GeoHomePart> CoverRectangle(GeoBuilding building, GeoRuinFit.Frame frame, IList<Vector2> target, GeoHomeModelAsset prefer, Surroundings around)
         {
             for (int pass = 0; pass < 2; pass++)
             {
                 bool related = pass == 1;
-                var whole = Pick(building, frame, false, related, prefer);
-                if (whole) return new List<GeoHomePart> { new GeoHomePart { frame = frame, model = whole } };
+                var whole = Pick(building, frame, target, false, related, prefer, around);
+                if (whole.model) return new List<GeoHomePart> { Part(frame, whole, false) };
                 for (int k = 2; k <= 4; k++)
                 {
-                    var model = Pick(building, Section(frame, k, 0), false, related, prefer);
-                    if (!model) continue;
+                    var first = Section(frame, k, 0);
+                    var fit = Pick(building, first, Corners(first), false, related, prefer, around);
+                    if (!fit.model) continue;
+                    // every other section mirrored (semi-detached houses, the sections of a block), each fitted to its own
+                    // rectangle and kept out of the neighbours like the first
+                    var plan = GeoHomePlan.Of(fit.model, GeoHomes.VariantOf(building, fit.model));
                     var row = new List<GeoHomePart>();
-                    for (int i = 0; i < k; i++) row.Add(new GeoHomePart { frame = Section(frame, k, i), model = model, mirror = (i & 1) == 1 });
-                    return row;
+                    for (int i = 0; i < k && row != null; i++)
+                    {
+                        var part = Part(Section(frame, k, i), fit, (i & 1) == 1);
+                        if (i > 0 && around.Blocked(GeoHomes.Boxes(plan, GeoHomes.Layout(plan, part.frame, part.quarter, part.turn, part.mirror)))) row = null;
+                        else row.Add(part);
+                    }
+                    if (row != null) return row;
                 }
-                var stretched = Pick(building, frame, true, related, prefer);
-                if (stretched) return new List<GeoHomePart> { new GeoHomePart { frame = frame, model = stretched } };
+                var stretched = Pick(building, frame, target, true, related, prefer, around);
+                if (stretched.model) return new List<GeoHomePart> { Part(frame, stretched, false) };
             }
             return null;
+        }
+
+        static GeoHomePart Part(GeoRuinFit.Frame frame, GeoHomeFit fit, bool mirrored) =>
+            new GeoHomePart { frame = frame, model = fit.model, turn = fit.turn, quarter = fit.quarter, mirror = fit.mirror ^ mirrored };
+
+        // The corners of a rectangle, as an outline.
+        static Vector2[] Corners(GeoRuinFit.Frame f)
+        {
+            Vector2 a = f.axis * (f.length * 0.5f), b = f.Across * (f.width * 0.5f);
+            return new[] { f.centre - a - b, f.centre + a - b, f.centre + a + b, f.centre - a + b };
         }
 
         // The i-th of k equal sections of a rectangle along its axis, with its own longer side as its axis.
@@ -112,6 +153,9 @@ namespace GeoWorld
             return section;
         }
 
+        static bool Outbuilding(string category) => category == "shed" || category == "garage";
+        static bool Dwelling(GeoHomeModelAsset m) => Has(m.categories, "house") && !Has(m.categories, "shed") && !Has(m.categories, "garage");
+
         static bool Covers(GeoBuilding building, IList<Vector2> outline, GeoHomeUse use)
         {
             if (use == GeoHomeUse.Off || building == null || outline == null || outline.Count < 3) return false;
@@ -119,18 +163,23 @@ namespace GeoWorld
             return state < (use == GeoHomeUse.AllStanding ? GeoConditionState.HeavilyDamaged : GeoConditionState.Damaged);
         }
 
-        // The model needing the least stretching for one rectangle (the footprint's or a part of it): within
-        // MinStretch..MaxStretch or, loose, LooseMinStretch..LooseMaxStretch; of the building's kind (category or OSM tag) or,
-        // related, of a kind that may stand in for it. prefer is taken when it is among the best (the parts of one
-        // building alike); otherwise the pick depends only on the building's ID.
-        GeoHomeModelAsset Pick(GeoBuilding building, GeoRuinFit.Frame frame, bool loose, bool related, GeoHomeModelAsset prefer)
+        // The model that fits one rectangle (the footprint's or a part of it) best, and which way round: its plan stretched
+        // within MinStretch..MaxStretch or, loose, LooseMinStretch..LooseMaxStretch, its proportions kept within
+        // MaxDistortion, of the building's kind (category or OSM tag) or, related, of a kind that may stand in for it.
+        // target is the outline the plan should cover (the footprint, or the rectangle of a part). prefer is taken when it
+        // is among the best (the parts of one building alike); otherwise the pick depends only on the building's ID.
+        GeoHomeFit Pick(GeoBuilding building, GeoRuinFit.Frame frame, IList<Vector2> target, bool loose, bool related, GeoHomeModelAsset prefer, Surroundings around)
         {
             // sheds are small (a woodshed is 2.4 m deep); the stretch limits keep a model off what is too small for it
-            if (frame.length < 2 || frame.width < 1.6f) return null;
+            if (frame.length < 2 || frame.width < 1.6f) return default;
             float min = loose ? LooseMinStretch : MinStretch, max = loose ? LooseMaxStretch : MaxStretch;
+            float distortion = loose ? LooseMaxDistortion : MaxDistortion;
             float eaves = Mathf.Max(2, building.height) - (building.roof != GeoRoofShape.Flat ? Mathf.Clamp(building.roofHeight, 0, Mathf.Max(2, building.height) - 2) : 0);
+            float lowest = HeightIsEstimated(building) ? Mathf.Min(MinEstimatedHeight, min) : min;
+            float targetArea = Mathf.Abs(GeoPolygon.Area(target));
             var kinds = related ? GeoRuinLibrary.RelatedTo(building.category) : null;
-            var candidates = new List<KeyValuePair<GeoHomeModelAsset, float>>();
+            uint seed = GeoBuildingDamage.Seed(building.sourceId ?? building.name);
+            var fits = new List<GeoHomeFit>();
             float best = float.MaxValue;
             foreach (var m in models)
             {
@@ -141,26 +190,130 @@ namespace GeoWorld
                 {
                     // a stand-in: not of the building's own kind (those had their turn) and never a model kept for its tag
                     if (own || m.tagOnly) continue;
+                    // nor a house with its porch to the street for a shed or a garage (GeoRuinLibrary.RelatedTo has houses)
+                    if (Outbuilding(building.category) && Dwelling(m)) continue;
                     bool near = false;
                     foreach (var kind in kinds) near |= Has(m.categories, kind);
                     if (!near) continue;
                 }
                 else if (!own) continue;
-                float rl = frame.length / m.length, rw = frame.width / m.width, rh = eaves / Mathf.Max(0.5f, m.eaveHeight);
-                float lowest = HeightIsEstimated(building) ? Mathf.Min(MinEstimatedHeight, min) : min;
-                if (rl < min || rl > max || rw < min || rw > max || rh < lowest || rh > max + 0.1f) continue;
-                // a two-storey office and a one-storey hall of the same height are not the same building
-                float cost = Mathf.Abs(Mathf.Log(rl)) + Mathf.Abs(Mathf.Log(rw)) + Mathf.Abs(Mathf.Log(rh)) * 0.7f + FloorCost * Mathf.Abs(m.floors - building.floors);
-                candidates.Add(new KeyValuePair<GeoHomeModelAsset, float>(m, cost));
-                best = Mathf.Min(best, cost);
+                float rh = eaves / Mathf.Max(0.5f, m.eaveHeight);
+                if (rh < lowest || rh > max + 0.1f) continue;
+                var plan = GeoHomePlan.Of(m, GeoHomes.VariantOf(building, m));
+                var fit = new GeoHomeFit { cost = float.MaxValue };
+                for (int q = 0; q < 2; q++)
+                {
+                    bool quarter = q == 1;
+                    var f = quarter ? GeoHomes.Quarter(frame) : frame;
+                    float rl = f.length / Mathf.Max(0.1f, plan.Size.x), rw = f.width / Mathf.Max(0.1f, plan.Size.y);
+                    if (rl < min || rl > max || rw < min || rw > max || Mathf.Abs(Mathf.Log(rl / rw)) > distortion) continue;
+                    // a two-storey office and a one-storey hall of the same height are not the same building
+                    float stretch = Mathf.Abs(Mathf.Log(rl)) + Mathf.Abs(Mathf.Log(rw)) + Mathf.Abs(Mathf.Log(rh)) * 0.7f + FloorCost * Mathf.Abs(m.floors - building.floors)
+                                    + (quarter ? QuarterCost : 0);
+                    if (stretch >= fit.cost) continue;
+                    for (int way = 0; way < 4; way++)
+                    {
+                        bool turn = (way & 1) == 1, mirror = (way & 2) == 2;
+                        var boxes = GeoHomes.Boxes(plan, GeoHomes.Layout(plan, frame, quarter, turn, mirror));
+                        float planArea = 0, inside = 0;
+                        foreach (var box in boxes) { planArea += box.Area; inside += GeoPolygon.AreaInside(target, box, around.a, around.b); }
+                        if (planArea - inside > MaxOutside * planArea || around.Blocked(boxes)) continue;
+                        float shape = 1 - inside / Mathf.Max(1e-3f, targetArea + planArea - inside);
+                        // ties (a symmetric plan, no street) are broken by the building's ID, so a street's houses differ
+                        float cost = stretch + ShapeCost * shape + around.Facing(GeoHomes.Front(frame, quarter, turn)) + 0.01f * GeoBuildingDamage.Hash01(seed, 86 + way + 4 * q);
+                        if (cost < fit.cost) fit = new GeoHomeFit { model = m, cost = cost, quarter = quarter, turn = turn, mirror = mirror };
+                    }
+                }
+                if (!fit.model) continue;
+                fits.Add(fit);
+                best = Mathf.Min(best, fit.cost);
             }
-            if (candidates.Count == 0) return null;
-            var pool = candidates.FindAll(c => c.Value <= best + 0.14f);
-            if (prefer && pool.Exists(c => c.Key == prefer)) return prefer;
-            pool.Sort((a, b) => string.CompareOrdinal(a.Key.id, b.Key.id));
-            uint seed = GeoBuildingDamage.Seed(building.sourceId ?? building.name);
-            return pool[Mathf.Min(pool.Count - 1, Mathf.FloorToInt(GeoBuildingDamage.Hash01(seed, 83) * pool.Count))].Key;
+            if (fits.Count == 0) return default;
+            var pool = fits.FindAll(c => c.cost <= best + 0.14f);
+            if (prefer)
+            {
+                int preferred = pool.FindIndex(c => c.model == prefer);
+                if (preferred >= 0) return pool[preferred];
+            }
+            pool.Sort((a, b) => string.CompareOrdinal(a.model.id, b.model.id));
+            return pool[Mathf.Min(pool.Count - 1, Mathf.FloorToInt(GeoBuildingDamage.Hash01(seed, 83) * pool.Count))];
         }
+
+        // A building's neighbourhood in its own local space, gathered once for all the ways its models are tried: the
+        // outlines of the other buildings around it and the direction its front should face.
+        internal sealed class Surroundings
+        {
+            public readonly List<Vector2[]> neighbours = new List<Vector2[]>();
+            public Vector2 front;
+            public float facing;
+            // scratch lists for clipping
+            public readonly List<Vector2> a = new List<Vector2>(), b = new List<Vector2>();
+
+            static readonly List<Vector2[]> found = new List<Vector2[]>();
+
+            public static Surroundings Of(GeoBuilding building, GeoRuinFit.Frame frame, GeoHomeSite site)
+            {
+                var s = new Surroundings();
+                if (building == null) return s;
+                var transform = building.transform;
+                Vector2 World(Vector2 p) { var w = transform.TransformPoint(new Vector3(p.x, 0, p.y)); return new Vector2(w.x, w.z); }
+                Vector2 Local(Vector2 p) { var l = transform.InverseTransformPoint(new Vector3(p.x, transform.position.y, p.y)); return new Vector2(l.x, l.z); }
+                Vector2 LocalDirection(Vector2 d) { var l = transform.InverseTransformDirection(new Vector3(d.x, 0, d.y)); return new Vector2(l.x, l.z).normalized; }
+                if (site != null && site.Count > 0)
+                {
+                    // a model fills the footprint's rectangle, so what it can reach is that rectangle (and a metre for safety)
+                    float minX = float.MaxValue, minZ = float.MaxValue, maxX = float.MinValue, maxZ = float.MinValue;
+                    Vector2 a = frame.axis * (frame.length * 0.5f + 1), b = frame.Across * (frame.width * 0.5f + 1);
+                    foreach (var corner in new[] { frame.centre - a - b, frame.centre + a - b, frame.centre + a + b, frame.centre - a + b })
+                    {
+                        var w = World(corner);
+                        minX = Mathf.Min(minX, w.x); maxX = Mathf.Max(maxX, w.x); minZ = Mathf.Min(minZ, w.y); maxZ = Mathf.Max(maxZ, w.y);
+                    }
+                    site.Near(Rect.MinMaxRect(minX, minZ, maxX, maxZ), building.sourceId, found);
+                    foreach (var outline in found)
+                    {
+                        var local = new Vector2[outline.Length];
+                        for (int i = 0; i < outline.Length; i++) local[i] = Local(outline[i]);
+                        s.neighbours.Add(local);
+                    }
+                }
+                // the street along a long side, else the south: a house with its gable to the street has its porch towards
+                // the yard, and an old hata looks south whatever the street does
+                s.front = LocalDirection(new Vector2(0, -1)); s.facing = SunFacing;
+                var toward = site?.street?.Invoke(World(frame.centre));
+                if (toward != null)
+                {
+                    var local = LocalDirection(toward.Value);
+                    if (Mathf.Abs(Vector2.Dot(local, frame.Across)) >= 0.5f) { s.front = local; s.facing = StreetFacing; }
+                }
+                return s;
+            }
+
+            // Whether boxes in the building's local space reach into another building's outline.
+            public bool Blocked(List<GeoPolygon.Box> boxes)
+            {
+                if (neighbours.Count == 0) return false;
+                foreach (var outline in neighbours)
+                {
+                    float into = 0;
+                    foreach (var box in boxes) into += GeoPolygon.AreaInside(outline, box, a, b);
+                    if (into > MaxIntoNeighbour) return true;
+                }
+                return false;
+            }
+
+            // What a front direction (local, unit) costs against the one it should face.
+            public float Facing(Vector2 direction) => facing * (1 - Vector2.Dot(direction, front)) * 0.5f;
+        }
+    }
+
+    // One way of drawing a rectangle of a building with a model: the model, which way round it goes and what that costs.
+    public struct GeoHomeFit
+    {
+        public GeoHomeModelAsset model;
+        // turn: the front to the other side; mirror: along its length; quarter: turned a quarter, the front to an end
+        public bool turn, mirror, quarter;
+        public float cost;
     }
 
     // One home model on a rectangle of a building (GeoHomeLibrary.Cover), in the building's local space.
@@ -168,7 +321,7 @@ namespace GeoWorld
     {
         public GeoRuinFit.Frame frame;
         public GeoHomeModelAsset model;
-        public bool turn, mirror;
+        public bool turn, mirror, quarter;
     }
 
     // Home models on buildings: choosing one, turning it to the street, fitting it and giving it the roof of the export.
@@ -180,7 +333,13 @@ namespace GeoWorld
         public static bool Draws(GeoBuilding building) =>
             building != null && building.home != null && building.homeMode != GeoRuinMode.Procedural;
 
-        public static void Assign(GeoBuilding building, GenerationSettings settings, Func<Vector2, Vector2?> street = null)
+        public static void Assign(GeoBuilding building, GenerationSettings settings, Func<Vector2, Vector2?> street = null) =>
+            Assign(building, settings, street != null ? new GeoHomeSite { street = street } : null);
+
+        // Gives a building the home model the settings call for, the way round that fits its outline, keeps out of its
+        // neighbours' outlines and faces the street (site; GeoHomeLibrary.ChooseFit). Model and Procedural are the user's
+        // choice and stay as they are.
+        public static void Assign(GeoBuilding building, GenerationSettings settings, GeoHomeSite site)
         {
             if (building == null || settings == null) return;
             building.homeParts = null;
@@ -188,61 +347,75 @@ namespace GeoWorld
             if (building.homeMode == GeoRuinMode.Model) return;
             building.home = null;
             building.homeLibrary = settings.homeLibrary;
-            if (settings.homeLibrary && settings.homeModels != GeoHomeUse.Off)
-            {
-                List<Vector2> outline;
-                try { outline = GeoPolygon.Clean(building.footprint); }
-                catch (ArgumentException) { return; }
-                building.home = settings.homeLibrary.Choose(building, outline, settings.homeModels);
-                // no single model fits: a row of sections, a further stretch, or a model on each rectangle of an L, T or U
-                // (not where a ruin model already draws the building)
-                if (!building.home && !GeoRuins.Draws(building))
-                {
-                    var parts = settings.homeLibrary.Cover(building, outline, settings.homeModels);
-                    if (parts != null && parts.Count > 0) { building.homeParts = parts; building.home = parts[0].model; }
-                }
-            }
-            uint seed = GeoBuildingDamage.Seed(building.sourceId ?? building.name);
-            building.homeMirror = GeoBuildingDamage.Hash01(seed, 84) < 0.5f;
-            building.homeTurn = GeoBuildingDamage.Hash01(seed, 85) < 0.5f;
-            if (building.homeParts != null)
-                for (int i = 0; i < building.homeParts.Count; i++)
-                {
-                    var part = building.homeParts[i];
-                    part.turn = building.homeTurn; part.mirror ^= building.homeMirror;
-                    building.homeParts[i] = part;
-                }
-            if (building.home && street != null) Face(building, street);
-        }
-
-        // The front (door, porch) towards the nearest street, when it is on one of the long sides (of each part).
-        static void Face(GeoBuilding building, Func<Vector2, Vector2?> street)
-        {
-            if (building.homeParts != null)
-            {
-                for (int i = 0; i < building.homeParts.Count; i++)
-                {
-                    var part = building.homeParts[i];
-                    part.turn = Faced(building, part.frame, street, part.turn);
-                    building.homeParts[i] = part;
-                }
-                return;
-            }
+            if (!settings.homeLibrary || settings.homeModels == GeoHomeUse.Off) return;
             List<Vector2> outline;
             try { outline = GeoPolygon.Clean(building.footprint); }
             catch (ArgumentException) { return; }
-            building.homeTurn = Faced(building, GeoRuinFit.FrameOf(outline), street, building.homeTurn);
+            var fit = settings.homeLibrary.ChooseFit(building, outline, settings.homeModels, site);
+            if (fit.model)
+            {
+                building.home = fit.model;
+                building.homeTurn = fit.turn; building.homeMirror = fit.mirror; building.homeQuarter = fit.quarter;
+                return;
+            }
+            // no single model fits: a row of sections, a further stretch, or a model on each rectangle of an L, T or U
+            // (not where a ruin model already draws the building)
+            if (GeoRuins.Draws(building)) return;
+            var parts = settings.homeLibrary.Cover(building, outline, settings.homeModels, site);
+            if (parts == null || parts.Count == 0) return;
+            building.homeParts = parts; building.home = parts[0].model;
+            building.homeTurn = parts[0].turn; building.homeMirror = parts[0].mirror; building.homeQuarter = parts[0].quarter;
         }
 
-        static bool Faced(GeoBuilding building, GeoRuinFit.Frame frame, Func<Vector2, Vector2?> street, bool turn)
+        // The roof variant a building gives a model (the export's roof shape, else the model's default).
+        public static string VariantOf(GeoBuilding building, GeoHomeModelAsset model)
         {
-            var transform = building.transform;
-            var centre = transform.TransformPoint(new Vector3(frame.centre.x, 0, frame.centre.y));
-            var toward = street(new Vector2(centre.x, centre.z));
-            if (toward == null) return turn;
-            var front = transform.TransformDirection(new Vector3(frame.Across.x, 0, frame.Across.y));
-            float side = Vector2.Dot(new Vector2(front.x, front.z).normalized, toward.Value);
-            return Mathf.Abs(side) > 0.3f ? side < 0 : turn;
+            var roofInfo = building != null ? building.roofInfo : null;
+            string name = GeoHomeModel.VariantFor(roofInfo?.shape, roofInfo?.renderAs, roofInfo?.ridge, model.defaultVariant);
+            return model.Variant(name) != null ? name : model.defaultVariant;
+        }
+
+        // A rectangle turned a quarter: its axis along the old one's width, so a model laid on it has its front to an end.
+        public static GeoRuinFit.Frame Quarter(GeoRuinFit.Frame frame) =>
+            new GeoRuinFit.Frame { centre = frame.centre, axis = frame.Across, length = frame.width, width = frame.length, fill = frame.fill };
+
+        // Where a model's front (its +Z) looks, in the building's local space.
+        public static Vector2 Front(GeoRuinFit.Frame frame, bool quarter, bool turn)
+        {
+            var across = quarter ? -frame.axis : frame.Across;
+            return turn ? -across : across;
+        }
+
+        // How a model's plan lies on a rectangle of its building: stretched so the whole plan (walls, porches, wings, eaves)
+        // covers the rectangle, which way round. Only the horizontal part of a Placement; Measure adds the heights.
+        public static Placement Layout(GeoHomePlan plan, GeoRuinFit.Frame frame, bool quarter, bool turn, bool mirror)
+        {
+            var f = quarter ? Quarter(frame) : frame;
+            var size = plan != null ? plan.Size : Vector2.one;
+            var middle = plan != null ? plan.bounds.center : Vector2.zero;
+            float sx = f.length / Mathf.Max(0.1f, size.x), sz = f.width / Mathf.Max(0.1f, size.y);
+            float flip = turn ? -1f : 1f, flop = mirror ? -1f : 1f;
+            return new Placement
+            {
+                // the plan's middle on the rectangle's centre
+                centre = f.centre - f.axis * (middle.x * sx * flip * flop) - f.Across * (middle.y * sz * flip),
+                axis = f.axis, across = f.Across, sx = sx, sz = sz, turn = turn, mirror = mirror
+            };
+        }
+
+        // A plan's rectangles where a placement puts them, in the building's local space.
+        public static List<GeoPolygon.Box> Boxes(GeoHomePlan plan, Placement p)
+        {
+            var boxes = new List<GeoPolygon.Box>(plan != null && plan.rects != null ? plan.rects.Length : 0);
+            if (plan == null || plan.rects == null) return boxes;
+            float flip = p.turn ? -1f : 1f, flop = p.mirror ? -1f : 1f;
+            foreach (var r in plan.rects)
+            {
+                var c = r.center;
+                var centre = p.centre + p.axis * (c.x * p.sx * flip * flop) + p.across * (c.y * p.sz * flip);
+                boxes.Add(new GeoPolygon.Box(centre, p.axis, r.width * 0.5f * p.sx, r.height * 0.5f * p.sz));
+            }
+            return boxes;
         }
 
         // ---------------------------------------------------------------- fitting
@@ -282,24 +455,18 @@ namespace GeoWorld
             return lowest + (flatRoof ? 0 : Mathf.Max(0.4f, roofRise));
         }
 
-        // How a model sits on a building: stretch to the footprint's rectangle, walls to the eaves, the roof to its rise.
-        public static Placement Measure(GeoHomeModelAsset model, IList<Vector2> outline, float height, float roofRise, bool flatRoof, bool turn, bool mirror, float depth) =>
-            Measure(model, GeoRuinFit.FrameOf(outline), height, roofRise, flatRoof, turn, mirror, depth);
-
-        // the same on one rectangle of the building (a part of GeoHomeLibrary.Cover)
-        public static Placement Measure(GeoHomeModelAsset model, GeoRuinFit.Frame frame, float height, float roofRise, bool flatRoof, bool turn, bool mirror, float depth)
+        // How a model sits on a rectangle of a building (the footprint's, or a part of GeoHomeLibrary.Cover): its plan with
+        // the roof variant stretched over the rectangle (Layout), walls to the eaves, the roof to its rise.
+        public static Placement Measure(GeoHomeModelAsset model, string variant, GeoRuinFit.Frame frame, bool quarter, float height, float roofRise, bool flatRoof, bool turn, bool mirror, float depth)
         {
             float h = Mathf.Max(2, height);
             float rise = flatRoof ? 0 : Mathf.Clamp(roofRise, 0.4f, Mathf.Max(0.5f, h - 2));
             float eaves = h - rise;
-            return new Placement
-            {
-                centre = frame.centre, axis = frame.axis, across = frame.Across,
-                sx = frame.length / Mathf.Max(0.1f, model.length), sz = frame.width / Mathf.Max(0.1f, model.width),
-                sy = Mathf.Clamp(eaves / Mathf.Max(0.5f, model.eaveHeight), 0.75f, 1.5f),
-                sr = flatRoof ? 1 : Mathf.Clamp(rise / Mathf.Max(0.3f, model.rise), 0.5f, 1.7f),
-                eaveTarget = eaves, eaveModel = model.eaveHeight, depth = Mathf.Max(0.1f, depth), turn = turn, mirror = mirror
-            };
+            var p = Layout(GeoHomePlan.Of(model, variant), frame, quarter, turn, mirror);
+            p.sy = Mathf.Clamp(eaves / Mathf.Max(0.5f, model.eaveHeight), 0.75f, 1.5f);
+            p.sr = flatRoof ? 1 : Mathf.Clamp(rise / Mathf.Max(0.3f, model.rise), 0.5f, 1.7f);
+            p.eaveTarget = eaves; p.eaveModel = model.eaveHeight; p.depth = Mathf.Max(0.1f, depth);
+            return p;
         }
 
         // part: 0 body (heights scale with the walls, the foot reaches down to the foundation), 1 roof (about the eave line)
@@ -374,22 +541,21 @@ namespace GeoWorld
                 var building = c.building;
                 var parts = building.homeParts;
                 if (parts != null && parts.Count > 0)
-                    foreach (var part in parts) Add(output, building, part.model, part.frame, part.turn, part.mirror, foundationDepth);
-                else Add(output, building, building.home, GeoRuinFit.FrameOf(c.outline), building.homeTurn, building.homeMirror, foundationDepth);
+                    foreach (var part in parts) Add(output, building, part.model, part.frame, part.quarter, part.turn, part.mirror, foundationDepth);
+                else Add(output, building, building.home, GeoRuinFit.FrameOf(c.outline), building.homeQuarter, building.homeTurn, building.homeMirror, foundationDepth);
                 return output;
             }
             catch { output.Dispose(); throw; }
         }
 
         // one model fitted to one rectangle of the building, with the roof of the export
-        static void Add(GeoBuildingOutput output, GeoBuilding building, GeoHomeModelAsset model, GeoRuinFit.Frame frame, bool turn, bool mirror, float foundationDepth)
+        static void Add(GeoBuildingOutput output, GeoBuilding building, GeoHomeModelAsset model, GeoRuinFit.Frame frame, bool quarter, bool turn, bool mirror, float foundationDepth)
         {
             var roofInfo = building.roofInfo; var library = building.homeLibrary;
-            string variant = GeoHomeModel.VariantFor(roofInfo?.shape, roofInfo?.renderAs, roofInfo?.ridge, model.defaultVariant);
-            if (model.Variant(variant) == null) variant = model.defaultVariant;
+            string variant = VariantOf(building, model);
             float roofRise = roofInfo != null && GeoRoofInfo.Has(roofInfo.rise) ? roofInfo.rise : building.roofHeight;
             float height = DrawnHeight(model, building.height, roofRise, variant == "flat");
-            var p = Measure(model, frame, height, roofRise, variant == "flat", turn, mirror, foundationDepth);
+            var p = Measure(model, variant, frame, quarter, height, roofRise, variant == "flat", turn, mirror, foundationDepth);
             var atlas = new Target(); var roof = new Target();
             // a merged city's bake asks for the reduced copies (GeoModelDetail): the same foot, eaves and corners
             Append(GeoModelDetail.For(model.body), p, false, atlas, roof);

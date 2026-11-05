@@ -48,6 +48,9 @@ namespace GeoWorld.Editor
                 buildings.buildings.AddRange(f.buildings.buildings);
                 levels.AddRange(f.waterLevels); pieces.AddRange(f.paths); if (f.rivers != null) rivers.AddRange(f.rivers);
             }
+            // each part was extracted (and its overlaps resolved) on its own: the same house can come from both, a Microsoft
+            // outline from one and the mapped one from the other, or one part's outline was never cut against the other's
+            if (fragments.Count > 1) buildings.buildings = GeoBuildingConflicts.Resolve(buildings.buildings).buildings;
             var field = new HeightField(main.field.bounds, main.field.resolution);
             var byPart = new Dictionary<int, GeoTileJob>();
             foreach (var f in fragments) byPart[f.part] = f;

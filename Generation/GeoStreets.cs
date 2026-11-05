@@ -3,19 +3,34 @@ using UnityEngine;
 
 namespace GeoWorld.Editor
 {
-    // The roads of an export in a coarse grid, to find the street nearest a building quickly (a city has tens of
-    // thousands of road segments): a ruin model turns its front, with the door and porch, towards it.
+    // The streets of an export in a coarse grid, to find the street nearest a building quickly (a city has tens of
+    // thousands of road segments): a ruin or home model turns its front, with the door and porch, towards it.
     public sealed class GeoStreets
     {
         const float Cell = 64;
         readonly Dictionary<Vector2Int, List<Vector4>> cells = new Dictionary<Vector2Int, List<Vector4>>();
+
+        // What a house turns its front to: a road people live along. A footway, path or cycleway runs through yards and
+        // between plots, a track across the fields; with them a village's houses faced garden paths and the field behind.
+        public static bool IsStreet(LineFeature road)
+        {
+            if (road == null) return false;
+            if (road.kind == "path") return false;
+            switch (road.type)
+            {
+                case "footway": case "path": case "cycleway": case "bridleway": case "steps": case "corridor":
+                case "track": case "construction": case "proposed": case "raceway": case "bus_guideway": case "escape":
+                    return false;
+                default: return true;
+            }
+        }
 
         public GeoStreets(IEnumerable<LineFeature> roads)
         {
             if (roads == null) return;
             foreach (var road in roads)
             {
-                if (road == null || road.tunnel || road.bridge) continue;
+                if (road == null || road.tunnel || road.bridge || !IsStreet(road)) continue;
                 var points = GeoData.Points(road.points);
                 for (int i = 1; i < points.Count; i++)
                 {
@@ -36,13 +51,26 @@ namespace GeoWorld.Editor
 
         public bool Empty => cells.Count == 0;
 
-        // The unit direction from a point (world X/Z) to the nearest road within reach, if there is one.
+        // The unit direction from a point (world X/Z) to the nearest street within reach, if there is one.
         public Vector2? Toward(Vector2 point, float reach = 60)
         {
-            if (cells.Count == 0) return null;
+            Nearest(point, reach, out _, out var toward);
+            return toward;
+        }
+
+        // How far the nearest street is from a point (world X/Z), or reach when there is none that near.
+        public float Distance(Vector2 point, float reach = 80)
+        {
+            Nearest(point, reach, out float distance, out _);
+            return distance;
+        }
+
+        void Nearest(Vector2 point, float reach, out float best, out Vector2? toward)
+        {
+            best = reach; toward = null;
+            if (cells.Count == 0) return;
             int r = Mathf.CeilToInt(reach / Cell);
             var home = new Vector2Int(Mathf.FloorToInt(point.x / Cell), Mathf.FloorToInt(point.y / Cell));
-            float best = reach; Vector2? toward = null;
             for (int x = home.x - r; x <= home.x + r; x++)
                 for (int z = home.y - r; z <= home.y + r; z++)
                 {
@@ -56,7 +84,6 @@ namespace GeoWorld.Editor
                         toward = (Vector2.Lerp(a, b, t) - point) / d;
                     }
                 }
-            return toward;
         }
     }
 }

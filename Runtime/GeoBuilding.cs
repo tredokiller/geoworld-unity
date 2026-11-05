@@ -64,6 +64,8 @@ namespace GeoWorld
         public GeoHomeModelAsset home;
         public GeoHomeLibrary homeLibrary;
         public bool homeMirror, homeTurn;
+        [Tooltip("Turn the model a quarter, so its front faces an end of the footprint (the generator does where its plan fits the outline better that way).")]
+        public bool homeQuarter;
         // A standing building no single model fits, drawn as several (GeoHomeLibrary.Cover: a row of sections, or a model on
         // each rectangle of an L, T or U; the first part's model is also Home). Worked out again before every build, never saved.
         [System.NonSerialized] public List<GeoHomePart> homeParts;
