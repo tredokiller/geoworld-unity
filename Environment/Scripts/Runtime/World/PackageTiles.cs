@@ -52,7 +52,7 @@ namespace _Game.Scripts.World
                 environment.TreeSpecies.Process(terrain);
 
             // Nature Renderer рисует деревья, с которыми начал: уже стоящий — заново
-            if (terrain.GetComponent("NatureRenderer") != null)
+            if (GeoWorld.GeoNatureRenderer.Of(terrain) != null)
                 GeoNatureRenderer.Refresh(terrain);
             else
                 GeoNatureRenderer.Ensure(terrain);

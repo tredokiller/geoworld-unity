@@ -26,7 +26,7 @@ namespace _Game.Scripts.World
         /// </summary>
         public static Component Ensure(Terrain terrain)
         {
-            Component natureRenderer = terrain.GetComponent("NatureRenderer");
+            Component natureRenderer = GeoWorld.GeoNatureRenderer.Of(terrain);
 
             if (natureRenderer != null)
                 return natureRenderer;
@@ -91,7 +91,7 @@ namespace _Game.Scripts.World
         /// </summary>
         public static void SwapGrass(Terrain terrain, TerrainData data, bool withGrass = true)
         {
-            Component natureRenderer = terrain.GetComponent("NatureRenderer");
+            Component natureRenderer = GeoWorld.GeoNatureRenderer.Of(terrain);
             System.Type type = natureRenderer != null ? natureRenderer.GetType() : null;
 
             // сообщение Unity о смене TerrainData перезапустило бы Nature Renderer целиком; данные тайла меняем только мы.
@@ -137,7 +137,7 @@ namespace _Game.Scripts.World
         /// </summary>
         public static bool? GrassShown(Terrain terrain)
         {
-            Component natureRenderer = terrain.GetComponent("NatureRenderer");
+            Component natureRenderer = GeoWorld.GeoNatureRenderer.Of(terrain);
 
             if (natureRenderer == null)
                 return null;
@@ -158,7 +158,7 @@ namespace _Game.Scripts.World
         /// </summary>
         public static void ShowGrass(Terrain terrain, bool shown)
         {
-            Component natureRenderer = terrain.GetComponent("NatureRenderer");
+            Component natureRenderer = GeoWorld.GeoNatureRenderer.Of(terrain);
 
             if (natureRenderer == null)
                 return;
@@ -181,7 +181,7 @@ namespace _Game.Scripts.World
         // После возврата прежнего TerrainData: Nature Renderer пересобирает свои ячейки травы и деревьев с него.
         public static void Restart(Terrain terrain)
         {
-            Component natureRenderer = terrain.GetComponent("NatureRenderer");
+            Component natureRenderer = GeoWorld.GeoNatureRenderer.Of(terrain);
 
             if (natureRenderer == null)
                 return;
@@ -198,7 +198,7 @@ namespace _Game.Scripts.World
 
         public static void AssignTerrainData(Terrain terrain, TerrainData data)
         {
-            Component natureRenderer = terrain.GetComponent("NatureRenderer");
+            Component natureRenderer = GeoWorld.GeoNatureRenderer.Of(terrain);
 
             if (natureRenderer == null)
                 return;

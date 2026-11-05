@@ -19,6 +19,17 @@ namespace GeoWorld
         static Type natureRendererType, grassRendererType;
         static bool searched;
 
+        // The terrain's (or object's) Nature Renderer component, or null. By its type: a lookup by name (GetComponent("NatureRenderer"))
+        // finds a script only by the class registry of the project's Assets, and with Nature Renderer's DLL in this package it
+        // found nothing on terrains that had one, so a second was added (refused: one per object) and the grass of 9 of 10
+        // tiles failed in the Interceptor Drones game.
+        public static Component Of(Component owner)
+        {
+            if (!owner) return null;
+            FindTypes();
+            return natureRendererType != null ? owner.GetComponent(natureRendererType) : owner.GetComponent("NatureRenderer");
+        }
+
         // Nature Renderer is in the project.
         public static bool Available { get { FindTypes(); return natureRendererType != null; } }
 
@@ -29,7 +40,7 @@ namespace GeoWorld
         // loaded in one frame: 16 frames over 50 ms in 14 s at 400 km/h, 1-2 with 62.5 m cells). Null without Nature Renderer.
         public static Component Ensure(Terrain terrain)
         {
-            var natureRenderer = terrain.GetComponent("NatureRenderer");
+            var natureRenderer = Of(terrain);
             if (!natureRenderer)
             {
                 FindTypes();
@@ -74,7 +85,7 @@ namespace GeoWorld
         // trees, and cooking it again cost some 18 ms.
         public static void SwapGrass(Terrain terrain, TerrainData data)
         {
-            var natureRenderer = terrain.GetComponent("NatureRenderer");
+            var natureRenderer = Of(terrain);
             var type = natureRenderer ? natureRenderer.GetType() : null;
             if (natureRenderer)
             {
@@ -100,7 +111,7 @@ namespace GeoWorld
         // After the terrain got its earlier TerrainData back: Nature Renderer rebuilds its grass and tree cells from it.
         public static void Restart(Terrain terrain)
         {
-            var natureRenderer = terrain.GetComponent("NatureRenderer");
+            var natureRenderer = Of(terrain);
             if (!natureRenderer) return;
             try { Rebuild(natureRenderer.GetType(), natureRenderer); }
             catch (Exception e) { Debug.LogWarning("Geo World: Nature Renderer could not restart on " + terrain.name + " (" + e.Message + ")."); }

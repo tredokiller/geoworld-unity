@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Nature Renderer is found by its type (`GeoNatureRenderer.Of`), not by name: `GetComponent("NatureRenderer")` finds a script only through the project's Assets, and with Nature Renderer's DLL in this package (since 1.17) it found nothing on terrains that had one. `NatureRendererTerrain.Ensure` then added a second (refused: one per object) and threw, so in the Interceptor Drones game the grass of 9 of the 10 tiles near the camera failed (`[GroundDressing] Tile build failed`) and the takeoff point's terrain paint threw; `TileTreeSpecies`, `PackageTiles` and `GeoNatureRenderer` looked it up the same way.
+
 ## 1.20.0
 
 - Battlefields: an area after a finished battle (no fighting goes on: no fire, smoke or artillery), from its satellite imagery and its map. The combat bake (`GeoCombatBake`) runs once for an export, before any tile is built, and writes `combat.json` next to its `environment.json` (`GeoCombatFile`, format `geo-combat` 2): **Bake battlefield** in the Geo Tiled World's Inspector (every export of the world, then Rebuild changed tiles), `GeoWorldRequest.battlefield` (and `combat` for its settings, `GeoCombatSettings`) for world packages, or `GeoCombatBake.Run`. The file names the export it was baked from (origin and bounds): next to another export it is ignored with a warning, and extracting the area again deletes it. It is part of every tile's fingerprint and of a package's input hash; a bake that changes nothing leaves the file as it was. `ReadEnvironment` and `ReadBuildings` merge it (their new `combat` argument, true by default); `environment.json` may carry `craters[]` and `trenches[]` of its own (`CraterFeature`, `TrenchFeature`).
