@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using GeoWorld;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -58,7 +59,7 @@ namespace _Game.Scripts.World
 
         private void LateUpdate()
         {
-            Camera camera = Camera.main;
+            Camera camera = GeoWorldCamera.Current;
 
             if (camera == null || !EnsureResources())
                 return;

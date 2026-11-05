@@ -488,7 +488,7 @@ namespace _Game.Scripts.World
         // ближнему строить нечего.
         private void UpdateLand()
         {
-            Camera camera = Camera.main;
+            Camera camera = GeoWorldCamera.Current;
 
             if (camera == null)
                 return;

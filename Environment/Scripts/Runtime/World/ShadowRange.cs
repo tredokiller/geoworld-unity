@@ -1,3 +1,4 @@
+using GeoWorld;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
@@ -105,7 +106,7 @@ namespace _Game.Scripts.World
                 return;
 
             _nextCheck = Time.unscaledTime + CheckInterval;
-            Camera camera = Camera.main;
+            Camera camera = GeoWorldCamera.Current;
 
             if (camera == null)
                 return;

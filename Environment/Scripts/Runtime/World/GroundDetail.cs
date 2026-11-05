@@ -110,7 +110,7 @@ namespace _Game.Scripts.World
             if (!_initialized)
                 return;
 
-            Camera camera = Camera.main;
+            Camera camera = GeoWorldCamera.Current;
 
             if (camera != null)
                 Build(camera.transform.position);

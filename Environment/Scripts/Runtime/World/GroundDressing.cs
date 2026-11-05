@@ -435,7 +435,7 @@ namespace _Game.Scripts.World
         // Камера и её сглаженная скорость — для упреждения; скачок быстрее TeleportSpeed — телепорт, скорость сбрасывается.
         private void TrackEye()
         {
-            Camera camera = Camera.main;
+            Camera camera = GeoWorldCamera.Current;
 
             if (camera == null)
                 return;

@@ -1,4 +1,5 @@
 using Enviro;
+using GeoWorld;
 using UnityEngine;
 
 namespace _Game.Scripts.Services
@@ -46,7 +47,7 @@ namespace _Game.Scripts.Services
         // 1 — камера у земли, 0 — высоко.
         private float NearGround()
         {
-            Camera camera = Camera.main;
+            Camera camera = GeoWorldCamera.Current;
 
             if (camera == null)
                 return 1f;

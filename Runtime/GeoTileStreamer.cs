@@ -94,7 +94,8 @@ namespace GeoWorld
         {
             if (!world || Time.unscaledTime < next) return;
             next = Time.unscaledTime + 0.2f;
-            var follow = target ? target : Camera.main ? Camera.main.transform : null;
+            var camera = GeoWorldCamera.Current;
+            var follow = target ? target : camera ? camera.transform : null;
             if (!follow) return;
             var wanted = new List<GeoTiledWorld.Tile>();
             foreach (var tile in world.tiles)

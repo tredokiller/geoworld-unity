@@ -1,6 +1,7 @@
 using _Game.Scripts.Enums;
 using _Game.Scripts.World;
 using Enviro;
+using GeoWorld;
 using UnityEngine;
 
 namespace _Game.Scripts.Services
@@ -47,7 +48,9 @@ namespace _Game.Scripts.Services
             if (fog == null || fog.Settings == null)
                 return;
 
-            Camera camera = EnviroManager.instance.Camera != null ? EnviroManager.instance.Camera : Camera.main;
+            Camera camera = GeoWorldCamera.Assigned != null && GeoWorldCamera.Assigned.isActiveAndEnabled
+                ? GeoWorldCamera.Assigned
+                : EnviroManager.instance.Camera != null ? EnviroManager.instance.Camera : Camera.main;
 
             if (camera == null)
                 return;
