@@ -17,8 +17,8 @@ namespace _Game.Scripts.Editor.Vegetation
     /// берутся один раз, а куски одной линии, обрезанные по границам частей, сшиваются; концам дорог ставится вид — тупик,
     /// продолжение, примыкание (RoadJunctions). Потом оси подтягиваются к дороге на снимке тайлов (RoadSatelliteSnap), а
     /// асфальту в городе (вокруг застройка карты земель и мощёные тротуары или разметка) ставится бордюр. Пишет в папку мира
-    /// (WorldMapBaker: &lt;папка мира&gt;/Environment/Road areas, на его WorldMapData). Без выгрузок на этой машине (пути в
-    /// мире — локальные) прежние дороги остаются.
+    /// (WorldMapBaker: &lt;папка мира&gt;/Environment/Road areas, на его WorldMapData). Без выгрузок на этой машине бейк
+    /// останавливается и прежние дороги не трогает (WorldMapBaker.RequireExports).
     /// </summary>
     public static class RoadAreasBaker
     {
@@ -30,7 +30,7 @@ namespace _Game.Scripts.Editor.Vegetation
         public static void BakeMenu()
         {
             GeoTiledWorld world = WorldMapBaker.FindWorld();
-            Debug.Log("[RoadAreasBaker] " + (world != null ? Bake(world) : WorldMapBaker.NoWorld));
+            WorldMapBaker.Log("RoadAreasBaker", () => world != null ? Bake(world) : WorldMapBaker.NoWorld);
         }
 
         public static string Bake(GeoTiledWorld world, bool snap = true)
@@ -42,11 +42,8 @@ namespace _Game.Scripts.Editor.Vegetation
             int files = 0;
             int skipped = 0;
 
-            foreach (string path in WorldMapBaker.EnvironmentPaths(world))
+            foreach (string path in WorldMapBaker.RequireExports(world))
             {
-                if (!File.Exists(path))
-                    continue;
-
                 files++;
                 JObject root = JObject.Parse(File.ReadAllText(path));
 
@@ -68,18 +65,13 @@ namespace _Game.Scripts.Editor.Vegetation
                 }
             }
 
-            RoadAreas asset = WorldMapBaker.Asset<RoadAreas>(world, AssetName, false);
-
-            if (files == 0)
-                return $"no GeoWorld environment export found, {asset?.roads.Length ?? 0} roads kept";
-
             int stitched = RoadJunctions.Stitch(roads, ids);
             RoadJunctions.Links links = RoadJunctions.Detect(roads, out string ends);
             // сначала оси и ширина по снимку: по ширине город отличается от села
             string snapped = snap ? SnapToSatellite(roads, world, links) : "not snapped";
             GeoLandCover cover = world.GetComponentInChildren<GeoLandCover>(true) ?? Object.FindFirstObjectByType<GeoLandCover>(FindObjectsInactive.Include);
             int curbs = WorldMapExport.MarkCurbs(roads, cover != null ? (x, z) => cover.Sample(x, z, out GeoLandClass land) ? land : GeoLandClass.None : null);
-            asset = WorldMapBaker.Asset<RoadAreas>(world, AssetName, true);
+            RoadAreas asset = WorldMapBaker.Asset<RoadAreas>(world, AssetName, true);
             asset.roads = roads.ToArray();
             asset.coverage = coverage.ToArray();
             asset.ResetIndex();

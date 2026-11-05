@@ -19,7 +19,8 @@ namespace _Game.Scripts.Editor.Vegetation
     /// поставлен из git, пакет только для чтения. Вешает WorldMapData и WorldEnvironment (весь слой окружения) на объект мира — и на копии этого мира в открытых
     /// сценах (в игре объект мира лежит и в её сцене, не только в сцене мира). Запекается после генерации тайлов (событие
     /// GeoTiles.AfterBake: если тайлы строились или данных у мира нет), кнопкой в инспекторе WorldMapData и
-    /// Tools/Environment/Bake World Map Data. Без выгрузок на этой машине (пути в мире — локальные) прежние данные остаются.
+    /// Tools/Environment/Bake World Map Data. Нет хоть одной выгрузки на этой машине (пути в мире — локальные) — бейк
+    /// останавливается с ошибкой (RequireExports) и прежние данные не трогает: молча оставленные старые данные не видно.
     /// </summary>
     [InitializeOnLoad]
     public static class WorldMapBaker
@@ -34,7 +35,20 @@ namespace _Game.Scripts.Editor.Vegetation
         public static void BakeMenu()
         {
             GeoTiledWorld world = FindWorld();
-            Debug.Log("[WorldMapBaker] " + (world != null ? Bake(world) : NoWorld));
+            Log("WorldMapBaker", () => world != null ? Bake(world) : NoWorld);
+        }
+
+        /// <summary>Отчёт бейка в консоль; бейк, остановленный без выгрузок (RequireExports), — ошибкой.</summary>
+        public static void Log(string tag, Func<string> bake, Object context = null)
+        {
+            try
+            {
+                Debug.Log($"[{tag}] {bake()}", context);
+            }
+            catch (MissingExportException e)
+            {
+                Debug.LogError($"[{tag}] {e.Message}", context);
+            }
         }
 
         public const string NoWorld = "no Geo Tiled World in the open scenes: open the world's scene (or a scene with its object)";
@@ -126,6 +140,26 @@ namespace _Game.Scripts.Editor.Vegetation
             }
         }
 
+        /// <summary>
+        /// Пути environment.json частей мира, если все они есть на этой машине; иначе MissingExportException с теми, которых
+        /// нет. Без части выгрузок бейк записал бы данные без её дорог, полей и лесов, а без всех — оставил бы старые.
+        /// </summary>
+        public static List<string> RequireExports(GeoTiledWorld world)
+        {
+            List<string> paths = EnvironmentPaths(world);
+
+            if (paths.Count == 0)
+                throw new MissingExportException($"{world.name} has no environment export path: nothing baked, the world's map data is unchanged.");
+
+            List<string> missing = paths.Where(path => !File.Exists(path)).ToList();
+
+            if (missing.Count > 0)
+                throw new MissingExportException($"{world.name}: environment export not found on this machine: {string.Join(", ", missing)}. " +
+                                                 "Nothing baked, the world's map data is unchanged. Point the world's parts at their exports or extract the area again.");
+
+            return paths;
+        }
+
         /// <summary>Пути environment.json частей мира, в его порядке.</summary>
         public static List<string> EnvironmentPaths(GeoTiledWorld world)
         {
@@ -151,6 +185,14 @@ namespace _Game.Scripts.Editor.Vegetation
 
             EnsureFolder(parent);
             AssetDatabase.CreateFolder(parent, Path.GetFileName(folder));
+        }
+    }
+
+    /// <summary>Бейк данных карты остановлен: у мира нет выгрузок на этой машине (WorldMapBaker.RequireExports).</summary>
+    public sealed class MissingExportException : InvalidOperationException
+    {
+        public MissingExportException(string message) : base(message)
+        {
         }
     }
 }

@@ -33,7 +33,7 @@ namespace _Game.Scripts.Editor.Vegetation
         public static void BakeMenu()
         {
             GeoTiledWorld world = WorldMapBaker.FindWorld();
-            Debug.Log("[TreeLeafAreasBaker] " + (world != null ? BakeLeafAreas(world) : WorldMapBaker.NoWorld));
+            WorldMapBaker.Log("TreeLeafAreasBaker", () => world != null ? BakeLeafAreas(world) : WorldMapBaker.NoWorld);
         }
 
         [MenuItem("Tools/Environment/Update Tree Species Profile")]
@@ -45,11 +45,8 @@ namespace _Game.Scripts.Editor.Vegetation
             List<TreeSpeciesProfile.LeafArea> areas = new();
             int files = 0;
 
-            foreach (string path in WorldMapBaker.EnvironmentPaths(world))
+            foreach (string path in WorldMapBaker.RequireExports(world))
             {
-                if (!File.Exists(path))
-                    continue;
-
                 files++;
                 JObject root = JObject.Parse(File.ReadAllText(path));
 
@@ -80,13 +77,6 @@ namespace _Game.Scripts.Editor.Vegetation
                     if (result.outer.Length >= 3)
                         areas.Add(result);
                 }
-            }
-
-            // выгрузок на этой машине нет (пути в мире — локальные, вне репозитория): прежние контуры не стираем
-            if (files == 0)
-            {
-                TreeLeafAreas kept = WorldMapBaker.Asset<TreeLeafAreas>(world, AssetName, false);
-                return $"no GeoWorld environment export found, {kept?.areas.Length ?? 0} leaf areas kept";
             }
 
             TreeLeafAreas asset = WorldMapBaker.Asset<TreeLeafAreas>(world, AssetName, true);

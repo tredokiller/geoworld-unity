@@ -17,8 +17,8 @@ namespace _Game.Scripts.Editor.Vegetation
     /// читается по 1 м на пиксель, в поле (дальше 12 м от края — лесополосы и дороги не в счёт) копится тензор градиентов
     /// (каждый градиент — единичный, чтобы редкие резкие края не перевешивали); линии идут поперёк главного градиента.
     /// Если рисунок слабый (связность ниже MinCoherence), остаётся длинная сторона. Пишет в папку мира (WorldMapBaker:
-    /// &lt;папка мира&gt;/Environment/Field areas, на его WorldMapData). Без выгрузок на этой машине (пути в мире — локальные)
-    /// прежние поля остаются.
+    /// &lt;папка мира&gt;/Environment/Field areas, на его WorldMapData). Без выгрузок на этой машине бейк останавливается
+    /// и прежние поля не трогает (WorldMapBaker.RequireExports).
     /// </summary>
     public static class FieldAreasBaker
     {
@@ -28,7 +28,7 @@ namespace _Game.Scripts.Editor.Vegetation
         public static void BakeMenu()
         {
             GeoTiledWorld world = WorldMapBaker.FindWorld();
-            Debug.Log("[FieldAreasBaker] " + (world != null ? Bake(world) : WorldMapBaker.NoWorld));
+            WorldMapBaker.Log("FieldAreasBaker", () => world != null ? Bake(world) : WorldMapBaker.NoWorld);
         }
 
         public static string Bake(GeoTiledWorld world)
@@ -37,11 +37,8 @@ namespace _Game.Scripts.Editor.Vegetation
             int files = 0;
             List<GeoTiledWorld.Tile> tiles = world.tiles.Where(tile => !tile.empty).ToList();
 
-            foreach (string path in WorldMapBaker.EnvironmentPaths(world))
+            foreach (string path in WorldMapBaker.RequireExports(world))
             {
-                if (!File.Exists(path))
-                    continue;
-
                 files++;
                 JObject root = JObject.Parse(File.ReadAllText(path));
 
@@ -83,14 +80,9 @@ namespace _Game.Scripts.Editor.Vegetation
                 }
             }
 
-            FieldAreas asset = WorldMapBaker.Asset<FieldAreas>(world, AssetName, false);
-
-            if (files == 0)
-                return $"no GeoWorld environment export found, {asset?.fields.Length ?? 0} fields kept";
-
             int fromSatellite = OrientBySatellite(fields, tiles);
 
-            asset = WorldMapBaker.Asset<FieldAreas>(world, AssetName, true);
+            FieldAreas asset = WorldMapBaker.Asset<FieldAreas>(world, AssetName, true);
             asset.fields = fields.ToArray();
             asset.ResetIndex();
             EditorUtility.SetDirty(asset);
