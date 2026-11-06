@@ -23,7 +23,10 @@ namespace _Game.Scripts.World
     ///    2 км² (большое водохранилище, море) — Water (sea), иначе пруд или озеро — Water (lakes). Стоячая вода, которая
     ///    касается реки (старица, затон, разлив у русла — в OSM не water=river, и пакет рисует её отдельным плоским
     ///    озером), остаётся речной: шейдер и поток реки; иначе на стыке по клеткам сетки резала прямая граница тёмной
-    ///    озёрной воды и мутной речной. Тени вода не бросает — иначе темнит своё дно.
+    ///    озёрной воды и мутной речной. Вид решается на весь водоём (по имени меша — id водоёма) по всем его загруженным
+    ///    кускам вместе, разрезы по границам тайлов — не берег: каждый кусок решал сам, и один разлив был болотом в одном
+    ///    тайле и озером в соседнем — квадрат по сетке тайлов. Загрузился ещё кусок и вид водоёма сменился — его куски
+    ///    переодеваются. Тени вода не бросает — иначе темнит своё дно.
     ///  - Течение рек: шейдеру реки нужен поток в UV3 меша (м/с, мир xz). Считаем его по осям рек тайла (GeoPath с river,
     ///    точки — по течению, как линии рек OSM): на стрежне быстрее, у берегов медленнее — в свою копию меша (меш тайла
     ///    не трогаем).
@@ -53,8 +56,10 @@ namespace _Game.Scripts.World
 
         private static readonly List<Surface> Surfaces = new();
         private static readonly HashSet<MeshFilter> Known = new();
-        // стоячая вода, которая касается реки, — по имени меша (id водоёма): её куски в соседних тайлах тоже речные
-        private static readonly HashSet<string> JoinedNames = new();
+        // стоячая вода по имени меша (id водоёма): замеры его кусков по тайлам, и выгруженных тоже
+        private static readonly Dictionary<string, Body> Bodies = new();
+        // рамки рек, загруженных за этот проход: стоячую воду рядом проверить на стык с ними
+        private static readonly List<Bounds> NewRivers = new();
         // материал рек пакета: для кусков водоёма, которые уже получили свой, а потом оказались речными
         private static Material _riverMaterial;
         private static readonly List<MeshFilter> Filters = new();
@@ -121,6 +126,21 @@ namespace _Game.Scripts.World
             // своя копия меша (с потоком реки), её уничтожаем вместе с тайлом
             public Mesh Owned;
             public GeoWorldRoot Root;
+        }
+
+        private sealed class Body
+        {
+            // по тайлу куска
+            public readonly Dictionary<long, Piece> Pieces = new();
+            // касается реки (хоть один кусок): речная вся, и куски в соседних тайлах
+            public bool Joined;
+        }
+
+        // Замеры куска водоёма: площадь (м²), берег (м кромки: у суши, из них у болота), вода внутри (м²: под картой
+        // земель, из них болото).
+        private struct Piece
+        {
+            public float Area, ShoreLand, ShoreWetland, Inside, InsideWetland;
         }
 
         /// <summary>
@@ -214,18 +234,28 @@ namespace _Game.Scripts.World
 
                     MeshRenderer renderer = filter.GetComponent<MeshRenderer>();
                     string name = filter.gameObject.name;
-                    WaterKind kind = name == RiversName ? WaterKind.River : Classify(filter);
+                    WaterKind kind;
 
-                    if (name == RiversName && _riverMaterial == null && renderer != null)
-                        _riverMaterial = renderer.sharedMaterial;
-
-                    // у реки — речная вся: и куски этого водоёма в соседних тайлах, уже одетые озером
-                    if ((kind is WaterKind.Lake or WaterKind.Swamp) && (JoinedNames.Contains(name) || JoinsRiver(filter)))
+                    if (name == RiversName)
                     {
                         kind = WaterKind.River;
+                        NewRivers.Add(renderer != null ? renderer.bounds : filter.sharedMesh.bounds);
 
-                        if (JoinedNames.Add(name))
-                            JoinRiver(name);
+                        if (_riverMaterial == null && renderer != null)
+                            _riverMaterial = renderer.sharedMaterial;
+                    }
+                    else
+                    {
+                        // вид — на весь водоём по всем его загруженным кускам: кусок в тайле решал сам, и один водоём
+                        // в соседних тайлах был болотом и озером с прямой границей по сетке
+                        Body body = AddPiece(name, filter, root);
+
+                        // у реки — речная вся: и куски этого водоёма в соседних тайлах, уже одетые озером
+                        if (!body.Joined && JoinsRiver(filter))
+                            body.Joined = true;
+
+                        kind = KindOf(body);
+                        Apply(name, kind);
                     }
 
                     var surface = new Surface
@@ -246,6 +276,50 @@ namespace _Game.Scripts.World
                         BakeFlow(surface, root);
                 }
             }
+
+            JoinNewRivers();
+        }
+
+        // Реки новых тайлов: стоячая вода соседних тайлов, загруженная раньше них, их не видела — проверить её ещё раз,
+        // иначе водоём у реки оставался озером или болотом, смотря какой тайл загрузился первым.
+        private static void JoinNewRivers()
+        {
+            if (NewRivers.Count == 0)
+                return;
+
+            for (int i = 0; i < Surfaces.Count; i++)
+            {
+                Surface surface = Surfaces[i];
+
+                if (surface.Filter == null || surface.Kind == WaterKind.River)
+                    continue;
+
+                string name = surface.Filter.gameObject.name;
+
+                if (!Bodies.TryGetValue(name, out Body body) || body.Joined)
+                    continue;
+
+                bool near = false;
+                Bounds bounds = surface.Bounds;
+
+                foreach (Bounds river in NewRivers)
+                {
+                    if (bounds.max.x + JoinReach >= river.min.x && bounds.min.x - JoinReach <= river.max.x &&
+                        bounds.max.z + JoinReach >= river.min.z && bounds.min.z - JoinReach <= river.max.z)
+                    {
+                        near = true;
+                        break;
+                    }
+                }
+
+                if (!near || !JoinsRiver(surface.Filter))
+                    continue;
+
+                body.Joined = true;
+                Apply(name, KindOf(body));
+            }
+
+            NewRivers.Clear();
         }
 
         private static void Forget(int index)
@@ -296,13 +370,87 @@ namespace _Game.Scripts.World
             return Materials[index];
         }
 
-        // Стоячая вода: море (большая площадь), болото (берег — болото по карте земель) или пруд и озеро.
-        private static WaterKind Classify(MeshFilter filter)
+        // Кусок водоёма name в тайле root: его замеры — к водоёму (кусок того же тайла, загруженный снова, — вместо
+        // прежнего).
+        private static Body AddPiece(string name, MeshFilter filter, GeoWorldRoot root)
         {
+            if (!Bodies.TryGetValue(name, out Body body))
+                Bodies[name] = body = new Body();
+
+            long key = root.tile ? Key(root.tileIndex.x, root.tileIndex.y) : (1L << 62) | (uint)root.GetInstanceID();
+            body.Pieces[key] = Measure(filter, root);
+            return body;
+        }
+
+        // Вид водоёма по всем его загруженным кускам: море (большая открытая вода — и у реки: водохранилище остаётся
+        // водохранилищем), речная (касается реки), болото (болото по карте земель на доле берега или внутри воды) или
+        // пруд и озеро. Большая заросшая вода — болото, не море. Зависит только от того, какие куски загружены, не от
+        // порядка: и река, которую водоём касается, может загрузиться после него.
+        private static WaterKind KindOf(Body body)
+        {
+            var sum = new Piece();
+
+            foreach (Piece piece in body.Pieces.Values)
+            {
+                sum.Area += piece.Area;
+                sum.ShoreLand += piece.ShoreLand;
+                sum.ShoreWetland += piece.ShoreWetland;
+                sum.Inside += piece.Inside;
+                sum.InsideWetland += piece.InsideWetland;
+            }
+
+            float shoreShare = sum.ShoreLand > 0f ? sum.ShoreWetland / sum.ShoreLand : 0f;
+            float insideShare = sum.Inside > 0f ? sum.InsideWetland / sum.Inside : 0f;
+
+            if (sum.Area >= SeaArea && insideShare < SwampShare)
+                return WaterKind.Sea;
+
+            if (body.Joined)
+                return WaterKind.River;
+
+            return Mathf.Max(shoreShare, insideShare) >= SwampShare ? WaterKind.Swamp : WaterKind.Lake;
+        }
+
+        // Водоём name стал другим видом (загрузился ещё кусок или река рядом) — переодеть его загруженные куски: речным —
+        // материал рек пакета и поток, стоячим — свой материал.
+        private static void Apply(string name, WaterKind kind)
+        {
+            foreach (Surface surface in Surfaces)
+            {
+                if (surface.Filter == null || surface.Kind == kind || surface.Filter.gameObject.name != name)
+                    continue;
+
+                surface.Kind = kind;
+                Version++;
+
+                if (!surface.Filter.TryGetComponent(out MeshRenderer renderer))
+                    continue;
+
+                if (kind != WaterKind.River)
+                {
+                    Dress(renderer, kind);
+                    continue;
+                }
+
+                if (_riverMaterial != null)
+                    renderer.sharedMaterial = _riverMaterial;
+
+                if (surface.Owned == null && surface.Root != null)
+                    BakeFlow(surface, surface.Root);
+            }
+        }
+
+        // Замеры куска: площадь, берег (длина кромки по карте земель в ShoreReach м снаружи: суша и болото) и вода внутри
+        // (площадь треугольников по карте земель под их центром: всего и болото). Разрез по границе тайла — не берег: за ним
+        // тот же водоём в соседнем тайле, и у заросшей воды (болото по карте земель и в воде) кусок посреди неё считал
+        // болотом весь свой «берег», а соседний с настоящим берегом — нет.
+        private static Piece Measure(MeshFilter filter, GeoWorldRoot root)
+        {
+            var piece = new Piece();
             Mesh mesh = filter.sharedMesh;
 
             if (!mesh.isReadable)
-                return WaterKind.Lake;
+                return piece;
 
             Matrix4x4 toWorld = filter.transform.localToWorldMatrix;
             Vector3[] vertices = mesh.vertices;
@@ -311,19 +459,70 @@ namespace _Game.Scripts.World
                 vertices[i] = toWorld.MultiplyPoint3x4(vertices[i]);
 
             int[] triangles = mesh.triangles;
-            float area = 0f;
 
             for (int t = 0; t + 2 < triangles.Length; t += 3)
+                piece.Area += TriangleArea(vertices[triangles[t]], vertices[triangles[t + 1]], vertices[triangles[t + 2]]);
+
+            Rect tile = root.terrain != null
+                ? new Rect(root.terrain.transform.position.x, root.terrain.transform.position.z,
+                    root.terrain.terrainData.size.x, root.terrain.terrainData.size.z)
+                : root.tile ? root.tileArea : Rect.zero;
+            List<(Vector3 middle, Vector2 outward, float length)> shore = ShoreEdges(vertices, triangles);
+            int step = Mathf.Max(1, shore.Count / ShoreSamples);
+
+            for (int i = 0; i < shore.Count; i += step)
             {
-                Vector3 a = vertices[triangles[t]], b = vertices[triangles[t + 1]], c = vertices[triangles[t + 2]];
-                area += Mathf.Abs((b.x - a.x) * (c.z - a.z) - (c.x - a.x) * (b.z - a.z)) * 0.5f;
+                (Vector3 middle, Vector2 outward, float length) = shore[i];
+
+                if (OnTileEdge(middle, outward, tile))
+                    continue;
+
+                Vector3 point = middle + new Vector3(outward.x, 0f, outward.y) * ShoreReach;
+
+                if (!GeoLandCover.TrySample(point, out GeoLandClass cover) || cover == GeoLandClass.Water)
+                    continue;
+
+                float weight = length * step;
+                piece.ShoreLand += weight;
+
+                if (cover == GeoLandClass.Wetland)
+                    piece.ShoreWetland += weight;
             }
 
-            if (area >= SeaArea)
-                return WaterKind.Sea;
+            // заросшая вода: карта земель внутри неё — болото
+            int triangleStep = Mathf.Max(1, triangles.Length / 3 / ShoreSamples) * 3;
 
-            return WetlandShare(vertices, triangles) >= SwampShare ? WaterKind.Swamp : WaterKind.Lake;
+            for (int t = 0; t + 2 < triangles.Length; t += triangleStep)
+            {
+                Vector3 a = vertices[triangles[t]], b = vertices[triangles[t + 1]], c = vertices[triangles[t + 2]];
+
+                if (!GeoLandCover.TrySample((a + b + c) / 3f, out GeoLandClass cover))
+                    continue;
+
+                float weight = TriangleArea(a, b, c) * (triangleStep / 3);
+                piece.Inside += weight;
+
+                if (cover == GeoLandClass.Wetland)
+                    piece.InsideWetland += weight;
+            }
+
+            return piece;
         }
+
+        // Ребро кромки лежит на границе тайла (меш воды там разрезан): середина на линии, наружу — поперёк неё.
+        private static bool OnTileEdge(Vector3 middle, Vector2 outward, Rect tile)
+        {
+            if (tile.width <= 0f)
+                return false;
+
+            const float tolerance = 0.05f;
+            bool onX = Mathf.Abs(middle.x - tile.xMin) < tolerance || Mathf.Abs(middle.x - tile.xMax) < tolerance;
+            bool onZ = Mathf.Abs(middle.z - tile.yMin) < tolerance || Mathf.Abs(middle.z - tile.yMax) < tolerance;
+            return onX && Mathf.Abs(outward.x) > 0.99f || onZ && Mathf.Abs(outward.y) > 0.99f;
+        }
+
+        private static float TriangleArea(Vector3 a, Vector3 b, Vector3 c) =>
+            Mathf.Abs((b.x - a.x) * (c.z - a.z) - (c.x - a.x) * (b.z - a.z)) * 0.5f;
 
         // Кромка воды: рёбра меша, у которых один треугольник, — середина и направление наружу (от треугольника).
         private static List<(Vector3 middle, Vector2 outward, float length)> ShoreEdges(Vector3[] vertices, int[] triangles)
@@ -394,25 +593,6 @@ namespace _Game.Scripts.World
             return false;
         }
 
-        // Уже загруженные куски водоёма name (в соседних тайлах) — речные: материал рек пакета и поток.
-        private static void JoinRiver(string name)
-        {
-            foreach (Surface surface in Surfaces)
-            {
-                if (surface.Filter == null || surface.Kind == WaterKind.River || surface.Filter.gameObject.name != name)
-                    continue;
-
-                surface.Kind = WaterKind.River;
-                MeshRenderer renderer = surface.Filter.GetComponent<MeshRenderer>();
-
-                if (renderer != null && _riverMaterial != null)
-                    renderer.sharedMaterial = _riverMaterial;
-
-                if (surface.Root != null)
-                    BakeFlow(surface, surface.Root);
-            }
-        }
-
         private static bool RiverAt(Vector3 point)
         {
             foreach (Surface surface in Surfaces)
@@ -430,49 +610,6 @@ namespace _Game.Scripts.World
             }
 
             return false;
-        }
-
-        // Доля болота по карте земель: у кромки снаружи и внутри воды.
-        private static float WetlandShare(Vector3[] vertices, int[] triangles)
-        {
-            List<(Vector3 middle, Vector2 outward, float length)> shore = ShoreEdges(vertices, triangles);
-            int wetland = 0, land = 0;
-            int step = Mathf.Max(1, shore.Count / ShoreSamples);
-
-            for (int i = 0; i < shore.Count; i += step)
-            {
-                (Vector3 middle, Vector2 outward, _) = shore[i];
-                Vector3 point = middle + new Vector3(outward.x, 0f, outward.y) * ShoreReach;
-
-                if (!GeoLandCover.TrySample(point, out GeoLandClass cover) || cover == GeoLandClass.Water)
-                    continue;
-
-                land++;
-
-                if (cover == GeoLandClass.Wetland)
-                    wetland++;
-            }
-
-            // заросшая вода: карта земель внутри неё — болото
-            int inside = 0, insideWetland = 0;
-            int triangleStep = Mathf.Max(1, triangles.Length / 3 / ShoreSamples) * 3;
-
-            for (int t = 0; t + 2 < triangles.Length; t += triangleStep)
-            {
-                Vector3 centre = (vertices[triangles[t]] + vertices[triangles[t + 1]] + vertices[triangles[t + 2]]) / 3f;
-
-                if (!GeoLandCover.TrySample(centre, out GeoLandClass cover))
-                    continue;
-
-                inside++;
-
-                if (cover == GeoLandClass.Wetland)
-                    insideWetland++;
-            }
-
-            float shoreShare = land > 0 ? (float)wetland / land : 0f;
-            float insideShare = inside > 0 ? (float)insideWetland / inside : 0f;
-            return Mathf.Max(shoreShare, insideShare);
         }
 
         private static long PointKey(Vector3 point) =>
@@ -726,7 +863,8 @@ namespace _Game.Scripts.World
         {
             Surfaces.Clear();
             Known.Clear();
-            JoinedNames.Clear();
+            Bodies.Clear();
+            NewRivers.Clear();
             _riverMaterial = null;
             _nextScan = float.NegativeInfinity;
             System.Array.Clear(Materials, 0, Materials.Length);
