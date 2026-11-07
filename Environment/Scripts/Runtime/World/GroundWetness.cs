@@ -175,13 +175,14 @@ namespace _Game.Scripts.World
 
             if (CraterField.Instance is { } craters && craters.BowlAt(point.x, point.z, out float bowl, out float waterBowl))
             {
-                float level = Mathf.Max(waterBowl > 0.001f ? waterBowl + 0.5f : 0f, bowl + Mathf.Lerp(-0.1f, 0.6f, Mathf.Clamp01(PuddleLevel)));
+                float level = Mathf.Max(waterBowl > 0.001f ? waterBowl + 0.5f : 0f, bowl + Mathf.Lerp(-0.32f, 0.6f, Mathf.Clamp01(PuddleLevel)));
 
-                if (level > 0.91f)
+                if (level > 0.8f)
                 {
-                    // рябь края — тот же шум, что у шейдера (PuddleNoise(xz / 0.6 + 37.1) · 0.05)
-                    float ripple = PuddleNoise(point.x / 0.6f + 37.1f, point.z / 0.6f + 37.1f) * 0.05f;
-                    float edge = Mathf.Clamp01((level + ripple - 0.96f) / 0.06f);
+                    // берег — тот же шум, что у шейдера: заливы по 1.6 м и кромка по 0.5 м
+                    float shore = level + (PuddleNoise(point.x / 1.6f + 37.1f, point.z / 1.6f + 37.1f) - 0.5f) * 0.28f +
+                                  (PuddleNoise(point.x / 0.5f + 11.3f, point.z / 0.5f + 11.3f) - 0.5f) * 0.08f;
+                    float edge = Mathf.Clamp01((shore - 0.97f) / 0.04f);
 
                     pond = edge * edge * (3f - 2f * edge);
                 }

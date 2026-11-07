@@ -96,7 +96,7 @@ namespace _Game.Scripts.World
 
         private void LateUpdate()
         {
-            Camera camera = Camera.main;
+            Camera camera = GeoWorldCamera.Current;
             CraterField field = CraterField.Instance;
 
             if (field == null || field.craters.Length == 0 && field.trenches.Length == 0)

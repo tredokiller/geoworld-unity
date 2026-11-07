@@ -17,6 +17,7 @@ namespace GeoWorld.Editor
         {
             GeoGeneration.EditorTarget = Target;
             GeoGeneration.EditorReducedModels = GeoModelReduction.Ensure;
+            GeoGeneration.EditorCompressSatellite = texture => EditorUtility.CompressTexture(texture, TextureFormat.DXT1, TextureCompressionQuality.Best);
         }
 
         public bool SavesAssets => true;

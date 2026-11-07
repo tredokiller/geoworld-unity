@@ -31,6 +31,9 @@ namespace GeoWorld.Editor
         public static IGeoGenerationTarget EditorTarget;
         // The editor's reduced models (GeoModelReduction.Ensure), for a package made in the editor.
         public static Func<GeoRuinLibrary, GeoHomeLibrary, GeoReducedModels> EditorReducedModels;
+        // The editor's DXT1 encoder at its best quality, for a package made in the editor: Texture2D.Compress leaves visible
+        // blocks in the satellite imagery seen from a drone.
+        public static Action<Texture2D> EditorCompressSatellite;
 
         public static IGeoGenerationTarget Target => current ?? EditorTarget ?? (fallback ??= new GeoMemoryTarget(null, default));
 
@@ -89,14 +92,16 @@ namespace GeoWorld.Editor
             progress?.Invoke(label, value);
         }
 
-        // Texture2D.Compress makes DXT1 of a texture without alpha (DXT5 with it): the texture becomes RGB24 first. Crunch
-        // needs the editor; a package keeps DXT1 (four times the bytes of crunched, read without decoding).
+        // Texture2D.Compress makes DXT1 of a texture without alpha (DXT5 with it): the texture becomes RGB24 first. In the editor
+        // the editor's encoder makes it instead. Crunch needs the editor's assets; a package keeps DXT1 (four times the bytes of
+        // crunched, read without decoding).
         public void CompressSatellite(Texture2D texture, Color32[] pixels, GenerationSettings settings, List<string> notes)
         {
             texture.Reinitialize(texture.width, texture.height, TextureFormat.RGB24, true);
             texture.SetPixels32(pixels);
             texture.Apply(true);
-            texture.Compress(true);
+            if (GeoGeneration.EditorCompressSatellite != null) GeoGeneration.EditorCompressSatellite(texture);
+            else texture.Compress(true);
             if (settings.satelliteCompression == GeoSatelliteCompression.Crunched)
                 notes?.Add("Satellite imagery: kept as DXT1 (Crunch needs the editor).");
         }

@@ -74,14 +74,21 @@ void GroundCraters(inout InputData inputData, float footprint, float distanceToC
                 albedo = lerp(albedo, spoil, ejecta * 0.35);
 
                 // вода: в воронке с водой — середина чаши (до 0.7 радиуса), в дождь набирается и в остальных
-                // a dry bowl stays under the water's threshold (0.92) until puddles have begun (~0.09 of the level)
-                half rain = lerp(-0.1, 0.6, saturate(_PuddleLevel));
+                // a dry bowl, its shore noise included, stays under the wet rim until puddles are well on (~0.2 of the level)
+                half rain = lerp(-0.32, 0.6, saturate(_PuddleLevel));
                 half level = max(waterBowl > 0.001 ? waterBowl + 0.5 : 0, bowl + rain);
-                // рябь до 0.05: с 0.91 край прудка уже может начаться (CPU — GroundWetness.WaterAt)
-                [branch] if (level > 0.91)
+                [branch] if (level > 0.8)
                 {
-                    float ripple = PuddleNoise(positionWS.xz / 0.6 + 37.1) * 0.05;
-                    pond = smoothstep(0.96, 1.02, level + ripple);
+                    // берег не по циркулю: уровень гуляет шумом в двух масштабах — заливы по полтора метра и кромка по полметра
+                    // (CPU — GroundWetness.WaterAt, тот же шум)
+                    float2 p = positionWS.xz;
+                    half shore = level + (PuddleNoise(p / 1.6 + 37.1) - 0.5) * 0.28 + (PuddleNoise(p / 0.5 + 11.3) - 0.5) * 0.08;
+                    pond = smoothstep(0.97, 1.01, shore);
+                    // мокрая грязь полосой до воды: темнее и с блеском, у самой кромки почти чёрная
+                    half rim = smoothstep(0.86, 0.99, shore) * (1 - pond);
+                    albedo *= 1 - 0.5 * rim;
+                    smoothness = max(smoothness, rim * 0.6);
+
                     half frozen = _Season.w;
                     half iceSmoothness = 0.9, iceSnow = 0;
                     half3 ice = 0;
@@ -89,13 +96,32 @@ void GroundCraters(inout InputData inputData, float footprint, float distanceToC
                     [branch] if (frozen > 0.5)
                         ice = GroundIce(positionWS.xz, footprint, iceSmoothness, iceSnow);
 
-                    // прудок в воронке: мутная глинистая вода, дна почти не видно
-                    half3 pondColour = lerp(half3(0.07, 0.058, 0.04), ice, frozen);
-                    albedo = lerp(albedo, pondColour, pond);
-                    smoothness = lerp(smoothness, lerp(lerp(0.93, 0.85, saturate(distanceToCamera / 300)), iceSmoothness, frozen), pond);
-                    occlusion = lerp(occlusion, 1, pond);
-                    inputData.normalWS = normalize(lerp(inputData.normalWS, float3(0, 1, 0), pond));
-                    pond *= 1 - frozen;
+                    // прудок: у берега мелко, сквозь воду темнеет дно; дальше мутная глинистая вода, бурая или в зелень по
+                    // пятнам ила; редкие пятна плёнки и сора — тусклые. Одна ровная заливка читалась сверху серым диском
+                    half deep = smoothstep(0.98, 1.08, shore);
+                    half silt = PuddleNoise(p / 1.7 + 5.3);
+                    half3 muddy = lerp(half3(0.034, 0.03, 0.018), half3(0.046, 0.044, 0.022), silt);
+                    half3 pondWater = lerp(albedo * 0.25 + 0.005, muddy, deep);
+                    half scum = smoothstep(0.7, 0.82, PuddleNoise(p / 0.45 + 3.1) * 0.7 + silt * 0.3) * (1 - frozen);
+                    pondWater = lerp(pondWater, half3(0.085, 0.078, 0.05), scum * 0.7);
+                    albedo = lerp(albedo, lerp(pondWater, ice, frozen), pond);
+
+                    // гладь не плоское зеркало: рябь от ветра (вблизи), кольца дождя и рябь под дроном, как у луж
+                    half foam;
+                    float near = saturate((120 - distanceToCamera) / 60);
+                    float2 q = p / 0.35 + _Time.y * float2(0.5, 0.2);
+                    float h = PuddleNoise(q);
+                    float2 wind = float2(PuddleNoise(q + float2(0.2, 0)) - h, PuddleNoise(q + float2(0, 0.2)) - h) * 0.5 * near;
+                    float2 slope = (wind + WaterRippleSlope(positionWS, foam) + WaterRainSlope(positionWS, distanceToCamera, _WaterRain) * 1.4)
+                                   * (1 - frozen) * (1 - scum);
+                    half mirror = lerp(0.92, 0.82, saturate(distanceToCamera / 300));
+                    smoothness = lerp(smoothness, lerp(lerp(mirror, 0.4, scum), iceSmoothness, frozen), pond);
+                    // низко над водой в ней отражаются стенки воронки, а не небо: чаша закрывает его ниже ~30°
+                    half skyOpen = lerp(0.35, 1, smoothstep(0.2, 0.55, inputData.viewDirectionWS.y));
+                    occlusion = lerp(occlusion, skyOpen, pond);
+                    float3 still = normalize(lerp(inputData.normalWS, float3(0, 1, 0), pond));
+                    inputData.normalWS = normalize(still + float3(-slope.x, 0, -slope.y) * pond);
+                    pond *= (1 - frozen) * (1 - scum);
                 }
             }
         }

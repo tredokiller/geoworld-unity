@@ -95,7 +95,8 @@ namespace GeoWorld
                 if (pass > 0) material.shader = add;
                 material.DisableKeyword("_TERRAIN_INSTANCED_PERPIXEL_NORMAL");
                 // a terrain material that knows trench soil (the environment layer's wet terrain) draws the mesh's own soil by
-                // UV1; the first pass only (the others add their layers under it)
+                // UV1; the first pass only (the others add their layers under it). A build keeps the variants that
+                // Resources/Terrain/WorldTerrainWetTrenches* hold, so a keyword set added here needs a material there too
                 if (pass == 0) material.EnableKeyword("_TRENCH_GROUND"); else material.DisableKeyword("_TRENCH_GROUND");
                 if (pass < controls.Length && material.HasProperty("_Control")) material.SetTexture("_Control", controls[pass]);
                 material.SetFloat("_NumLayersCount", layers.Length);

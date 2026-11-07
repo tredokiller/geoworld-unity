@@ -320,8 +320,9 @@ the open scenes (a game may keep a copy of the world's object in its own scene).
 data stays as it is. A world without it has no road surfaces, field rows or leaf types, never another world's. The tree
 species themselves (species, variants and mixes by place) are shared: Resources/World/TreeSpeciesProfile. World packages
 (runtime generation) carry it as the extra "world map" (worldmap.json.gz, WorldMapPackage), baked from the export when the package
-is generated (curbs by the package's land cover) and put on the host as a WorldMapData when it opens; without the editor there is
-no satellite step: road centrelines are OpenStreetMap's and field rows follow the field's long side.
+is generated (curbs by the package's land cover) and put on the host as a WorldMapData when it opens. The satellite step runs
+as in the editor, on each tile's imagery as the generator builds it: road centrelines move onto the road and field rows take
+the direction of the field's pattern.
 The environment layer's setup (WorldEnvironment, on the world's object; WorldMapBaker puts it there with the map data):
 when it wakes (execution order -1000) it adds to its object every system the layer has and the object lacks, so a scene
 with the world's object gets the whole look without code of its own: TileTreeSpecies (before the tiles' Nature Renderer

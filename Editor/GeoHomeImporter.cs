@@ -201,6 +201,7 @@ namespace GeoWorld.Editor
             model.defaultVariant = (string)meta["defaultVariant"] ?? "gabled_along";
             model.defaultRoofMaterial = (string)meta["defaultRoofMaterial"] ?? "metal_tile";
             model.defaultRoofColor = (string)meta["defaultRoofColor"] ?? "#6e4636";
+            SeparateCoplanar(parts);
             model.body = Save(parts, "Body", id, folder);
             model.roofFixed = Save(parts, "RoofFixed", id, folder);
             var names = new List<string>(); var meshes = new List<Mesh>();
@@ -209,6 +210,17 @@ namespace GeoWorld.Editor
             model.variantNames = names.ToArray(); model.variants = meshes.ToArray();
             if (create) AssetDatabase.CreateAsset(model, path); else EditorUtility.SetDirty(model);
             return model;
+        }
+
+        // faces in one plane that would flicker through each other (GeoModelCoplanar): the body with its fixed roofs, then
+        // each roof variant over them, before the meshes are saved
+        static void SeparateCoplanar(Dictionary<string, Mesh> parts)
+        {
+            parts.TryGetValue("Body", out var body); parts.TryGetValue("RoofFixed", out var roofFixed);
+            GeoModelCoplanar.Repeat(() => GeoModelCoplanar.Separate(new[] { body, roofFixed }, new[] { true, true }));
+            foreach (var pair in parts)
+                if (pair.Key.StartsWith("Roof_", StringComparison.Ordinal))
+                    GeoModelCoplanar.Repeat(() => GeoModelCoplanar.Separate(new[] { body, roofFixed, pair.Value }, new[] { false, false, true }));
         }
 
         static Mesh Save(Dictionary<string, Mesh> parts, string part, string id, string folder)

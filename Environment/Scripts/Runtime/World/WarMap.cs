@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using GeoWorld;
 using UnityEngine;
 
 namespace _Game.Scripts.World
@@ -133,7 +134,7 @@ namespace _Game.Scripts.World
                 return;
 
             _nextCheck = Time.unscaledTime + 0.5f;
-            Camera cam = Camera.main;
+            Camera cam = GeoWorldCamera.Current;
 
             if (cam == null)
                 return;
