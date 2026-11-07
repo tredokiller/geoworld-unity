@@ -155,6 +155,7 @@ namespace GeoWorld
                     var ids = colliders.ConvertAll(c => c.mesh.GetInstanceID());
                     await UniTask.RunOnThreadPool(() => { foreach (int id in ids) Physics.BakeMesh(id, false); }, cancellationToken: cancellation);
                 }
+                if (options.cityLods) await GeoCityLods.AddAsync(builder.Root, created, options.frameBudgetMs, cancellation);
                 step.Restart();
                 var handle = Finish(index, data, builder, created, options, colliders);
                 RaiseTileLoaded(handle);
@@ -181,6 +182,7 @@ namespace GeoWorld
             try
             {
                 while (builder.Step()) { }
+                if (options.cityLods) GeoCityLods.Add(builder.Root, created);
                 var handle = Finish(index, data, builder, created, options,
                     options.buildingColliders && data.navigation != null ? GeoNavigation.BuildingMeshes(data.navigation, created) : null);
                 RaiseTileLoaded(handle);
@@ -278,6 +280,8 @@ namespace GeoWorld
         public bool navigationTags = true;
         [Tooltip("Layer for every object of the tile; -1 keeps the generator's.")]
         public int layer = -1;
+        [Tooltip("Coarser copies of the merged city's chunks for the distance (GeoCityLods), made on a worker thread, with an LODGroup on each chunk.")]
+        public bool cityLods = true;
         [Tooltip("Milliseconds of the main thread a frame that LoadTileAsync spends making the tile's objects.")]
         public float frameBudgetMs = 4;
     }
