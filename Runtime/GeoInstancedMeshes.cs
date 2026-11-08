@@ -21,6 +21,10 @@ namespace GeoWorld
             [Tooltip("World bounds of all the copies: the batch is skipped when the camera cannot see them.")]
             public Bounds bounds;
             public Matrix4x4[] matrices = new Matrix4x4[0];
+            [Tooltip("Levels of detail: drawn only when the camera is at least this far from the bounds (0: from the start), metres.")]
+            [Min(0)] public float near;
+            [Tooltip("Drawn only nearer than this to the bounds (0: the component's draw distance), metres.")]
+            [Min(0)] public float far;
         }
 
         public List<Batch> batches = new List<Batch>();
@@ -44,7 +48,10 @@ namespace GeoWorld
             foreach (var batch in batches)
             {
                 if (!batch.mesh || !batch.material || batch.matrices.Length == 0) continue;
-                if (batch.bounds.SqrDistance(eye) > far || !GeometryUtility.TestPlanesAABB(planes, batch.bounds)) continue;
+                // a level of detail of the copies (near and far of the same bounds: exactly one of them is drawn)
+                float distance = batch.bounds.SqrDistance(eye);
+                if (distance > (batch.far > 0 ? Mathf.Min(batch.far * batch.far, far) : far) || distance < batch.near * batch.near) continue;
+                if (!GeometryUtility.TestPlanesAABB(planes, batch.bounds)) continue;
                 var parameters = new RenderParams(batch.material)
                 {
                     camera = camera, worldBounds = batch.bounds, layer = gameObject.layer,

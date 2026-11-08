@@ -9,7 +9,8 @@ namespace GeoWorld.Editor
     // A merged city bakes its trees, fences, walls and street props like its buildings: one object per tree would
     // stall the editor (a city has tens of thousands), a chunk of a few hundred metres does not. Colours go through
     // the same palette texture as the buildings, so a whole city is a few hundred objects and one material.
-    // Props with a prefab in the prop catalog, and props placed from photo references, stay objects of their own.
+    // Props with a prefab in the prop catalog, and props placed from photo references, stay objects of their own; power
+    // poles are GPU instances of their textured model (GeoPowerPole.Plant).
     public static class GeoPropBaker
     {
         public static bool Bakes(PropPlacement placement, GenerationSettings settings) =>
@@ -36,9 +37,12 @@ namespace GeoWorld.Editor
             var chunks = new Dictionary<Vector2Int, Chunk>();
             var models = new Dictionary<string, Model>();
             TreeModel tree = null;
+            // power poles are GPU instances of their own textured model (GeoPowerPole), not copies in the chunks
+            var poles = new List<PropPlacement>();
             foreach (var p in placements)
             {
                 if (!GeoData.Finite(p.position.x) || !GeoData.Finite(p.position.y) || !GeoData.Finite(p.position.z)) continue;
+                if (p.kind == "power_pole") { poles.Add(p); continue; }
                 var key = new Vector2Int(Mathf.FloorToInt(p.position.x / size), Mathf.FloorToInt(p.position.z / size));
                 if (!chunks.TryGetValue(key, out var chunk)) chunks[key] = chunk = new Chunk();
                 // its yaw, and its lean after the battle (GeoPropDamage); a prop lying on its side is lifted onto the ground
@@ -83,6 +87,7 @@ namespace GeoWorld.Editor
                 lod.SetLODs(new[] { new LOD(0.02f, new Renderer[] { renderer }) });
                 lod.size = 20;
             }
+            if (poles.Count > 0) GeoPowerPole.Plant(poles, group, save, seed);
             return chunks.Count;
         }
 

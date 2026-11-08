@@ -52,6 +52,8 @@ namespace GeoWorld.Editor
             Root(GeoTerrainTextures.Stamp);
             // the trenches' wall atlas (GeoWorldBuild's Trench walls material)
             foreach (var map in new[] { "albedo", "normal", "mask" }) Root(GeoPaths.Package + "/Textures/Trenches/trench_walls_" + map + ".png");
+            // the power poles' atlas (GeoPowerPole.MakeMaterial)
+            foreach (var map in GeoPowerPole.Maps) Root(GeoPowerPole.MapPath(map));
             Root(GeoPaths.Package + "/Runtime/Resources/" + GeoWaterLook.Resource + ".mat");
             // the water tiles are made with: the project's own (GeoWaterLook.ProjectResource) where it has one
             if (GeoWaterLook.Material) Root(AssetDatabase.GetAssetPath(GeoWaterLook.Material));
@@ -135,6 +137,8 @@ namespace GeoWorld.Editor
             }
             Make("Lit", "Universal Render Pipeline/Lit");
             Make("Lit normal map", "Universal Render Pipeline/Lit", "_NORMALMAP");
+            // atlases with a mask (R metallic, G occlusion, A smoothness): the power poles, the trench walls
+            Make("Lit normal mask map", "Universal Render Pipeline/Lit", "_NORMALMAP", "_METALLICSPECGLOSSMAP", "_OCCLUSIONMAP");
             Make("Road", "GeoWorld/Road");
             Make("Terrain", "Universal Render Pipeline/Terrain/Lit");
             Make("Terrain normal map", "Universal Render Pipeline/Terrain/Lit", "_NORMALMAP");

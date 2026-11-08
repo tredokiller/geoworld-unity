@@ -206,18 +206,9 @@ namespace GeoWorld.Editor
                     }
                     Post(0,0,6,metal,0.14f);Box(metal,0,5.9f,0.55f,0.12f,0.12f,1.2f);Box(light,0,5.85f,1.1f,0.38f,0.18f,0.7f);break;
                 case "power_pole":
-                    if(broken)
-                    {
-                        // a concrete pole broken low: the stump, the rest lying beside it with its crossarm, the insulators along the ground
-                        BrokenPole(variant,out float stump,out float arm);float rest=8-stump;
-                        Post(0,0,stump,concrete,0.25f);
-                        Box(concrete,0,0.125f,0.35f+rest/2,0.25f,0.25f,rest);
-                        Box(metal,0,0.075f,arm,1.8f,0.15f,0.12f);
-                        foreach(float x in new[]{-0.7f,0f,0.7f})Box(light,x,0.075f,arm+0.2f,0.12f,0.12f,0.3f);
-                        break;
-                    }
-                    Post(0,0,8,concrete,0.25f);Box(metal,0,7,0,1.8f,0.12f,0.15f);
-                    foreach(float x in new[]{-0.7f,0f,0.7f})Box(light,x,7.2f,0,0.12f,0.3f,0.12f);break;
+                    // the textured pole's far shape (GeoPowerPole draws it; this is its size and a fallback): snapped low when broken,
+                    // its top lying along +z
+                    GeoPowerPole.Draft(Draft(concrete),damage,variant);break;
                 case "bus_stop": case "post_box":
                     Post(0,0,kind=="bus_stop"?2.7f:1.5f,metal);
                     Box(blue,0,kind=="bus_stop"?2.4f:1.2f,0,0.55f,0.6f,kind=="bus_stop"?0.08f:0.35f);
@@ -266,10 +257,6 @@ namespace GeoWorld.Editor
             return drafts;
         }
 
-        // A broken power pole (variant 0..1): the height of its stump, and how far along +z from its foot its crossarm lies
-        // (the power lines hang their wires from its insulators there).
-        internal static void BrokenPole(float variant,out float stump,out float arm){stump=1.2f+variant*1.6f;arm=0.35f+(8-stump)-1;}
-
         // The size of a kind's intact model: a broken one is scaled as the intact one would be.
         internal static Vector3 IntactSize(string kind)
         {
@@ -296,7 +283,8 @@ namespace GeoWorld.Editor
             readonly Dictionary<Color,Material> materials=new Dictionary<Color,Material>();
             readonly Action<Object> save;
             readonly int seed;
-            public PreviewModels(Action<Object> save,int seed){this.save=save;this.seed=seed;}
+            readonly GeoPowerPole.Set poles;
+            public PreviewModels(Action<Object> save,int seed){this.save=save;this.seed=seed;poles=new GeoPowerPole.Set(save);}
             Material Material(Color color)
             {
                 if(materials.TryGetValue(color,out var material))return material;
@@ -307,6 +295,14 @@ namespace GeoWorld.Editor
             // rotation: the one the object was given (GeoPropDamage.Rotation); a prop lying on its side is lifted onto the ground
             public void Attach(GameObject go,PropPlacement p,Quaternion rotation)
             {
+                if(p.kind=="power_pole")
+                {
+                    // the textured pole, near and far (GeoPowerPole), its far shape as the collider
+                    GeoPowerPole.Attach(go,p,poles,seed);
+                    go.AddComponent<MeshCollider>().sharedMesh=poles.Of(GeoPowerPole.Key(p,seed)).far;
+                    go.isStatic=true;
+                    return;
+                }
                 Model model;
                 // a damaged wall section is a shape of its own, in real dimensions
                 bool own=p.segment&&p.kind=="wall"&&p.damage!=GeoPropDamage.Intact;

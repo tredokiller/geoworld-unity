@@ -27,6 +27,7 @@ namespace GeoWorld
         // component kinds
         const byte CMeshFilter = 1, CMeshRenderer = 2, CMeshCollider = 3, CBoxCollider = 4, CCapsuleCollider = 5, CSphereCollider = 6,
             CTerrain = 7, CTerrainCollider = 8, CLODGroup = 9, CWorldRoot = 10, CCityChunk = 11, CHomeInstances = 12, CInstanced = 13,
+            CInstancedLods = 14, // GeoInstancedMeshes whose batches are levels of detail (each batch's near and far after its bounds)
             CJson = 99;
 
         // ------------------------------------------------------------------------------------------------------------ writing
@@ -233,14 +234,18 @@ namespace GeoWorld
                     case GeoCityChunk chunk: w.Write(CCityChunk); w.Write(JsonUtility.ToJson(chunk)); break;
                     case GeoHomeInstances h: w.Write(CHomeInstances); Ref(w, h.set); break;
                     case GeoInstancedMeshes im:
-                        w.Write(CInstanced); w.Write(im.drawDistance); w.Write((int)im.shadows); w.Write(im.count); w.Write(im.batches.Count);
+                    {
+                        bool levels = im.batches.Exists(b => b.near > 0 || b.far > 0);
+                        w.Write(levels ? CInstancedLods : CInstanced); w.Write(im.drawDistance); w.Write((int)im.shadows); w.Write(im.count); w.Write(im.batches.Count);
                         foreach (var b in im.batches)
                         {
                             Ref(w, b.mesh); w.Write(b.submesh); Ref(w, b.material); Vec(w, b.bounds.center); Vec(w, b.bounds.extents);
+                            if (levels) { w.Write(b.near); w.Write(b.far); }
                             w.Write(b.matrices.Length);
                             foreach (var m in b.matrices) for (int k = 0; k < 16; k++) w.Write(m[k]);
                         }
                         break;
+                    }
                     default:
                         w.Write(CJson); w.Write(c.GetType().AssemblyQualifiedName); w.Write(JsonUtility.ToJson(c));
                         break;
@@ -595,7 +600,7 @@ namespace GeoWorld
                     break;
                 case CWorldRoot: case CCityChunk: c.text = r.ReadString(); break;
                 case CHomeInstances: c.refs = new[] { RRef(r) }; break;
-                case CInstanced:
+                case CInstanced: case CInstancedLods:
                     c.numbers = new[] { r.ReadSingle() }; c.ints = new[] { r.ReadInt32(), r.ReadInt32() };
                     int batches = r.ReadInt32();
                     c.batches = new List<GeoInstancedMeshes.Batch>(batches); c.batchRefs = new RefData[batches * 2];
@@ -603,9 +608,11 @@ namespace GeoWorld
                     {
                         c.batchRefs[i * 2] = RRef(r); int submesh = r.ReadInt32(); c.batchRefs[i * 2 + 1] = RRef(r);
                         Vector3 center = RVec(r), extents = RVec(r);
+                        float near = 0, far = 0;
+                        if (c.kind == CInstancedLods) { near = r.ReadSingle(); far = r.ReadSingle(); }
                         var matrices = new Matrix4x4[r.ReadInt32()];
                         for (int m = 0; m < matrices.Length; m++) { var x = new Matrix4x4(); for (int k = 0; k < 16; k++) x[k] = r.ReadSingle(); matrices[m] = x; }
-                        c.batches.Add(new GeoInstancedMeshes.Batch { submesh = submesh, bounds = new Bounds(center, extents * 2), matrices = matrices });
+                        c.batches.Add(new GeoInstancedMeshes.Batch { submesh = submesh, bounds = new Bounds(center, extents * 2), matrices = matrices, near = near, far = far });
                     }
                     break;
                 case CJson: c.type = r.ReadString(); c.text = r.ReadString(); break;
@@ -884,7 +891,7 @@ namespace GeoWorld
                         if (active) go.SetActive(true);
                         break;
                     }
-                    case CInstanced:
+                    case CInstanced: case CInstancedLods:
                     {
                         var im = go.AddComponent<GeoInstancedMeshes>();
                         im.drawDistance = c.numbers[0]; im.shadows = (ShadowCastingMode)c.ints[0]; im.count = c.ints[1];

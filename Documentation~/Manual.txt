@@ -163,7 +163,11 @@ Assign it in the import window or world Settings. Prefabs use a ground pivot, +Z
 and their authored scale multiplied by Scale. Fence/wall/hedge prefabs run along +Z;
 Segment Length specifies their authored length, which is stretched to match each line
 segment. Clearance Radius reserves ground space around custom props. Preview models
-are shared meshes with simple materials when no prefab is assigned.
+are shared meshes with simple materials when no prefab is assigned. A power_pole without
+a prefab is a textured concrete pole (GeoPowerPole: an СВ-95 with a steel angle crossarm and
+four porcelain pin insulators, the wires tied in their necks; snapped low when broken), its
+atlas in Textures/PowerPoles (Tools~/PowerPoles/power_pole_textures.py); a merged world
+draws its poles as GPU instances with a near and a far shape.
 
 Mapped objects keep their source locations; their visual style and missing dimensions
 are still defaults. A Geo Placed Prop component records source ID, placement source,

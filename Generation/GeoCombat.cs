@@ -21,7 +21,8 @@ namespace GeoWorld.Editor
     // those (a world without a battlefield keeps its tiles). Bump it when they draw differently.
     public static class GeoWarLook
     {
-        public const string Version = "war-look-1"; // 1: street props after the battle, power lines, worn homes
+        // 1: street props after the battle, power lines, worn homes; 2: textured concrete power poles (GeoPowerPole) with four wires
+        public const string Version = "war-look-2";
     }
 
     public static class GeoTrenchKind

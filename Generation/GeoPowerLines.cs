@@ -12,13 +12,14 @@ namespace GeoWorld.Editor
     // reads by its wires — slack between leaning poles, snapped and hanging down, a pole broken off with its wires on the
     // ground.
     //
-    // Poles: concrete, 30–38 m apart on one side of a residential, living, unclassified, tertiary, secondary or primary
-    // street (the side by a hash of the road), 1.8 m past its edge, nudged along the street off whatever stands there; only
-    // where a house stands within 35 m (flats have their cables underground). They are power_pole placements (source
-    // generated), so the war leans, snaps or takes them like the other props (GeoPropDamage). The wires are hung after that
-    // from what is left of the poles (Build): three per span from the crossarm's insulators, sagging 0.5–0.9 m, slacker the
-    // more the war (up to ~3 m, each wire its own); one that reaches a broken pole falls from the standing pole to the
-    // ground and lies on to the broken pole's top, one that reaches a pole that is gone ends on the ground part of the way;
+    // Poles: concrete (GeoPowerPole: an СВ-95 with a steel crossarm and four pin insulators), 30–38 m apart on one side of a
+    // residential, living, unclassified, tertiary, secondary or primary street (the side by a hash of the road), 1.8 m past
+    // its edge, nudged along the street off whatever stands there; only where a house stands within 35 m (flats have their
+    // cables underground). They are power_pole placements (source generated), so the war leans, snaps or takes them like the
+    // other props (GeoPropDamage). The wires are hung after that from what is left of the poles (Build): four per span (three
+    // phases and the neutral) from the necks of the crossarm's insulators, sagging 0.5–0.9 m, slacker the more the war (up to
+    // ~3 m, each wire its own); one that reaches a broken pole falls from the standing pole to the ground and lies on to the
+    // broken pole's top, torn off its insulators, one that reaches a pole that is gone ends on the ground part of the way;
     // where there was fighting single wires are snapped and hang down from both poles. A span belongs to the tile of its
     // first pole; its other pole may stand in the next tile (the planner's `beyond`: the same plan and fate in both tiles).
     // Drawn by the GeoWorld/Wire shader (a ribbon facing the camera, at least 1.5 pixels wide and as faint as the wire is
@@ -27,9 +28,6 @@ namespace GeoWorld.Editor
     {
         public const string Marker = "/power/", ShaderName = "GeoWorld/Wire";
         const float Spacing = 30, SpacingRange = 8, Edge = 1.8f, HouseReach = 35, LongestSpan = 50, Cell = 32;
-        // the insulators' tops on the crossarm (GeoPropBuilder.Drafts "power_pole")
-        const float WireTop = 7.33f;
-        static readonly float[] Insulators = { -0.7f, 0f, 0.7f };
         static readonly HashSet<string> Streets = new HashSet<string> { "residential", "living_street", "unclassified", "tertiary", "secondary", "primary" };
 
         sealed class Pole { public PropPlacement placement; public bool standing, inside; public string road; public int number; }
@@ -205,7 +203,7 @@ namespace GeoWorld.Editor
             return spans;
         }
 
-        // The wires of one span, three of them, as their poles stand.
+        // The wires of one span, one from each insulator (GeoPowerPole.Wires), as their poles stand.
         static List<List<Vector3>> Span(Pole a, Pole b, float span, GeoPropDamage.War war, Func<float, float, float> ground, int seed, ref int snapped, ref int down)
         {
             var wires = new List<List<Vector3>>();
@@ -217,7 +215,7 @@ namespace GeoWorld.Editor
             float blast = 0, level = war != null && !war.None ? war.At(new Vector2(mid.x, mid.z), out blast, out _) : 0;
             float slack = 0.5f + 0.4f * GeoPropPlanner.Sample(id, seed, 81);
             bool spanDown = false;
-            for (int i = 0; i < Insulators.Length; i++)
+            for (int i = 0; i < GeoPowerPole.Wires; i++)
             {
                 var wire = new List<Vector3>();
                 float r = GeoPropPlanner.Sample(id + "/" + i, seed, 82), r2 = GeoPropPlanner.Sample(id + "/" + i, seed, 83);
@@ -259,28 +257,9 @@ namespace GeoWorld.Editor
             return wires;
         }
 
-        // The insulators' tops of a pole as it stands, leans or lies (null: gone).
-        static Vector3[] Attach(Pole pole, int seed)
-        {
-            if (!pole.standing) return null;
-            var p = pole.placement;
-            var result = new Vector3[Insulators.Length];
-            if (GeoPropDamage.Fallen(p))
-            {
-                // the top lies along +z of its yaw, the insulators past the crossarm
-                GeoPropBuilder.BrokenPole(GeoPropDamage.Variant(p, seed), out _, out float arm);
-                var turn = Quaternion.Euler(0, p.yaw, 0);
-                for (int i = 0; i < result.Length; i++) result[i] = p.position + turn * new Vector3(Insulators[i], 0.1f, arm + 0.35f);
-                return result;
-            }
-            var rotation = GeoPropDamage.Rotation(p);
-            float lift = GeoPropDamage.Lift(rotation, PoleBounds, Vector3.one, p.lean);
-            for (int i = 0; i < result.Length; i++) result[i] = p.position + Vector3.up * lift + rotation * new Vector3(Insulators[i], WireTop, 0);
-            return result;
-        }
-
-        static Bounds? poleBounds;
-        static Bounds PoleBounds => poleBounds ??= GeoPropBaker.Bounds(GeoPropBuilder.Drafts("power_pole"));
+        // Where the wires are tied on a pole as it stands, leans or lies (null: gone): the necks of its insulators, the same
+        // wire on the same side of every pole of the line (GeoPowerPole.WireTops).
+        static Vector3[] Attach(Pole pole, int seed) => pole.standing ? GeoPowerPole.WireTops(pole.placement, seed) : null;
 
         // A pole down on the ground: snapped with its top lying, or (a prefab) knocked flat.
         static bool Lying(PropPlacement p) => GeoPropDamage.Fallen(p) || p.lean > 45;
