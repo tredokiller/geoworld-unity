@@ -205,9 +205,12 @@ namespace GeoWorld.Editor
             HomeInstance(building, building.home, GeoRuinFit.FrameOf(context.outline), building.homeQuarter, building.homeTurn, building.homeMirror, depth,
                 out body, out roof, out variant, out roofMaterial);
 
-        // the same for one model on one rectangle of the building (a part of GeoHomeLibrary.Cover)
+        // the same for one model on one rectangle of the building (a part of GeoHomeLibrary.Cover). A proud one is drawn
+        // GeoCoplanarFaces.Gap wider on each side, its roof that much higher: every second section of a row is, because where
+        // sections overlap at a seam their facades and roof overhangs lie in one plane and flicker through each other (a
+        // merged home's parts are separated by GeoCoplanarFaces instead).
         public static void HomeInstance(GeoBuilding building, GeoHomeModelAsset model, GeoRuinFit.Frame frame, bool quarter, bool turn, bool mirrored, float depth,
-            out Matrix4x4 body, out Matrix4x4 roof, out Mesh variant, out Material roofMaterial)
+            out Matrix4x4 body, out Matrix4x4 roof, out Mesh variant, out Material roofMaterial, bool proud = false)
         {
             var roofInfo = building.roofInfo;
             string name = GeoHomes.VariantOf(building, model);
@@ -218,9 +221,11 @@ namespace GeoWorld.Editor
             float flip = p.turn ? -1f : 1f, mirror = p.mirror ? -1f : 1f;
             var x = new Vector4(p.axis.x, 0, p.axis.y, 0) * (p.sx * flip * mirror);
             var z = new Vector4(p.across.x, 0, p.across.y, 0) * (p.sz * flip);
+            if (proud) z *= 1 + 2 * GeoCoplanarFaces.Gap / Mathf.Max(1f, Mathf.Abs(p.sz) * model.width);
             var centre = new Vector4(p.centre.x, 0, p.centre.y, 1);
             body = new Matrix4x4(x, new Vector4(0, p.sy, 0, 0), z, centre);
-            roof = new Matrix4x4(x, new Vector4(0, p.sr, 0, 0), z, centre + new Vector4(0, p.eaveTarget - p.eaveModel * p.sr, 0, 0));
+            float lift = proud ? GeoCoplanarFaces.Gap : 0;
+            roof = new Matrix4x4(x, new Vector4(0, p.sr, 0, 0), z, centre + new Vector4(0, p.eaveTarget - p.eaveModel * p.sr + lift, 0, 0));
             variant = model.Variant(name);
             roofMaterial = GeoHomes.RoofMaterial(building.homeLibrary, model, roofInfo);
         }
@@ -247,15 +252,16 @@ namespace GeoWorld.Editor
                 PlaceHome(building, building.home, GeoRuinFit.FrameOf(context.outline), building.homeQuarter, building.homeTurn, building.homeMirror, depth, frame, parent, id, wear, level);
                 return;
             }
-            // a row of sections or the rectangles of an L, T or U: one home object for each
+            // a row of sections or the rectangles of an L, T or U: one home object for each, every second one proud (HomeInstance)
             for (int i = 0; i < parts.Count; i++)
-                PlaceHome(building, parts[i].model, parts[i].frame, parts[i].quarter, parts[i].turn, parts[i].mirror, depth, frame, parent, i == 0 ? id : id + " #" + (i + 1), wear, level);
+                PlaceHome(building, parts[i].model, parts[i].frame, parts[i].quarter, parts[i].turn, parts[i].mirror, depth, frame, parent, i == 0 ? id : id + " #" + (i + 1), wear, level,
+                    i % 2 == 1);
         }
 
         static void PlaceHome(GeoBuilding building, GeoHomeModelAsset model, GeoRuinFit.Frame rectangle, bool quarter, bool turn, bool mirrored, float depth, Transform frame, Transform parent, string id,
-            GeoHomeWear wear = null, int level = 0)
+            GeoHomeWear wear = null, int level = 0, bool proud = false)
         {
-            HomeInstance(building, model, rectangle, quarter, turn, mirrored, depth, out var body, out var roof, out var variant, out var roofMaterial);
+            HomeInstance(building, model, rectangle, quarter, turn, mirrored, depth, out var body, out var roof, out var variant, out var roofMaterial, proud);
             var home = new GameObject("Home " + model.id + " | " + id).transform;
             home.SetParent(parent, false);
             void Part(string name, Mesh mesh, Matrix4x4 local)

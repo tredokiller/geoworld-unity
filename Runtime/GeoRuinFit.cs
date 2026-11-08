@@ -559,6 +559,26 @@ namespace GeoWorld
         // The model fitted to the target, in the building's local space.
         public static Mesh Build(GeoRuinModel model, Target target, out Fit fit)
         {
+            var shape = BuildShape(model, target, out fit);
+            Separate(new[] { shape }, new[] { model.material });
+            return shape.ToMesh("Ruin " + model.id);
+        }
+
+        // Faces of the fitted parts of one ruin that lie in one plane and overlap (a bay repeated over its neighbour's edge, the
+        // parts of an L where they meet, details squashed onto their walls) are separated in metres (GeoCoplanarFaces), so their
+        // textures do not flicker through each other.
+        public static void Separate(IList<Shape> shapes, IList<Material> materials)
+        {
+            var parts = new GeoCoplanarFaces.Part[shapes.Count];
+            for (int i = 0; i < shapes.Count; i++)
+                parts[i] = new GeoCoplanarFaces.Part { positions = shapes[i].positions, normals = shapes[i].normals, tangents = shapes[i].tangents, uvs = shapes[i].uvs,
+                                                       triangles = new[] { shapes[i].triangles }, twoSided = GeoCoplanarFaces.TwoSided(materials[i]) };
+            GeoCoplanarFaces.Separate(parts);
+        }
+
+        // The model fitted to the target, in the building's local space, as lists (Build makes the mesh).
+        public static Shape BuildShape(GeoRuinModel model, Target target, out Fit fit)
+        {
             if (!model || !model.Usable) throw new ArgumentException("The ruin model is incomplete. Import the ruin models again.");
             if (!(target.frame.length > 0.1f) || !(target.frame.width > 0.1f)) throw new ArgumentException("The footprint is too small for a ruin model.");
             fit = Measure(model, target);
@@ -660,7 +680,7 @@ namespace GeoWorld
                 }
             }
             if (kept.triangles.Count == 0) throw new ArgumentException("The ruin model left nothing after fitting.");
-            return kept.ToMesh("Ruin " + model.id);
+            return kept;
         }
 
         // Which piece of the shape each vertex belongs to: triangles that touch, also where a box's faces have vertices of

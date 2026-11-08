@@ -54,6 +54,7 @@ namespace GeoWorld.Editor
             var known = new Dictionary<Mesh, int>();
             for (int i = 0; i < set.entries.Count; i++) if (set.entries[i].source) known[set.entries[i].source] = i;
             bool changed = false;
+            var rebuilt = new HashSet<Mesh>();
             foreach (var source in sources.Distinct())
             {
                 string fingerprint = Fingerprint(source);
@@ -70,7 +71,9 @@ namespace GeoWorld.Editor
                 }
                 else { known[source] = set.entries.Count; set.entries.Add(entry); }
                 changed = true;
+                rebuilt.Add(source);
             }
+            if (rebuilt.Count > 0) SeparateReduced(set, ruins, homes, rebuilt);
             // entries whose source model is gone
             for (int i = set.entries.Count - 1; i >= 0; i--)
                 if (!set.entries[i].source)
@@ -80,6 +83,32 @@ namespace GeoWorld.Editor
                 }
             if (changed) { EditorUtility.SetDirty(set); AssetDatabase.SaveAssets(); }
             return set;
+        }
+
+        // Collapsing edges brings faces of a model into one plane again (about forty patches over the kits), so the copies made
+        // now are separated as their sources were (GeoModelCoplanar): a ruin alone, a home's body with its fixed roofs, then
+        // each roof variant over them. A source drawn as it is (nothing to gain by reducing it) is not changed here.
+        static void SeparateReduced(GeoReducedModels set, GeoRuinLibrary ruins, GeoHomeLibrary homes, HashSet<Mesh> rebuilt)
+        {
+            var reducedOf = new Dictionary<Mesh, Mesh>();
+            foreach (var entry in set.entries) if (entry.source && entry.reduced) reducedOf[entry.source] = entry.reduced;
+            Mesh Drawn(Mesh source) => source && reducedOf.TryGetValue(source, out var reduced) ? reduced : source;
+            bool Own(Mesh source) => source && reducedOf.ContainsKey(source);
+            if (ruins)
+                foreach (var model in ruins.models)
+                    if (model && model.mesh && rebuilt.Contains(model.mesh) && Own(model.mesh))
+                        GeoModelCoplanar.Separate(new[] { Drawn(model.mesh) }, new[] { true }, new[] { GeoCoplanarFaces.TwoSided(model.material) });
+            if (homes)
+                foreach (var model in homes.models)
+                {
+                    if (!model) continue;
+                    var variants = model.variants ?? new Mesh[0];
+                    if (!rebuilt.Contains(model.body) && !rebuilt.Contains(model.roofFixed) && !variants.Any(rebuilt.Contains)) continue;
+                    Mesh body = Drawn(model.body), roofFixed = Drawn(model.roofFixed);
+                    GeoModelCoplanar.Separate(new[] { body, roofFixed }, new[] { Own(model.body), Own(model.roofFixed) });
+                    foreach (var variant in variants)
+                        if (Own(variant)) GeoModelCoplanar.Separate(new[] { body, roofFixed, Drawn(variant) }, new[] { false, false, true });
+                }
         }
 
         static string Fingerprint(Mesh mesh)

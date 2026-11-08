@@ -212,12 +212,16 @@ namespace GeoWorld
                 var parts=c.building.ruinParts;
                 if(parts!=null&&parts.Count>0)
                 {
-                    // an L, T or U: a model on each of its rectangles (or on the one that stands of an odd ruin)
+                    // an L, T or U: a model on each of its rectangles (or on the one that stands of an odd ruin), their faces that
+                    // meet in one plane separated together
+                    var shapes=new List<GeoRuinFit.Shape>();
                     foreach(var part in parts)
                     {
                         var piece=GeoRuins.TargetOf(c.building,c.outline);piece.frame=part.frame;piece.turn=part.turn;piece.ground=ground;
-                        output.Add("Ruin",GeoRuinFit.Build(part.model,piece,out _),part.model.material,true);
+                        shapes.Add(GeoRuinFit.BuildShape(part.model,piece,out _));
                     }
+                    GeoRuinFit.Separate(shapes,parts.ConvertAll(part=>part.model.material));
+                    for(int i=0;i<parts.Count;i++)output.Add("Ruin",shapes[i].ToMesh("Ruin "+parts[i].model.id),parts[i].model.material,true);
                     return output;
                 }
                 var target=GeoRuins.TargetOf(c.building,c.outline);target.ground=ground;

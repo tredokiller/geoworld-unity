@@ -148,8 +148,8 @@ namespace GeoWorld.Editor
                 AssetDatabase.CreateAsset(model, path);
             }
             mesh.name = id + " mesh";
-            // faces in one plane that would flicker through each other (GeoModelCoplanar)
-            GeoModelCoplanar.Repeat(() => GeoModelCoplanar.Separate(new[] { mesh }, new[] { true }));
+            // faces in one plane that would flicker through each other (GeoModelCoplanar); the material is double-sided (Material)
+            GeoModelCoplanar.Repeat(() => GeoModelCoplanar.Separate(new[] { mesh }, new[] { true }, new[] { true }));
             if (model.mesh && AssetDatabase.GetAssetPath(model.mesh) == path)
             {
                 // the same mesh object, so everything that references it sees the new data

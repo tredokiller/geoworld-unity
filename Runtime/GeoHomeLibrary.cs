@@ -540,16 +540,44 @@ namespace GeoWorld
             {
                 var building = c.building;
                 var parts = building.homeParts;
+                var fitted = new List<Fitted>();
                 if (parts != null && parts.Count > 0)
-                    foreach (var part in parts) Add(output, building, part.model, part.frame, part.quarter, part.turn, part.mirror, foundationDepth);
-                else Add(output, building, building.home, GeoRuinFit.FrameOf(c.outline), building.homeQuarter, building.homeTurn, building.homeMirror, foundationDepth);
+                    foreach (var part in parts) fitted.Add(Fit(building, part.model, part.frame, part.quarter, part.turn, part.mirror, foundationDepth));
+                else fitted.Add(Fit(building, building.home, GeoRuinFit.FrameOf(c.outline), building.homeQuarter, building.homeTurn, building.homeMirror, foundationDepth));
+                Separate(fitted);
+                foreach (var f in fitted)
+                {
+                    output.Add("Model", f.atlas.ToMesh("Home"), f.model.material, true);
+                    if (f.roofMaterial) output.Add("Model", f.roof.ToMesh("Home roof"), f.roofMaterial, false);
+                    else if (f.roof.vertices.Count > 0) output.Add("Model", f.roof.ToMesh("Home roof"), f.model.material, false);
+                }
                 return output;
             }
             catch { output.Dispose(); throw; }
         }
 
+        sealed class Fitted
+        {
+            public GeoHomeModelAsset model;
+            public Target atlas, roof;
+            public Material roofMaterial;
+        }
+
+        // The parts of a long house are fitted to sections side by side, and each one's roof overhangs into the next one's: there
+        // the roofs (and walls squashed onto each other) lie in one plane. Their faces are separated in metres across all the
+        // parts (GeoCoplanarFaces), so the textures do not flicker through each other.
+        static void Separate(List<Fitted> fitted)
+        {
+            var parts = new List<GeoCoplanarFaces.Part>();
+            foreach (var f in fitted)
+                foreach (var (t, material) in new[] { (f.atlas, f.model.material), (f.roof, f.roofMaterial ? f.roofMaterial : f.model.material) })
+                    parts.Add(new GeoCoplanarFaces.Part { positions = t.vertices, normals = t.normals, tangents = t.tangents, uvs = t.uvs, triangles = new[] { t.triangles },
+                                                         twoSided = GeoCoplanarFaces.TwoSided(material) });
+            GeoCoplanarFaces.Separate(parts);
+        }
+
         // one model fitted to one rectangle of the building, with the roof of the export
-        static void Add(GeoBuildingOutput output, GeoBuilding building, GeoHomeModelAsset model, GeoRuinFit.Frame frame, bool quarter, bool turn, bool mirror, float foundationDepth)
+        static Fitted Fit(GeoBuilding building, GeoHomeModelAsset model, GeoRuinFit.Frame frame, bool quarter, bool turn, bool mirror, float foundationDepth)
         {
             var roofInfo = building.roofInfo; var library = building.homeLibrary;
             string variant = VariantOf(building, model);
@@ -561,10 +589,7 @@ namespace GeoWorld
             Append(GeoModelDetail.For(model.body), p, false, atlas, roof);
             Append(GeoModelDetail.For(model.roofFixed), p, false, atlas, roof);
             Append(GeoModelDetail.For(model.Variant(variant)), p, true, atlas, roof);
-            output.Add("Model", atlas.ToMesh("Home"), model.material, true);
-            var roofMaterial = RoofMaterial(library, model, roofInfo);
-            if (roofMaterial) output.Add("Model", roof.ToMesh("Home roof"), roofMaterial, false);
-            else if (roof.vertices.Count > 0) output.Add("Model", roof.ToMesh("Home roof"), model.material, false);
+            return new Fitted { model = model, atlas = atlas, roof = roof, roofMaterial = RoofMaterial(library, model, roofInfo) };
         }
     }
 }
