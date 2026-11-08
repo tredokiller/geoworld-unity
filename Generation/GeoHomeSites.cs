@@ -5,22 +5,42 @@ namespace GeoWorld.Editor
 {
     // The site the generator gives home models (GeoHomeSite): the outline of every building it is given, those around the
     // area it builds too (a model at the edge of a tile must keep out of the house across the line, which the next tile
-    // builds), the streets their fronts turn to, and which "houses" are a yard's outbuildings.
+    // builds), the streets their fronts turn to, the kinds of the buildings the export guessed (GeoBuildingKinds, from its
+    // land use areas) and which "houses" are a yard's outbuildings.
     public static class GeoHomeSites
     {
-        public static GeoHomeSite For(ICollection<BuildingFeature> buildings, GeoStreets streets, GenerationSettings settings)
+        public static GeoHomeSite For(ICollection<BuildingFeature> buildings, GeoStreets streets, GenerationSettings settings, IList<AreaFeature> areas = null)
         {
             var site = new GeoHomeSite();
-            if (streets != null && !streets.Empty) site.street = p => streets.Toward(p);
+            if (streets != null && !streets.Empty) { site.street = p => streets.Toward(p); site.streetDistance = p => streets.Distance(p, 60); }
             if (buildings == null) return site;
             foreach (var b in buildings)
             {
                 if (!GeoWorldBuild.ValidBuilding(b)) continue;
                 site.Add(b.id, Outline(b));
             }
-            if (settings == null || settings.yardOutbuildings) site.outbuildings.UnionWith(Outbuildings(buildings, streets));
+            if (settings == null || settings.inferBuildingKinds)
+                foreach (var pair in GeoBuildingKinds.For(buildings, areas)) site.kinds[pair.Key] = (pair.Value.category, pair.Value.tag);
+            if (settings == null || settings.yardOutbuildings)
+            {
+                // with the kinds found (a guessed house that is a garage is no house with a yard)
+                var drawn = new List<BuildingFeature>(buildings.Count);
+                foreach (var b in buildings) drawn.Add(Kind(b, site));
+                site.outbuildings.UnionWith(Outbuildings(drawn, streets));
+            }
             return site;
         }
+
+        // A building as the generator draws it: with the kind found for it, and as a yard's outbuilding when it is one.
+        public static BuildingFeature Drawn(BuildingFeature b, GeoHomeSite site)
+        {
+            if (b == null || site == null) return b;
+            b = Kind(b, site);
+            return site.IsOutbuilding(b.id) ? AsOutbuilding(b) : b;
+        }
+
+        static BuildingFeature Kind(BuildingFeature b, GeoHomeSite site) =>
+            b?.id != null && site.kinds.TryGetValue(b.id, out var kind) ? GeoBuildingKinds.Apply(b, new GeoBuildingKinds.Kind { category = kind.category, tag = kind.tag }) : b;
 
         // A building's outline in world X/Z, as GeoBuildingBuilder.Import reads it (its box when it has no outline): the
         // export's offsets are east/north from its centre already.

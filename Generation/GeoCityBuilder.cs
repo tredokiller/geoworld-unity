@@ -36,14 +36,14 @@ namespace GeoWorld.Editor
         // models to face their street. war (optional, a battlefield's): the homes where the fighting was are worn (GeoHomeWear).
         public static int Build(IEnumerable<BuildingFeature> sources, GeoBounds bounds, Transform group, Func<Vector3, float> ground,
             Action<Object> save, List<string> notes, GenerationSettings settings, Action<float> progress, int total, GeoStreets streets = null,
-            GeoPropDamage.War war = null)
+            GeoPropDamage.War war = null, IList<AreaFeature> areas = null)
         {
             var wear = new GeoHomeWear(war, save);
             Func<Vector2, Vector2?> street = streets != null && !streets.Empty ? p => streets.Toward(p) : (Func<Vector2, Vector2?>)null;
             // every outline given (those around the bounds too) keeps the home models out of it
             var given = sources as ICollection<BuildingFeature> ?? new List<BuildingFeature>(sources);
             sources = given;
-            var site = GeoHomeSites.For(given, streets, settings);
+            var site = GeoHomeSites.For(given, streets, settings, areas);
             var chunks = new Dictionary<Vector2Int, Chunk>();
             var temp = new GameObject("Geo building (temporary)") { hideFlags = HideFlags.HideAndDontSave };
             int count = 0, skipped = 0, damaged = 0, index = 0;
@@ -70,7 +70,7 @@ namespace GeoWorld.Editor
                     {
                         source = GeoWorldBuild.ForSettings(source, settings);
                         // a guessed "house" in a bigger house's yard is drawn as an outbuilding
-                        if (site.IsOutbuilding(source.id)) source = GeoHomeSites.AsOutbuilding(source);
+                        source = GeoHomeSites.Drawn(source, site);
                         GeoBuildingBuilder.Import(building, source, null);
                         GeoRuins.Assign(building, settings, street);
                         GeoHomes.Assign(building, settings, site);

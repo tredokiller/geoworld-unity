@@ -4,11 +4,14 @@ using UnityEngine;
 namespace GeoWorld.Editor
 {
     // The streets of an export in a coarse grid, to find the street nearest a building quickly (a city has tens of
-    // thousands of road segments): a ruin or home model turns its front, with the door and porch, towards it.
+    // thousands of road segments): a ruin or home model turns its front, with the door and porch, towards it. Service
+    // roads (driveways, parking aisles, the lanes between blocks of flats) count only where no other street is in reach:
+    // with them blocks of flats turned to their parking and corner houses to the drive beside them.
     public sealed class GeoStreets
     {
         const float Cell = 64;
         readonly Dictionary<Vector2Int, List<Vector4>> cells = new Dictionary<Vector2Int, List<Vector4>>();
+        readonly Dictionary<Vector2Int, List<Vector4>> serviceCells = new Dictionary<Vector2Int, List<Vector4>>();
 
         // What a house turns its front to: a road people live along. A footway, path or cycleway runs through yards and
         // between plots, a track across the fields; with them a village's houses faced garden paths and the field behind.
@@ -31,6 +34,7 @@ namespace GeoWorld.Editor
             foreach (var road in roads)
             {
                 if (road == null || road.tunnel || road.bridge || !IsStreet(road)) continue;
+                var grid = road.type == "service" ? serviceCells : cells;
                 var points = GeoData.Points(road.points);
                 for (int i = 1; i < points.Count; i++)
                 {
@@ -42,14 +46,14 @@ namespace GeoWorld.Editor
                         for (int z = z0; z <= z1; z++)
                         {
                             var key = new Vector2Int(x, z);
-                            if (!cells.TryGetValue(key, out var list)) cells[key] = list = new List<Vector4>();
+                            if (!grid.TryGetValue(key, out var list)) grid[key] = list = new List<Vector4>();
                             list.Add(new Vector4(a.x, a.y, b.x, b.y));
                         }
                 }
             }
         }
 
-        public bool Empty => cells.Count == 0;
+        public bool Empty => cells.Count == 0 && serviceCells.Count == 0;
 
         // The unit direction from a point (world X/Z) to the nearest street within reach, if there is one.
         public Vector2? Toward(Vector2 point, float reach = 60)
@@ -66,6 +70,12 @@ namespace GeoWorld.Editor
         }
 
         void Nearest(Vector2 point, float reach, out float best, out Vector2? toward)
+        {
+            Nearest(cells, point, reach, out best, out toward);
+            if (toward == null) Nearest(serviceCells, point, reach, out best, out toward);
+        }
+
+        static void Nearest(Dictionary<Vector2Int, List<Vector4>> cells, Vector2 point, float reach, out float best, out Vector2? toward)
         {
             best = reach; toward = null;
             if (cells.Count == 0) return;

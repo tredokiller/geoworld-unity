@@ -19,10 +19,19 @@ namespace GeoWorld
         public const float FloorCost = 0.2f;
         // How low a building may be for a model when its height is only estimated (no height tag): a storey counted as 3 m
         // makes a one-storey warehouse 3 m high. The model then keeps its lowest walls (Squash of its eaves), a little
-        // taller than the estimate; a mapped height must fit within MinStretch.
+        // taller than the estimate; a mapped height must fit within MinStretch. (A mapped storey count is still an estimate
+        // of the height: the export counts 3 m a storey with no roof, a one-storey house 3 m to its ridge.)
         public const float MinEstimatedHeight = 0.5f, Squash = 0.75f;
 
         public static bool HeightIsEstimated(GeoBuilding building) => building.heightSource != "tag";
+
+        // Whether the building's storey count is mapped (building:levels, or a height tag), not taken from its kind.
+        public static bool FloorsMapped(GeoBuilding building) => building.heightSource == "tag" || building.heightSource == "levels";
+
+        // Kinds of building no house or block of flats stands in for (GeoRuinLibrary.RelatedTo has them as a last resort):
+        // a cowshed drawn as a row of semi-detached houses, a hospital as a khrushchyovka. They keep the style's walls.
+        public static bool NonResidential(string category) =>
+            category == "farm" || category == "utility" || category == "commercial" || category == "public" || category == "industrial" || category == "religious";
         public List<GeoHomeModelAsset> models = new List<GeoHomeModelAsset>();
         public GeoRoofMaterialSet roofMaterials;
 
@@ -50,7 +59,7 @@ namespace GeoWorld
         public const float MaxOutside = 0.2f, MaxIntoNeighbour = 0.3f;
         // What the front costs turned away from the side it should face: a street along the long side, else the south
         // (the yard side of a house with its gable to the street, where the porch and the windows of a hata look).
-        public const float StreetFacing = 0.3f, SunFacing = 0.12f;
+        public const float StreetFacing = 0.6f, SunFacing = 0.12f;
 
         // The model that fits the building's footprint best, or null when none fits (not a rectangle, damaged beyond what
         // the use allows, wrong kind, too different in size). The pick depends only on the building and its neighbours.
@@ -155,6 +164,7 @@ namespace GeoWorld
 
         static bool Outbuilding(string category) => category == "shed" || category == "garage";
         static bool Dwelling(GeoHomeModelAsset m) => Has(m.categories, "house") && !Has(m.categories, "shed") && !Has(m.categories, "garage");
+        static bool Residential(GeoHomeModelAsset m) => (Has(m.categories, "house") || Has(m.categories, "apartments")) && !Has(m.categories, "shed") && !Has(m.categories, "garage");
 
         static bool Covers(GeoBuilding building, IList<Vector2> outline, GeoHomeUse use)
         {
@@ -190,8 +200,9 @@ namespace GeoWorld
                 {
                     // a stand-in: not of the building's own kind (those had their turn) and never a model kept for its tag
                     if (own || m.tagOnly) continue;
-                    // nor a house with its porch to the street for a shed or a garage (GeoRuinLibrary.RelatedTo has houses)
-                    if (Outbuilding(building.category) && Dwelling(m)) continue;
+                    // nor a house with its porch to the street for a shed or a garage (GeoRuinLibrary.RelatedTo has houses), nor
+                    // a house or a block of flats for a farm, a shop, a hall or a school
+                    if ((Outbuilding(building.category) && Dwelling(m)) || (NonResidential(building.category) && Residential(m))) continue;
                     bool near = false;
                     foreach (var kind in kinds) near |= Has(m.categories, kind);
                     if (!near) continue;
@@ -199,6 +210,9 @@ namespace GeoWorld
                 else if (!own) continue;
                 float rh = eaves / Mathf.Max(0.5f, m.eaveHeight);
                 if (rh < lowest || rh > max + 0.1f) continue;
+                // a mapped storey count: a block of flats two storeys off is the wrong building (five storeys squashed onto
+                // three, its windows at the wrong heights)
+                if (FloorsMapped(building) && Mathf.Max(m.floors, building.floors) >= 3 && Mathf.Abs(m.floors - building.floors) >= 2) continue;
                 var plan = GeoHomePlan.Of(m, GeoHomes.VariantOf(building, m));
                 var fit = new GeoHomeFit { cost = float.MaxValue };
                 for (int q = 0; q < 2; q++)
@@ -278,13 +292,32 @@ namespace GeoWorld
                     }
                 }
                 // the street along a long side, else the south: a house with its gable to the street has its porch towards
-                // the yard, and an old hata looks south whatever the street does
+                // the yard, and an old hata looks south whatever the street does. Each long side looks for its street from
+                // its own middle, and the nearer one wins: from the centre, a corner plot's house found the side street off
+                // its gable and turned to the south.
                 s.front = LocalDirection(new Vector2(0, -1)); s.facing = SunFacing;
-                var toward = site?.street?.Invoke(World(frame.centre));
-                if (toward != null)
+                if (site?.street != null)
                 {
-                    var local = LocalDirection(toward.Value);
-                    if (Mathf.Abs(Vector2.Dot(local, frame.Across)) >= 0.5f) { s.front = local; s.facing = StreetFacing; }
+                    float nearest = float.MaxValue;
+                    foreach (var side in new[] { frame.Across, -frame.Across })
+                    {
+                        var from = World(frame.centre + side * (frame.width * 0.5f + 0.5f));
+                        var toward = site.street(from);
+                        if (toward == null) continue;
+                        var local = LocalDirection(toward.Value);
+                        if (Vector2.Dot(local, side) < 0.5f) continue;
+                        float distance = site.streetDistance != null ? site.streetDistance(from) : 0;
+                        if (distance < nearest) { nearest = distance; s.front = side; s.facing = StreetFacing; }
+                    }
+                    if (s.facing != StreetFacing)
+                    {
+                        var toward = site.street(World(frame.centre));
+                        if (toward != null)
+                        {
+                            var local = LocalDirection(toward.Value);
+                            if (Mathf.Abs(Vector2.Dot(local, frame.Across)) >= 0.5f) { s.front = local; s.facing = StreetFacing; }
+                        }
+                    }
                 }
                 return s;
             }

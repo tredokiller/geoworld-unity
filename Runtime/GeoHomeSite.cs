@@ -13,6 +13,11 @@ namespace GeoWorld
         // world X/Z -> the unit direction to the nearest street within reach (GeoStreets: roads people live along, not
         // footways, paths or field tracks), or null
         public Func<Vector2, Vector2?> street;
+        // world X/Z -> how far the street street() points to is (a long side nearer a street faces it), or null
+        public Func<Vector2, float> streetDistance;
+        // the kinds found for buildings the export guessed by their size (GeoBuildingKinds): a category and the OSM tag its
+        // models are kept for, by ID
+        public readonly Dictionary<string, (string category, string tag)> kinds = new Dictionary<string, (string, string)>();
         // the buildings drawn as a yard's outbuildings although the export calls them houses (GeoHomeSites.Outbuildings)
         public readonly HashSet<string> outbuildings = new HashSet<string>();
 

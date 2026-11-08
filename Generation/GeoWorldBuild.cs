@@ -354,18 +354,18 @@ namespace GeoWorld.Editor
                     // a battlefield's homes where the fighting was are worn (GeoHomeWear)
                     if(merged)
                         root.buildingCount+=GeoCityBuilder.Build(buildings.buildings,env.bounds,group,p=>field.Sample(p.x,p.z),obj=>context.Save(obj),notes,settings,
-                            f=>Progress("Baking buildings",0.63f+0.22f*f),buildings.buildings.Count,streets,env.battlefield?new GeoPropDamage.War(env,buildings,settings.applyCondition):null);
+                            f=>Progress("Baking buildings",0.63f+0.22f*f),buildings.buildings.Count,streets,env.battlefield?new GeoPropDamage.War(env,buildings,settings.applyCondition):null,env.areas);
                     var edited=BuildingEdits(replace);
                     int index=0,skipped=0;var ruins=new Dictionary<string,int>();
                     GeoRuinFit.ClearCache();GeoHomePlan.ClearCache();
                     // every outline keeps the home models out of it
-                    var site=merged?null:GeoHomeSites.For(buildings.buildings,streets,settings);
+                    var site=merged?null:GeoHomeSites.For(buildings.buildings,streets,settings,env.areas);
                     foreach(var building in merged?new List<BuildingFeature>():buildings.buildings)
                     {
                         if(index++%100==0) Progress("Placing buildings "+index+" / "+buildings.buildings.Count,0.63f+0.22f*index/Mathf.Max(1,buildings.buildings.Count));
                         if(!ValidBuilding(building)||!env.bounds.Owns(building.x,building.z)) { skipped++;continue; }
                         edited.TryGetValue(building.id??"",out var previous);
-                        var feature=ForSettings(building,settings);if(site!=null&&site.IsOutbuilding(feature.id))feature=GeoHomeSites.AsOutbuilding(feature);
+                        var feature=GeoHomeSites.Drawn(ForSettings(building,settings),site);
                         CountRuin(ruins,GeoBuildingBuilder.Create(feature,group,p=>field.Sample(p.x,p.z),obj=>context.Save(obj),notes,previous,settings,streets,site));root.buildingCount++;
                     }
                     root.buildingCount+=CopyCustomBuildings(replace,group,p=>field.Sample(p.x,p.z),obj=>context.Save(obj),notes,settings);

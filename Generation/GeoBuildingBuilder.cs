@@ -209,6 +209,9 @@ namespace GeoWorld.Editor
             return p=>(ground(transform.TransformPoint(new Vector3(p.x,0,p.y)))-baseY)/scale;
         }
 
+        // how far a building on a slope sinks into the ground uphill (Ground)
+        public const float SinkShare=0.35f,PlinthCap=0.9f,BuryCap=1.2f;
+
         internal static void Ground(GeoBuilding building,GeoBuildingContext context,Func<Vector3,float> ground,out float baseY,out float depth)
         {
             var scale=building.transform.lossyScale;
@@ -232,7 +235,10 @@ namespace GeoWorld.Editor
             float step=Mathf.Max(2/Mathf.Max(scale.x,scale.z),Mathf.Max(maxX-minX,maxZ-minZ)/64);
             for(float z=minZ+step*0.5f;z<maxZ;z+=step)for(float x=minX+step*0.5f;x<maxX;x+=step)
                 if(GeoPolygon.Contains(context.outline,new Vector2(x,z)))Sample(new Vector2(x,z));
-            baseY=max+building.groundOffset;depth=Mathf.Max(0.2f,(baseY-min+0.25f)/scale.y);
+            // on a slope the building sinks into the ground uphill rather than standing on a tall plinth downhill (its porch in
+            // the air): by SinkShare of the fall, more where the plinth would be taller than PlinthCap, never more than BuryCap
+            float fall=max-min,sink=Mathf.Min(BuryCap,Mathf.Max(fall*SinkShare,fall-PlinthCap));
+            baseY=max-sink+building.groundOffset;depth=Mathf.Max(0.2f,(baseY-min+0.25f)/scale.y);
         }
 
         static Transform Install(GeoBuilding building,GeoBuildingOutput output,Action<Object> save)

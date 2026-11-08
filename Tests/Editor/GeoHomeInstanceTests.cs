@@ -65,8 +65,9 @@ namespace GeoWorld.Editor.Tests
                 var actual = Of(parts[0].mesh.vertices.Where(p => p.y > -0.05f));
                 Assert.That(Vector3.Distance(expected.min, actual.min), Is.LessThan(0.002f), $"min {expected.min} vs {actual.min}");
                 Assert.That(Vector3.Distance(expected.max, actual.max), Is.LessThan(0.002f), $"max {expected.max} vs {actual.max}");
-                // the baked foot reaches down to the foundation; the instance's stops at the ground (a plinth fills it)
-                Assert.That(parts[0].mesh.bounds.min.y, Is.EqualTo(-depth).Within(0.01f));
+                // the baked foot reaches down to the foundation (faces that meet in one plane there are separated, one of them
+                // GeoCoplanarFaces.Gap further down); the instance's stops at the ground (a plinth fills it)
+                Assert.That(parts[0].mesh.bounds.min.y, Is.EqualTo(-depth).Within(GeoCoplanarFaces.Gap + 0.01f));
                 if (parts.Count > 1)
                 {
                     var roofPoints = Mapped(model.body, 1, body, true).Concat(Mapped(model.roofFixed, 1, body, true)).Concat(Mapped(variant, 1, roof, false)).ToList();

@@ -46,6 +46,8 @@ namespace GeoWorld
         public GeoHomeUse homeModels = GeoHomeUse.IntactAndUnknown;
         [Tooltip("Outlines the export calls houses by their size alone (Microsoft's, bare building=yes) that stand in the yard of a bigger house, behind it from the street, are drawn as outbuildings (summer kitchens, sheds, barns) instead of houses with porches to the street.")]
         public bool yardOutbuildings = true;
+        [Tooltip("Buildings the export calls a shed, a house, a block of flats or industrial by their size alone take the kind their name, storeys, land use, shape and neighbours say (a garage cooperative's garages, a factory's halls, a tower block among blocks of flats, a school), so they get the models of that kind.")]
+        public bool inferBuildingKinds = true;
         [Tooltip("The home models to choose from (Tools > Geo World > Import home models). Empty: the style's walls and roof only.")]
         public GeoHomeLibrary homeLibrary;
         [Tooltip("Metres of a ruin's yard and debris kept around its footprint, at most (a big building may keep up to a fifth of its width). Less keeps streets and neighbours clear.")]
