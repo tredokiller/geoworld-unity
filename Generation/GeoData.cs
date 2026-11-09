@@ -82,10 +82,16 @@ namespace GeoWorld.Editor
         public float width = 1, depth = 1.6f, age;
         public int kind, source;
     }
+    // A data source the export used (its credit): "terrain", "osm" when OpenStreetMap's roads, water and land use loaded, ...
+    [Serializable] public class SourceFeature { public string name, attribution; }
     [Serializable] public class EnvironmentData
     {
         public string format;
         public int version;
+        public List<SourceFeature> sources = new List<SourceFeature>();
+        // Whether OpenStreetMap's map data (roads, water, land use, trees) loaded. The extractor goes on without it (a warning)
+        // and the world then has no roads at all; an export that names no source at all is an old one, taken as loaded.
+        [JsonIgnore] public bool OsmLoaded => sources == null || sources.Count == 0 || sources.Exists(s => s != null && s.name == "osm");
         public GeoOrigin origin;
         public GeoBounds bounds;
         public TerrainInfo terrain;

@@ -430,6 +430,8 @@ namespace GeoWorld
             [Tooltip("Share of the area under building footprints (0-1).")]
             public float buildingCover;
             public float roadsKm;
+            [Tooltip("The road length is not known: OpenStreetMap's map data of the area could not be loaded when it was exported, so roadsKm is 0 for want of data, not for want of roads.")]
+            public bool roadsUnknown;
         }
 
         // The manifest as JSON gives it back (read and written until it no longer changes: numbers written as text may come back with

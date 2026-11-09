@@ -547,7 +547,8 @@ namespace GeoWorld
                 var s = new GeoWorldManifest.Stats
                 {
                     areaKm2 = (float)(area / 1e6), heightMin = min, heightMax = max, relief = max - min, meanSlope = slopes > 0 ? (float)(slope / slopes) : 0,
-                    buildings = buildings, damagedBuildings = damaged, buildingCover = area > 0 ? (float)(footprints / area) : 0, roadsKm = RoadsKm(env, outer)
+                    buildings = buildings, damagedBuildings = damaged, buildingCover = area > 0 ? (float)(footprints / area) : 0, roadsKm = RoadsKm(env, outer),
+                    roadsUnknown = !env.OsmLoaded
                 };
                 GeoGroundStats.Cover(env, envPath, outer, out s.forest, out s.builtUp, out s.water, out s.open);
                 return s;
