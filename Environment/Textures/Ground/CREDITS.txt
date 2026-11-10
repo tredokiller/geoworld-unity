@@ -40,5 +40,5 @@ forest_litter (Poly Haven, CC0), чтобы фактуру можно было �
 
 <имя>_mask.jpg — маски для фактуры земли (GroundDetail): R высота (растянута по 1–99 перцентилям), G AO, B гладкость
 (1 − шероховатость; у набора Unity — 0.1). Пакует Tools~/GroundTextures/pack_ground_masks.py; набор слоёв и классов
-собирает Tools/Environment/Build Ground Detail Set в Environment/Resources/Terrain/GroundDetailSet.asset.
+собирает Tools/Environment/Build Ground Detail Set в Environment/Profiles/GroundDetailSet.asset.
 В игре из каждого набора — только _diff, _nor_gl и _mask; _rough, _ao и _disp — исходники масок.

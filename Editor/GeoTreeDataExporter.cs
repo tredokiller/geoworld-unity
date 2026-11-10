@@ -7,7 +7,9 @@ namespace GeoWorld.Editor
 {
     public static class GeoTreeDataExporter
     {
-        public const string Folder = "Assets/Resources/TerrainChunker/TreeData";
+        // Not in a Resources folder (that would put the tree data of every world into every player): loaded by address
+        // (GeoAddressableAssets.TreeData), from the world's shared Addressables group (GeoTileAddressables.ShareDependencies).
+        public const string Folder = GeoAddressableAssets.TreeDataRoot + "TerrainChunker/TreeData";
 
         // A world and tile identify the asset, independently of duplicate TerrainData names.
         public static string ResourceKey(GeoWorldRoot root) => "TerrainChunker/TreeData/" +
@@ -17,7 +19,7 @@ namespace GeoWorld.Editor
         public static void Export(GeoWorldRoot root)
         {
             if (!root || !root.terrain) return;
-            string key = ResourceKey(root), path = "Assets/Resources/" + key + ".asset";
+            string key = ResourceKey(root), path = GeoAddressableAssets.TreeData(key);
             Directory.CreateDirectory(Folder);
             AssetDatabase.Refresh();
             var asset = AssetDatabase.LoadAssetAtPath<GeoTreeData>(path);

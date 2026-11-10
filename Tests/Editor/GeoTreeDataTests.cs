@@ -12,7 +12,7 @@ namespace GeoWorld.Editor.Tests
 {
     public class GeoTreeDataTests
     {
-        const string RuntimeTestPath = "Assets/Resources/GeoWorldTreeLifecycleTest.asset";
+        const string RuntimeTestPath = GeoAddressableAssets.TreeDataRoot + "GeoWorldTreeLifecycleTest.asset";
 
         [TearDown]
         public void CleanupRuntimeAsset()
@@ -25,7 +25,7 @@ namespace GeoWorld.Editor.Tests
         [UnityTest]
         public IEnumerator RuntimeTrees_DisableAndReloadRestoresInstances()
         {
-            System.IO.Directory.CreateDirectory("Assets/Resources");
+            System.IO.Directory.CreateDirectory(GeoAddressableAssets.TreeDataRoot);
             AssetDatabase.Refresh();
             var data = ScriptableObject.CreateInstance<GeoTreeData>();
             data.batches = new[] { new GeoInstancedMeshes.Batch { matrices = new[] { Matrix4x4.identity } } };
@@ -123,7 +123,7 @@ namespace GeoWorld.Editor.Tests
             instances.transform.SetParent(go.transform);
             instances.batches.Add(new GeoInstancedMeshes.Batch { matrices = new[] { Matrix4x4.identity } });
             instances.count = 1;
-            string key = GeoTreeDataExporter.ResourceKey(root), path = "Assets/Resources/" + key + ".asset";
+            string key = GeoTreeDataExporter.ResourceKey(root), path = GeoAddressableAssets.TreeData(key);
             try
             {
                 GeoTreeDataExporter.Export(root);

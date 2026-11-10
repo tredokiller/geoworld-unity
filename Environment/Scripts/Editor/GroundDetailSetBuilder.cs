@@ -8,7 +8,7 @@ using UnityEngine;
 namespace _Game.Scripts.Editor
 {
     /// <summary>
-    /// Собирает набор фактуры земли (Resources/Terrain/GroundDetailSet, GroundDetail) из Environment/Textures/Ground пакета: по
+    /// Собирает набор фактуры земли (Environment/Profiles/GroundDetailSet, GroundDetail) из Environment/Textures/Ground пакета: по
     /// слою — <имя>_diff.jpg (sRGB, DXT1), <имя>_nor_gl.jpg (карта нормалей, BC5) и <имя>_mask.jpg (линейная, DXT1; маски
     /// пакует Tools~/GroundTextures/pack_ground_masks.py), все 2048 с мипами — из них при старте собираются массивы текстур,
     /// поэтому размер и сжатие у всех одни. Считает средний цвет альбедо (рисунок — отношение к нему) и заполняет слои
@@ -17,7 +17,7 @@ namespace _Game.Scripts.Editor
     public static class GroundDetailSetBuilder
     {
         private const string Root = "Packages/com.tredokiller.geoworld/Environment/Textures/Ground/";
-        private const string SetPath = "Packages/com.tredokiller.geoworld/Environment/Resources/Terrain/GroundDetailSet.asset";
+        private const string SetPath = GeoAddressableAssets.GroundDetailSet;
         private const int Size = 2048;
 
         private readonly struct LayerSpec

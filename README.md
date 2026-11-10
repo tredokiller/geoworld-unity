@@ -25,7 +25,7 @@ For an existing world, enable **Addressable Scenes** on its Geo Tiled World and 
 With Addressable Scenes disabled, add the tile scenes to Build Settings using the world's Inspector.
 
 Tile generation automatically exports terrain tree instances and Geo World's instanced tree batches to
-`Assets/Resources/TerrainChunker/TreeData`. Keys include the world's output folder and tile coordinates, so worlds with
+`Assets/GeoWorld/TerrainChunker/TreeData` (not Resources: loaded by address from the world's shared Addressables group). Keys include the world's output folder and tile coordinates, so worlds with
 identical terrain names do not collide. Rebuilding updates the same asset and preserves its GUID, including when a
 new generation has no trees. Tree prototypes stay in TerrainData; the saved tile contains no tree instances.
 
@@ -100,7 +100,7 @@ changed (a few MB instead of the whole package), and the project's commit of an 
 
 ```
 git submodule add https://github.com/tredokiller/geoworld-unity.git Packages/com.tredokiller.geoworld
-git -C Packages/com.tredokiller.geoworld checkout v1.21.1
+git -C Packages/com.tredokiller.geoworld checkout v1.22.0
 git -C Packages/com.tredokiller.geoworld lfs pull
 git config -f .gitmodules submodule.Packages/com.tredokiller.geoworld.shallow true
 ```
@@ -112,13 +112,13 @@ that is not a git repository: `git clone` into the same folder.) Unity takes a p
 **Through the Package Manager:** Package Manager > **+** > **Add package from git URL...** and enter the version you want:
 
 ```
-https://github.com/tredokiller/geoworld-unity.git#v1.21.1
+https://github.com/tredokiller/geoworld-unity.git#v1.22.0
 ```
 
 or add it to `Packages/manifest.json`:
 
 ```json
-"com.tredokiller.geoworld": "https://github.com/tredokiller/geoworld-unity.git#v1.21.1"
+"com.tredokiller.geoworld": "https://github.com/tredokiller/geoworld-unity.git#v1.22.0"
 ```
 
 The Package Manager downloads the whole package (some 300 MB, and its Git LFS files) for every version, and Unity imports all
@@ -130,7 +130,7 @@ The repository is private: git on the computer must be signed in to GitHub (the 
 
 **Update** in the Geo World window (or Tools > Geo World > Update Geo World...). With fast updates it fetches the new
 version's tag and checks it out in place, with a bar of git's progress; Unity imports what changed and recompiles. By hand:
-`git -C Packages/com.tredokiller.geoworld fetch --depth 1 origin tag v1.21.1` and `checkout v1.21.1`, then `lfs pull`.
+`git -C Packages/com.tredokiller.geoworld fetch --depth 1 origin tag v1.22.0` and `checkout v1.22.0`, then `lfs pull`.
 Through the Package Manager: change the version after `#` in `Packages/manifest.json` and go back to Unity. Each version is
 listed in [CHANGELOG.md](CHANGELOG.md).
 

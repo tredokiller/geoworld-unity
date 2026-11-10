@@ -24,7 +24,6 @@ namespace _Game.Scripts.World
     public class RoadMap : MonoBehaviour
     {
         private const string MaterialResource = "Materials/RoadMap";
-        private const string DetailSetResource = "Terrain/GroundDetailSet";
         private static readonly int LayersId = Shader.PropertyToID("_RoadLayers");
         private static readonly int Layers2Id = Shader.PropertyToID("_RoadLayers2");
         private static readonly int AsphaltAlbedoId = Shader.PropertyToID("_RoadAsphaltAlbedo");
@@ -341,7 +340,7 @@ namespace _Game.Scripts.World
         private void BuildSurfaces()
         {
             _asphalt = Vector4.zero;
-            RoadSurfaceSet set = Resources.Load<RoadSurfaceSet>(RoadSurfaceSet.ResourcePath);
+            RoadSurfaceSet set = GeoAddressableAssets.Load<RoadSurfaceSet>(GeoAddressableAssets.RoadSurfaceSet);
 
             if (set == null || set.asphaltAlbedo.Length == 0 || set.asphaltAlbedo.Length != set.asphaltNormal.Length)
                 return;
@@ -395,7 +394,7 @@ namespace _Game.Scripts.World
         // Номера слоёв дорог в массивах фактуры земли (GroundDetail строит их из набора в том же порядке).
         private bool FindLayers()
         {
-            GroundDetailSet set = Resources.Load<GroundDetailSet>(DetailSetResource);
+            GroundDetailSet set = GeoAddressableAssets.Load<GroundDetailSet>(GeoAddressableAssets.GroundDetailSet);
 
             if (set == null || set.layers.Count == 0)
                 return false;
@@ -408,7 +407,7 @@ namespace _Game.Scripts.World
 
                 if (index < 0)
                 {
-                    Debug.LogWarning($"[RoadMap] Ground detail layer '{LayerNames[i]}' is missing in Resources/{DetailSetResource}", this);
+                    Debug.LogWarning($"[RoadMap] Ground detail layer '{LayerNames[i]}' is missing in {GeoAddressableAssets.GroundDetailSet}", this);
                     enabled = false;
                     return false;
                 }

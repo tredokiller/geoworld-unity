@@ -322,7 +322,7 @@ are moved onto the road in the tiles' satellite imagery (a few minutes for a lar
 cover. They are written into the world's folder, never into the package, and put on the world's object and on its copies in
 the open scenes (a game may keep a copy of the world's object in its own scene). Without the exports on the machine the
 data stays as it is. A world without it has no road surfaces, field rows or leaf types, never another world's. The tree
-species themselves (species, variants and mixes by place) are shared: Resources/World/TreeSpeciesProfile. World packages
+species themselves (species, variants and mixes by place) are shared: Environment/Profiles/TreeSpeciesProfile (Addressables). World packages
 (runtime generation) carry it as the extra "world map" (worldmap.json.gz, WorldMapPackage), baked from the export when the package
 is generated (curbs by the package's land cover) and put on the host as a WorldMapData when it opens. The satellite step runs
 as in the editor, on each tile's imagery as the generator builds it: road centrelines move onto the road and field rows take
@@ -442,7 +442,7 @@ relief of the craters too small for the height grid, every bowl, fresh ejecta an
 does not draw them). GroundCraters.hlsl in Game/Terrain Lit (Wet) bends the normals of the small craters, shades bowls,
 lays fresh soil around fresh craters and fills ponds: craters the imagery shows wet hold water all year, every bowl fills in long rain
 (dark brown still water; ice in winter). A world with craters gets per-pixel terrain normals
-(Resources/Terrain/WorldTerrainWetCraters), so carved craters keep their shape where the terrain's LOD smooths its
+(Environment/Materials/WorldTerrainWetCraters), so carved craters keep their shape where the terrain's LOD smooths its
 vertices. GroundWetness.WaterAt and WaterNear know the ponds (rotor spray). GroundDressing and the takeoff point keep grass
 out of fresh crater bowls and ponds (old ones are grown over), and grass and props off a trench's mesh out to the end of its
 lip, where the terrain under it is cut lower; the outer slope of its banks grows thinner. Where craters stand at three a hectare or more
@@ -555,7 +555,7 @@ frame of the same flight is about 80 ms, and only in the editor, whose Game view
 tile loads (GeoBenchmarks.RunFlight flies a straight line and lists every slow frame with what took the time). New tiled worlds register their tile scenes in Addressables, one scene per bundle. Build Addressables content
 before building a player; only the master scene belongs in Build Settings. Existing worlds keep their previous mode:
 enable Addressable Scenes and rebuild changed tiles to migrate, or add tile scenes to Build Settings for built-in streaming.
-Tile generation also exports trees to Assets/Resources/TerrainChunker/TreeData. GeoTerrainTreeLoader restores trees
+Tile generation also exports trees to Assets/GeoWorld/TerrainChunker/TreeData (Addressables, by path). GeoTerrainTreeLoader restores trees
 asynchronously in Play mode, converts terrain instances in batches, and releases runtime data when a tile unloads.
 Nature Renderer starts after restoration. Regenerate older tiles to create external tree assets; external trees are
 not displayed in Edit mode. UniTask 2.5.10 must be installed via its Git package URL before installing Geo World.

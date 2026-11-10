@@ -10,7 +10,7 @@ namespace _Game.Scripts.World
 {
     /// <summary>
     /// Фактура земли вблизи камеры поверх спутника тайлов (рисует шейдер террейна, GroundDetail.hlsl). Отдаёт шейдерам:
-    ///  - массивы текстур набора (GroundDetailSet из Resources/Terrain): собираются при старте копией на GPU из текстур
+    ///  - массивы текстур набора (GroundDetailSet из Addressables, GeoAddressableAssets): собираются при старте копией на GPU из текстур
     ///    набора — так в проекте и билде лежат только сами текстуры, без второй копии в массиве; после копии они выгружаются;
     ///  - параметры слоёв (повтор, контраст, нормали, AO, средний цвет) и слои каждого класса земли;
     ///  - окно классов земли GeoWorld вокруг камеры (_GroundDetailClasses: клетки карты земель, ~10 м, 128 × 128 — ~1.3 км;
@@ -20,7 +20,6 @@ namespace _Game.Scripts.World
     /// </summary>
     public sealed class GroundDetail : MonoBehaviour
     {
-        private const string SetPath = "Terrain/GroundDetailSet";
         private const int MaxLayers = 32;
         private const int Cells = 128;
         private const int RowsPerFrame = 16;
@@ -72,11 +71,11 @@ namespace _Game.Scripts.World
         private void Awake()
         {
             Shader.SetGlobalVector(RectId, Vector4.zero);
-            GroundDetailSet set = Resources.Load<GroundDetailSet>(SetPath);
+            GroundDetailSet set = GeoAddressableAssets.Load<GroundDetailSet>(GeoAddressableAssets.GroundDetailSet);
 
             if (set == null || set.layers.Count == 0)
             {
-                Debug.LogWarning($"[GroundDetail] Ground detail set is missing: Resources/{SetPath}", this);
+                Debug.LogWarning($"[GroundDetail] Ground detail set is missing: {GeoAddressableAssets.GroundDetailSet}", this);
                 return;
             }
 

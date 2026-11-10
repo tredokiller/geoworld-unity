@@ -14,14 +14,14 @@ namespace _Game.Scripts.Editor.Vegetation
     /// Породы деревьев по месту. Контуры лесов с типом листвы (TreeLeafAreas) — свои у каждого мира: из его выгрузок
     /// (environment.json частей мира, areas[].leafType: OSM leaf_type — пакет его не переносит в тайлы) в папку мира
     /// (WorldMapBaker: &lt;папка мира&gt;/Environment/Tree leaf areas, на его WorldMapData). Общий профиль видов
-    /// (Resources/World/TreeSpeciesProfile, TileTreeSpecies) — виды с вариантами: сосны набора и сгенерированный дуб
+    /// (Environment/Profiles/TreeSpeciesProfile, TileTreeSpecies) — виды с вариантами: сосны набора и сгенерированный дуб
     /// (Environment/Vegetation/Generated/PineSet, Oak), бук и тополь NatureManufacture — обновляет Update Tree Species
     /// Profile; он пишет в пакет, так что это инструмент разработки пакета. Смеси по месту задаются при первом создании
     /// профиля; потом их правят в инспекторе, а обновление меняет только варианты видов.
     /// </summary>
     public static class TreeLeafAreasBaker
     {
-        private const string ProfilePath = "Packages/com.tredokiller.geoworld/Environment/Resources/World/TreeSpeciesProfile.asset";
+        private const string ProfilePath = GeoAddressableAssets.TreeSpeciesProfile;
         private const string AssetName = "Tree leaf areas";
         private const string Generated = "Packages/com.tredokiller.geoworld/Environment/Vegetation/Generated";
         private const string Vegetation = "Packages/com.tredokiller.geoworld/Environment/Vegetation/Prefabs";

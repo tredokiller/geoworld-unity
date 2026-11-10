@@ -15,7 +15,7 @@ namespace GeoWorld.Editor.Tests
     public class GeoNatureRendererStartTests
     {
         const string Key = "GeoWorldNatureRendererStartTest";
-        const string DataPath = "Assets/Resources/" + Key + ".asset";
+        const string DataPath = GeoAddressableAssets.TreeDataRoot + Key + ".asset";
         const string MasterPath = "Assets/GeoWorldNatureRendererStartMasterTest.unity";
 
         [TearDown] public void Cleanup()
@@ -26,7 +26,7 @@ namespace GeoWorld.Editor.Tests
 
         static void MakeTreeData(GeoTreeData data)
         {
-            System.IO.Directory.CreateDirectory("Assets/Resources");
+            System.IO.Directory.CreateDirectory(GeoAddressableAssets.TreeDataRoot);
             AssetDatabase.Refresh();
             AssetDatabase.CreateAsset(data, DataPath);
             AssetDatabase.SaveAssets();

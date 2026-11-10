@@ -21,7 +21,6 @@ namespace _Game.Scripts.World
     /// </summary>
     public sealed class TileTreeSpecies : MonoBehaviour
     {
-        private const string ProfilePath = "World/TreeSpeciesProfile";
         private const int TreesPerFrame = 6000;
         private const float Margin = 130f;
         // подбор варианта по высоте: из подходящих в 1.3 раза от лучшего — по хешу (как GeoTreeHeights)
@@ -96,10 +95,10 @@ namespace _Game.Scripts.World
 
         private void Awake()
         {
-            _profile = Resources.Load<TreeSpeciesProfile>(ProfilePath);
+            _profile = GeoAddressableAssets.Load<TreeSpeciesProfile>(GeoAddressableAssets.TreeSpeciesProfile);
 
             if (_profile == null)
-                Debug.LogWarning($"[TileTreeSpecies] Profile is missing: Resources/{ProfilePath}", this);
+                Debug.LogWarning($"[TileTreeSpecies] Profile is missing: {GeoAddressableAssets.TreeSpeciesProfile}", this);
         }
 
         private void OnEnable()

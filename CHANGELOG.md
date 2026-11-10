@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+## 1.22.0
+
+World-only assets are out of `Resources`. A `Resources` folder goes into every player of a project, and these, with what they refer to, put some 1.2 GB into players that show no Geo World: in the FPV Drones Defence game the VR player grew from about 650 MB to 1.3 GB, and with them out of `Resources` it is 536 MB, the tablet player 239 MB instead of 549 MB.
+
+- Moved: the tree species profile, the ground detail set and the road surface set to `Environment/Profiles`; the wet terrain materials (`WorldTerrainWet`, `WorldTerrainWetCraters`, the four `WorldTerrainWetTrenches*`: some 135 MB of `Game/Terrain Lit (Wet)` variants), `TakeoffTerrainLit` and the lake, swamp, sea and river water materials to `Environment/Materials`; the tiles' tree data to `Assets/GeoWorld/TerrainChunker/TreeData` (from `Assets/Resources/TerrainChunker/TreeData`).
+- `TileTreeSpecies`, `GroundDetail`, `ForestFloor`, `RoadMap`, `GroundWetness`, `CustomSpawnRuntimeEnvironmentGenerator`, `WaterSurfaces`, `GeoWaterLook` and `GeoTerrainTreeLoader` load them by address (`GeoAddressableAssets`, the address is the asset's path) from the world's shared Addressables group, where `GeoTileAddressables.ShareDependencies` puts them, the tree data of the world's tiles and the wet variant materials before every build. Each is loaded once and kept, as `Resources.Load` kept it; the tree data asynchronously, released when no tile uses it. A player built without the world's groups gets nothing, and the components skip their work with a warning, as they did when an asset was missing; the editor falls back to the AssetDatabase while the project's groups do not have them yet. `GroundWetness` takes the wet shader from the `WorldTerrainWet` material instead of `Shader.Find`: the shader is in the world's bundles, not in the player.
+- Stay in `Resources`: the snow textures, the birds' sound, the rotor wash leaves and ripples, the overview, crater map, road map and shore materials (a game may add those components in a player without a world).
+- A project with tile tree data moves `Assets/Resources/TerrainChunker` to `Assets/GeoWorld/TerrainChunker` (the tiles keep their keys). `RoadSurfaceSet.ResourcePath` is gone (`GeoAddressableAssets.RoadSurfaceSet`).
+
 ## 1.21.1
 
 1.21.0 was tagged on a commit whose `package.json` still said 1.20.0: every project on it, or on a commit after it, was told "Geo World 1.21.0 is available" on every editor start, and taking the update moved a project pinned past the tag back to it (and still said 1.20.0, so it offered the update again). 1.21.1 is the whole of 1.21.0 and the fixes below, with `package.json` and `GeoWorldGenerator.Version` saying 1.21.1. A project on 1.21.0 or a commit after it takes 1.21.1 (`#v1.21.1`) and is offered nothing more.

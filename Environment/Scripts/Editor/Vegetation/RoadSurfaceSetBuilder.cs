@@ -1,5 +1,6 @@
 using System.IO;
 using _Game.Scripts.World;
+using GeoWorld;
 using GeoWorld.Editor;
 using UnityEditor;
 using UnityEngine;
@@ -12,7 +13,7 @@ namespace _Game.Scripts.Editor.Vegetation
     /// </summary>
     public static class RoadSurfaceSetBuilder
     {
-        private const string AssetPath = "Packages/com.tredokiller.geoworld/Environment/Resources/" + RoadSurfaceSet.ResourcePath + ".asset";
+        private const string AssetPath = GeoAddressableAssets.RoadSurfaceSet;
 
         [MenuItem("Tools/Environment/Build Road Surface Set")]
         public static void BuildMenu() => Debug.Log("[RoadSurfaceSetBuilder] " + Build());

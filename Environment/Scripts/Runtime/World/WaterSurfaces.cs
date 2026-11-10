@@ -18,7 +18,7 @@ namespace _Game.Scripts.World
     /// «Water | rivers»; озёра и пруды — плоские, «Water | &lt;id&gt;»).
     ///  - Высота воды под точкой: коллайдеров у воды нет, а террейн под рекой прорезан на глубину русла, поэтому берём её
     ///    из треугольников самой воды (при первом запросе к мешу — сетка ячеек со списками треугольников).
-    ///  - Вид по воде: пакет даёт всей воде один материал — реки (Resources/GeoWorld/Water (project), Game/Water/River);
+    ///  - Вид по воде: пакет даёт всей воде один материал — реки (Water (project), Game/Water/River);
     ///    стоячей воде ставим свой по тому, что это за вода: берег — болото по карте земель — Water (swamp), площадь от
     ///    2 км² (большое водохранилище, море) — Water (sea), иначе пруд или озеро — Water (lakes). Стоячая вода, которая
     ///    касается реки (старица, затон, разлив у русла — в OSM не water=river, и пакет рисует её отдельным плоским
@@ -37,9 +37,6 @@ namespace _Game.Scripts.World
         private const float RescanInterval = 1f;
         private const float CellSize = 8f;
         private const string RiversName = "Water | rivers";
-        private const string LakeMaterialResource = "GeoWorld/Water (lakes)";
-        private const string SwampMaterialResource = "GeoWorld/Water (swamp)";
-        private const string SeaMaterialResource = "GeoWorld/Water (sea)";
         // открытая вода — от этой площади (м²): на большом водохранилище ветер разгоняет волну, как на море
         private const float SeaArea = 2_000_000f;
         // болото — когда болото по карте земель хотя бы на такой доле берега (или внутри воды)
@@ -355,16 +352,16 @@ namespace _Game.Scripts.World
             if (!MaterialsLoaded[index])
             {
                 MaterialsLoaded[index] = true;
-                string resource = kind switch
+                string address = kind switch
                 {
-                    WaterKind.Swamp => SwampMaterialResource,
-                    WaterKind.Sea => SeaMaterialResource,
-                    _ => LakeMaterialResource
+                    WaterKind.Swamp => GeoAddressableAssets.SwampWater,
+                    WaterKind.Sea => GeoAddressableAssets.SeaWater,
+                    _ => GeoAddressableAssets.LakeWater
                 };
-                Materials[index] = Resources.Load<Material>(resource);
+                Materials[index] = GeoAddressableAssets.Load<Material>(address);
 
                 if (Materials[index] == null)
-                    Debug.LogWarning($"[WaterSurfaces] Water material is missing: Resources/{resource}");
+                    Debug.LogWarning($"[WaterSurfaces] Water material is missing: {address}");
             }
 
             return Materials[index];

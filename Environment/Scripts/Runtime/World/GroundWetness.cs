@@ -18,7 +18,9 @@ namespace _Game.Scripts.World
     ///  - _WaterRain: сила дождя для колец от капель на реках, озёрах и лужах.
     /// Лужи рисует шейдер террейна Game/Terrain Lit (Wet) (GroundWetness.hlsl): его ставим тайлам GeoWorld вместо URP
     /// Terrain Lit — копией их материала (материалы тайлов из бандлов не трогаем; другие террейны — нет: их наборы
-    /// ключевых слов в билде не держит ни один материал), а точке взлёта — через её Resources/Terrain/TakeoffTerrainLit.
+    /// ключевых слов в билде не держит ни один материал), а точке взлёта — через её TakeoffTerrainLit. Шейдер берём у
+    /// материала WorldTerrainWet из Addressables (GeoAddressableAssets): он держит шейдер в бандлах мира, а не в каждом
+    /// билде проекта; в билде без мира шейдера нет, и тайлы не переодеваются.
     /// Где стоять воде, шейдеры террейна и травы (трава в луже оседает под воду) берут из карты (_PuddleLand, 8 м на
     /// тексель, окно 2 км вокруг камеры) по карте земель GeoWorld и уклону рельефа: R — пригодность под лужи (грунтовки
     /// и тропинки, голая земля, болото, пашня, гравий; асфальт и посёлок реже, луг и лес мало, вода, здания и рельсы —
@@ -291,7 +293,8 @@ namespace _Game.Scripts.World
             }
 
             Instance = this;
-            _wetShader = Shader.Find(WetShaderName);
+            Material wet = GeoAddressableAssets.Load<Material>(GeoAddressableAssets.WorldTerrainWet);
+            _wetShader = wet != null ? wet.shader : null;
 
             if (_wetShader == null)
                 Debug.LogWarning($"[GroundWetness] Shader is missing: {WetShaderName}", this);
@@ -468,7 +471,7 @@ namespace _Game.Scripts.World
                 if (CustomSpawnRuntimeEnvironmentGenerator.IsRuntimeCopy(terrain.terrainData))
                     continue;
 
-                // только тайлы GeoWorld: у них материал без ключевых слов, как у Resources/Terrain/WorldTerrainWet, и
+                // только тайлы GeoWorld: у них материал без ключевых слов, как у WorldTerrainWet, и
                 // этот вариант есть в билде. Террейн-заплатки локаций (URP TerrainLit.mat с per-pixel normal) в билде
                 // получили бы вырезанный вариант
                 if (_notTiles.Contains(terrain))
@@ -487,7 +490,7 @@ namespace _Game.Scripts.World
                 }
 
                 // у мира с воронками нормаль земли — из сетки высот в каждом пикселе, а не в вершинах лода: врезанные
-                // воронки видны и там, где лод их сгладил (вариант держит Resources/Terrain/WorldTerrainWetCraters)
+                // воронки видны и там, где лод их сгладил (вариант держит Environment/Materials/WorldTerrainWetCraters)
                 if (WorldMapData.Craters != null && !wet.IsKeywordEnabled(PerPixelNormal))
                     wet.EnableKeyword(PerPixelNormal);
                 else if (WorldMapData.Craters == null && wet.IsKeywordEnabled(PerPixelNormal))

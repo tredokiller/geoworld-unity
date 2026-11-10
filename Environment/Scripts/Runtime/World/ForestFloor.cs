@@ -26,7 +26,6 @@ namespace _Game.Scripts.World
     /// </summary>
     public sealed class ForestFloor : MonoBehaviour
     {
-        private const string DetailSetResource = "Terrain/GroundDetailSet";
         private const float CheckInterval = 0.5f;
 
         private static readonly int MapId = Shader.PropertyToID("_ForestFloorMap");
@@ -174,7 +173,7 @@ namespace _Game.Scripts.World
         private void OnEnable()
         {
             Shader.SetGlobalVector(RectId, Vector4.zero);
-            _set = Resources.Load<GroundDetailSet>(DetailSetResource);
+            _set = GeoAddressableAssets.Load<GroundDetailSet>(GeoAddressableAssets.GroundDetailSet);
             _resolution = Mathf.Max(16, Mathf.RoundToInt(windowSize / Mathf.Max(texel, 0.25f)));
             _map = new Texture2D(_resolution, _resolution, TextureFormat.RGBA32, false, true)
             {
@@ -557,7 +556,7 @@ namespace _Game.Scripts.World
 
             if (baseLayer < 0 || needles < 0)
             {
-                Debug.LogWarning($"[ForestFloor] Ground detail layers '{look.baseLayer}' or '{look.needleLayer}' are missing in Resources/{DetailSetResource}", this);
+                Debug.LogWarning($"[ForestFloor] Ground detail layers '{look.baseLayer}' or '{look.needleLayer}' are missing in {GeoAddressableAssets.GroundDetailSet}", this);
                 Shader.SetGlobalVector(MixId, Vector4.zero);
                 return;
             }

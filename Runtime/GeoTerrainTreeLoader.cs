@@ -3,10 +3,13 @@ using System.Threading;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace GeoWorld
 {
-    // Owns the trees of one loaded tile. Does not retain a global Resources cache.
+    // Owns the trees of one loaded tile: its tree data comes from Addressables (GeoAddressableAssets.TreeData), in the editor from
+    // the AssetDatabase while the project's groups do not have it yet. Does not retain a global cache.
     [DefaultExecutionOrder(-11000), DisallowMultipleComponent, RequireComponent(typeof(Terrain))]
     public sealed class GeoTerrainTreeLoader : MonoBehaviour
     {
@@ -26,8 +29,20 @@ namespace GeoWorld
         bool restored;
         sealed class Request
         {
-            public ResourceRequest operation;
+            public AsyncOperationHandle<GeoTreeData> operation;
+            public GeoTreeData asset;
             public int users;
+            public bool Done => !operation.IsValid() || operation.IsDone;
+            public GeoTreeData Data => operation.IsValid() ? operation.Result : asset;
+
+            public Request(string address)
+            {
+                var location = GeoAddressableAssets.Locate<GeoTreeData>(address);
+                if (location != null) operation = Addressables.LoadAssetAsync<GeoTreeData>(location);
+#if UNITY_EDITOR
+                else asset = UnityEditor.AssetDatabase.LoadAssetAtPath<GeoTreeData>(address);
+#endif
+            }
         }
         // Share only requests currently being applied, including a disable/re-enable during loading.
         static readonly Dictionary<string, Request> requests = new Dictionary<string, Request>();
@@ -53,13 +68,13 @@ namespace GeoWorld
                 if (string.IsNullOrEmpty(resourceKey)) { restored = Ready = true; return; }
                 string key = resourceKey;
                 if (!requests.TryGetValue(key, out var request))
-                    requests[key] = request = new Request { operation = Resources.LoadAsync<GeoTreeData>(key) };
+                    requests[key] = request = new Request(GeoAddressableAssets.TreeData(key));
                 request.users++;
                 try
                 {
                     // Finish the request even when disabled, so its asset can be released.
-                    await request.operation;
-                    var data = request.operation.asset as GeoTreeData;
+                    while (!request.Done) await UniTask.Yield();
+                    var data = request.Data;
                     if (!data) throw new InvalidOperationException("Missing Geo World tree data: " + key);
                     token.ThrowIfCancellationRequested();
                     var trees = new TreeInstance[data.TreeCount];
@@ -102,7 +117,7 @@ namespace GeoWorld
                     if (--request.users == 0)
                     {
                         requests.Remove(key);
-                        if (request.operation.asset) Resources.UnloadAsset(request.operation.asset);
+                        if (request.operation.IsValid()) Addressables.Release(request.operation);
                     }
                 }
             }
