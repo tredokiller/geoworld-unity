@@ -123,9 +123,11 @@ namespace GeoWorld.Editor
             if (choice == 1) return;
             if (choice == 0)
             {
-                string repository = Repository(Info); var version = Latest;
+                // the project's folder and the Package Manager's copy, read here: Application.dataPath is the main thread's
+                string repository = Repository(Info), project = Path.GetDirectoryName(Application.dataPath), installed = Info.resolvedPath;
+                var version = Latest;
                 Begin($"Downloading Geo World {Latest} as a git clone (once all of it)");
-                working = Task.Run(() => { string error = GeoGitUpdate.Switch(repository, version, Progress, out string note); return (error, note); });
+                working = Task.Run(() => { string error = GeoGitUpdate.Switch(repository, version, project, installed, Progress, out string note); return (error, note); });
                 EditorApplication.update += WaitForGit;
                 return;
             }

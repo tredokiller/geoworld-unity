@@ -17,12 +17,18 @@ namespace GeoWorld.Editor
     //
     // Everything here runs git and takes a while: it is called off the main thread (GeoUpdate), and reports what git says (its
     // "Receiving objects: 45%") through progress(stage, fraction).
+    //
+    // Paths: in the editor Unity maps Packages/<name of an installed package> to where that package really is, for System.IO
+    // too, relative or absolute (Path.GetFullPath("Packages/com.tredokiller.geoworld") of a package installed from git is its
+    // copy in Library/PackageCache/com.tredokiller.geoworld@<hash>, which is always there; Directory.Exists of the project's
+    // absolute .../Packages/com.tredokiller.geoworld is true and Directory.Move into it goes to the cache). So the clone's
+    // folder is never looked up or touched through System.IO by that path: it is found in a listing of the project's Packages
+    // folder, git clones into the project's Temp folder, and only a finished clone is moved into Packages, by the system's move
+    // command (Unity maps nothing for other processes). Switch deletes nothing under Packages or Library.
     static class GeoGitUpdate
     {
-        public const string FolderName = "Packages/com.tredokiller.geoworld";
-
-        // Where the clone goes: the project's Packages folder (the editor's working directory is the project).
-        public static string Folder => Path.GetFullPath(FolderName);
+        public const string PackageFolder = "com.tredokiller.geoworld";
+        public const string FolderName = "Packages/" + PackageFolder;
 
         // A package folder that is a git clone (a submodule has a .git file, a clone a .git folder).
         public static bool IsClone(string path) =>
@@ -32,24 +38,40 @@ namespace GeoWorld.Editor
         public static string Origin(string path) => Git(path, "remote get-url origin", null, out string output) == 0 ? output.Trim() : null;
 
         // Makes the clone of version from the repository (once: a full download), with its Git LFS files, and adds it to the
-        // project's git repository as a submodule where there is one. Returns the error, or null; note: what to tell the user.
-        public static string Switch(string repository, Version version, Action<string, float> progress, out string note)
+        // project's git repository as a submodule where there is one. project: the project's folder (the parent of
+        // Application.dataPath, read on the main thread); installed: where the Package Manager's copy is (PackageInfo.resolvedPath).
+        // Returns the error, or null; note: what to tell the user.
+        public static string Switch(string repository, Version version, string project, string installed, Action<string, float> progress, out string note)
         {
             note = null;
-            string target = Folder, tag = "v" + version;
-            if (Directory.Exists(target)) return FolderName + " is there already: move it away, then update again.";
+            string packages = Path.Combine(project, "Packages"), target = Path.Combine(packages, PackageFolder), tag = "v" + version;
+            string blocked = Blocked(Entries(packages), target, installed);
+            if (blocked != null) return blocked;
             string lfs = NeedLfs();
             if (lfs != null) return lfs;
+            // the clone is made in the project's Temp folder (Unity imports nothing there, and the Package Manager does not take
+            // it for a package while git writes it) and moved into Packages when it is complete: a failed download leaves nothing
+            // in Packages, and is deleted where Unity maps no path
+            string temp = Path.Combine(project, "Temp", "GeoWorldClone");
+            TryDelete(temp);
             progress("Downloading Geo World " + version + " (the first time all of it; from then on only what changed)", 0);
-            if (Git(Path.GetDirectoryName(target), $"clone --depth 1 --branch {tag} --progress \"{repository}\" \"{target}\"", Report(progress, 0, 0.7f), out string output, true) != 0)
+            // core.longpaths (kept in the clone's config for later updates): on Windows git refuses paths over 260 characters
+            // without it, and the package's deepest files are 143 characters in; the Package Manager's own clone takes them
+            if (Git(project, $"clone --depth 1 --branch {tag} --config core.longpaths=true --progress \"{repository}\" \"{temp}\"", Report(progress, 0, 0.7f), out string output, true) != 0)
             {
-                TryDelete(target);
+                TryDelete(temp);
                 return "git clone failed: " + Last(output);
             }
-            string error = LargeFiles(target, progress, 0.7f, 0.97f);
-            if (error != null) return error;
+            string error = LargeFiles(temp, progress, 0.7f, 0.97f);
+            if (error != null) { TryDelete(temp); return error; }
+            string moved = Move(temp, target);
+            if (moved == null && !Present(Entries(packages))) moved = "it is not in the Packages folder after the move";
+            if (moved != null)
+            {
+                TryDelete(temp);
+                return $"the clone could not be moved to {FolderName} ({moved}): nothing was changed in Packages.";
+            }
             // a submodule of the project's repository, shallow for the others too
-            string project = Path.GetDirectoryName(Path.GetDirectoryName(target));
             if (Git(project, "rev-parse --show-toplevel", null, out string top) == 0)
             {
                 top = top.Trim();
@@ -62,6 +84,60 @@ namespace GeoWorld.Editor
                 else note = $"{FolderName} could not be made a submodule of the project ({Last(added)}): it is a clone of its own; keep it out of the project's commits (.gitignore).";
             }
             return null;
+        }
+
+        // The names in the project's Packages folder as they are on disk (a listing of the folder itself, which Unity does not map).
+        static string[] Entries(string packages)
+        {
+            try { return Directory.GetFileSystemEntries(packages); }
+            catch (Exception) { return null; }
+        }
+
+        // Why the clone cannot go to target (Packages/com.tredokiller.geoworld in the project's folder), or null. entries: the
+        // project's Packages folder listed (null: it could not be read); installed: the Package Manager's copy, which must never
+        // be the target.
+        internal static string Blocked(string[] entries, string target, string installed)
+        {
+            if (entries == null) return "the project's Packages folder could not be read.";
+            string folder = Normal(target);
+            if (!folder.EndsWith("/Packages/" + PackageFolder, StringComparison.OrdinalIgnoreCase) || folder.IndexOf("/Library/PackageCache/", StringComparison.OrdinalIgnoreCase) >= 0)
+                return $"{target} is not the project's {FolderName}: nothing was changed.";
+            if (!string.IsNullOrEmpty(installed) && string.Equals(folder, Normal(installed), StringComparison.OrdinalIgnoreCase))
+                return $"{target} is where the Package Manager keeps Geo World: nothing was changed.";
+            return Present(entries) ? FolderName + " is there already: move it away, then update again." : null;
+        }
+
+        // The listing of the Packages folder has a com.tredokiller.geoworld folder.
+        static bool Present(string[] entries)
+        {
+            if (entries != null)
+                foreach (string entry in entries)
+                    if (string.Equals(Path.GetFileName(entry.TrimEnd('/', '\\')), PackageFolder, StringComparison.OrdinalIgnoreCase)) return true;
+            return false;
+        }
+
+        static string Normal(string path) => path.Replace('\\', '/').TrimEnd('/');
+
+        // Renames folder from to to (which must not exist) with the system's own command, or returns why it could not. Not
+        // Directory.Move: Unity maps the absolute path of Packages/com.tredokiller.geoworld as well, and Directory.Move into it
+        // tried to create the Package Manager's copy in Library/PackageCache.
+        static string Move(string from, string to)
+        {
+            bool windows = Path.DirectorySeparatorChar == '\\';
+            if (windows) { from = from.Replace('/', '\\'); to = to.Replace('/', '\\'); }
+            var start = windows ? new ProcessStartInfo("cmd.exe", $"/c move \"{from}\" \"{to}\"") : new ProcessStartInfo("mv", $"\"{from}\" \"{to}\"");
+            start.UseShellExecute = false; start.RedirectStandardOutput = true; start.RedirectStandardError = true; start.CreateNoWindow = true;
+            try
+            {
+                using (var move = Process.Start(start))
+                {
+                    var output = move.StandardOutput.ReadToEndAsync();
+                    string errors = move.StandardError.ReadToEnd();
+                    move.WaitForExit();
+                    return move.ExitCode == 0 ? null : Last(output.Result + errors);
+                }
+            }
+            catch (Exception e) { return e.Message; }
         }
 
         // Brings the clone at path to version: fetches the version's tag (only the objects the clone does not have), puts its
@@ -172,9 +248,16 @@ namespace GeoWorld.Editor
             return b.StartsWith(a, StringComparison.OrdinalIgnoreCase) ? b.Substring(a.Length) : b;
         }
 
+        // Deletes a clone in the project's Temp folder (git leaves its object files read-only, which Directory.Delete refuses).
         static void TryDelete(string folder)
         {
-            try { if (Directory.Exists(folder)) Directory.Delete(folder, true); } catch (Exception) { }
+            try
+            {
+                if (!Directory.Exists(folder)) return;
+                foreach (string file in Directory.GetFiles(folder, "*", SearchOption.AllDirectories)) File.SetAttributes(file, FileAttributes.Normal);
+                Directory.Delete(folder, true);
+            }
+            catch (Exception) { }
         }
     }
 }
