@@ -77,6 +77,8 @@ namespace _Game.Scripts.World
             Ensure<GroundDetail>();
             Ensure<ForestFloor>();
             Seasons = Ensure<Seasons>();
+            // снег на крышах зимой: материалы зданий на GeoWorld/Home, пока лежит снег
+            Ensure<RoofSnow>();
             Ensure<SeasonGrading>();
             Ensure<SeasonAmbience>();
             Ensure<RainTuner>();

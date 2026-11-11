@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Landmarks under snow: cleared asphalt and paving (a dark wet strip between white snow banks), dirt and gravel packed over the whole carriageway with dark wheel ruts, fields that differ (winter crop white with dark tramlines, stubble poking through, autumn plough with dark crests; `FieldSnow`), field margins as a ragged strip of weeds, greyer snow under crowns (tree belts), dark ground greying the snow to 0.7 (was 0.8).
+- Snow on roofs in winter: `GeoWorld/Home` lays snow on every surface facing up by `_SnowCover` (`HomeSnow`: at full cover pitches to ~55° are white and steeper ones shed it, with less it lies in patches that grow with the cover and thin snow shows the roof; never in holes torn into a roof), and `RoofSnow` (added by `WorldEnvironment`) puts the URP Lit materials of the loaded buildings — merged city chunks, library homes, editable buildings — on that shader while snow lies, restoring URP Lit and its keywords without snow and on exit.
+
 ## 1.21.1
 
 1.21.0 was tagged on a commit whose `package.json` still said 1.20.0: every project on it, or on a commit after it, was told "Geo World 1.21.0 is available" on every editor start, and taking the update moved a project pinned past the tag back to it (and still said 1.20.0, so it offered the update again). 1.21.1 is the whole of 1.21.0 and the fixes below, with `package.json` and `GeoWorldGenerator.Version` saying 1.21.1. A project on 1.21.0 or a commit after it takes 1.21.1 (`#v1.21.1`) and is offered nothing more.

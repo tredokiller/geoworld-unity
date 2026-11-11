@@ -4,6 +4,12 @@
 // home blown out (dark), boarded with OSB, covered with film or only dirty, one look per home. Roofs: missing and
 // cracked sheets in a grid of sheets on the roof's slopes.
 //
+// Snow in winter (HomeSnow, every home, worn or not): on surfaces facing up — roofs, porches, sills — by the global
+// _SnowCover (0..1, Seasons): at full cover flat and pitched roofs up to ~55° are white and steeper ones shed it; with
+// less snow it lies in patches that grow with the cover (melted first on steep slopes and where the noise says), thin
+// snow shows the roof through. Not in holes torn into a roof. RoofSnow (Environment) puts the URP Lit materials of the
+// world's buildings on this shader for the session, so library homes and merged city chunks get snow too.
+//
 // SRP Batcher: the material is URP Lit's (LitInput.hlsl), and the wear is carried in properties URP Lit leaves unused
 // without their keywords — _Parallax the wear (0 none, 1 heaviest; no _PARALLAXMAP), _ClearCoatMask 1 for a roof surface,
 // _ClearCoatSmoothness the eaves' height above the model's origin in tens of metres — so the shadow, depth and meta
@@ -151,9 +157,45 @@ Shader "GeoWorld/Home"
 
             half HomeLuminance(half3 c) { return dot(c, half3(0.2126, 0.7152, 0.0722)); }
 
-            // The wear of a home after the battle, on the surface before it is lit (see the header).
-            void HomeWear(inout SurfaceData s, float3 positionWS, float3 normalWS)
+            // snow on the ground in winter, 0..1 (Seasons; 0 in other seasons)
+            float _SnowCover;
+
+            // Snow on the surfaces of a home facing up (see the header). open: 0 where there is nothing for snow to lie on
+            // (a hole in the roof); fine: how much of the fine noise a pixel can show (1 near, 0 where it covers it).
+            void HomeSnow(inout SurfaceData s, float3 positionWS, float3 normalWS, half open, half fine)
             {
+                half cover = saturate(_SnowCover);
+                [branch] if (cover < 0.001 || open < 0.01)
+                    return;
+
+                // slope: flat holds all; heavier snow stays on steeper pitches (~45° at half cover, ~55° at full)
+                half up = normalWS.y;
+                half hold = smoothstep(lerp(0.8, 0.5, cover), lerp(0.92, 0.62, cover), up);
+                [branch] if (hold < 0.001)
+                    return;
+
+                float2 p = positionWS.xz;
+                // patches: ~4 m and ~1 m (the fine one only where a pixel can show it); they grow with the cover and close
+                // at full cover
+                float n = HomeNoise(p / 4.3, 301u) * 0.65 + lerp(0.175, HomeNoise(p / 1.1, 307u) * 0.35, fine);
+                float threshold = 1.0 - cover * 1.2;
+                half amount = smoothstep(threshold - 0.06, threshold + 0.06, n) * hold * open;
+                // thin snow lets the roof show through; deeper is solid white
+                amount *= lerp(0.7, 1.0, cover);
+
+                half3 snow = half3(0.86, 0.875, 0.91) * (0.94 + 0.12 * HomeNoise(p / 2.3, 311u));
+                s.albedo = lerp(s.albedo, snow, amount);
+                s.smoothness = lerp(s.smoothness, 0.25, amount);
+                s.metallic = lerp(s.metallic, 0.0, amount);
+                s.specular = lerp(s.specular, half3(0.04, 0.04, 0.04), amount);
+                s.occlusion = lerp(s.occlusion, 1.0, amount * 0.5);
+                s.normalTS = normalize(lerp(s.normalTS, half3(0, 0, 1), amount));
+            }
+
+            // The wear of a home after the battle, on the surface before it is lit (see the header).
+            void HomeWear(inout SurfaceData s, float3 positionWS, float3 normalWS, out half hole)
+            {
+                hole = 0;
                 half wear = saturate(_Parallax);
                 [branch] if (wear < 0.02)
                     return;
@@ -177,6 +219,7 @@ Shader "GeoWorld/Home"
                     if (r < 0.16 * wear)
                     {
                         // a hole into the dark attic
+                        hole = 1;
                         s.albedo *= 0.05;
                         s.smoothness = 0;
                         s.occlusion *= 0.25;
@@ -269,7 +312,12 @@ Shader "GeoWorld/Home"
 
                 SurfaceData surfaceData;
                 InitializeStandardLitSurfaceData(input.uv, surfaceData);
-                HomeWear(surfaceData, input.positionWS, normalize(input.normalWS));
+                float3 geometryNormal = normalize(input.normalWS);
+                // derivatives before the branches of the wear and the snow
+                float footprint = max(length(ddx(input.positionWS.xz)), length(ddy(input.positionWS.xz)));
+                half hole;
+                HomeWear(surfaceData, input.positionWS, geometryNormal, hole);
+                HomeSnow(surfaceData, input.positionWS, geometryNormal, 1.0 - hole, saturate(1.5 - footprint / 0.5));
 
             #ifdef LOD_FADE_CROSSFADE
                 LODFadeCrossFade(input.positionCS);
