@@ -46,6 +46,9 @@ namespace _Game.Scripts.World
         private int _ruinVersion = -1;
         private Vector2 _centre;
         private float _nextCheck;
+        private System.Threading.Tasks.Task<Snapshot> _job;
+        private readonly List<RuinField.Ruin> _ruins = new List<RuinField.Ruin>();
+        private float[] _value;
 
         public static WarMap Instance { get; private set; }
 
@@ -130,6 +133,17 @@ namespace _Game.Scripts.World
 
         private void LateUpdate()
         {
+
+            // the map is counted on a worker thread (a city's ruins and craters took 150-200 ms of one frame); its texture is
+            // filled here when the count is done
+            if (_job != null)
+            {
+                if (!_job.IsCompleted)
+                    return;
+
+                FinishBuild();
+            }
+
             if (Time.unscaledTime < _nextCheck)
                 return;
 
@@ -147,16 +161,17 @@ namespace _Game.Scripts.World
             if (!moved && craters == _craters && RuinField.Version == _ruinVersion)
                 return;
 
-            Build(at, craters);
+            StartBuild(at, craters);
         }
 
-        private void Build(Vector2 centre, CraterField craters)
+        private void StartBuild(Vector2 centre, CraterField craters)
         {
             _craters = craters;
             _ruinVersion = RuinField.Version;
             _centre = centre;
             var origin = new Vector2(Mathf.Floor((centre.x - Window * 0.5f) / Texel) * Texel, Mathf.Floor((centre.y - Window * 0.5f) / Texel) * Texel);
-            bool war = (craters != null && craters.craters.Length > 0) || RuinField.Count > 0;
+            CraterField.Crater[] craterList = craters != null ? craters.craters : null;
+            bool war = (craterList != null && craterList.Length > 0) || RuinField.Count > 0;
 
             if (!war)
             {
@@ -166,17 +181,49 @@ namespace _Game.Scripts.World
                 return;
             }
 
-            var value = new float[Texels * Texels];
+            // the worker reads a copy of the ruins (the field changes as tiles come and go); crater arrays are replaced, never changed
+            _ruins.Clear();
+            _ruins.AddRange(RuinField.All);
+            List<RuinField.Ruin> ruins = _ruins;
+            _value ??= new float[Texels * Texels];
+            float[] value = _value;
+            _job = System.Threading.Tasks.Task.Run(() => Count(origin, craterList, ruins, value));
+        }
+
+        private void FinishBuild()
+        {
+            System.Threading.Tasks.Task<Snapshot> job = _job;
+            _job = null;
+
+            if (job.IsFaulted)
+            {
+                Debug.LogException(job.Exception);
+                return;
+            }
+
+            Snapshot map = job.Result;
+            _map.SetPixelData(map.bytes, 0);
+            _map.Apply(false, false);
+            _cpu = map;
+            Version++;
+            Shader.SetGlobalTexture(MapId, _map);
+            Shader.SetGlobalVector(RectId, new Vector4(map.origin.x, map.origin.y, 1f / Window, Texels));
+            Shader.SetGlobalFloat(OnId, 1f);
+        }
+
+        private static Snapshot Count(Vector2 origin, CraterField.Crater[] craters, List<RuinField.Ruin> ruins, float[] value)
+        {
+            Array.Clear(value, 0, value.Length);
 
             // воронки: счёт по текселям поля шире окна на радиус круга (у края окна — и воронки за ним), потом сумма по
             // квадрату ~120 м (суммы по таблице) — воронок на гектар
-            if (craters != null && craters.craters.Length > 0)
+            if (craters != null && craters.Length > 0)
             {
                 const int r = CraterRadiusTexels;
                 int wide = Texels + 2 * r, n1 = wide + 1;
                 var count = new int[n1 * n1];
 
-                foreach (CraterField.Crater c in craters.craters)
+                foreach (CraterField.Crater c in craters)
                 {
                     int ix = Mathf.FloorToInt((c.x - origin.x) / Texel) + r, iz = Mathf.FloorToInt((c.z - origin.y) / Texel) + r;
 
@@ -203,7 +250,7 @@ namespace _Game.Scripts.World
             }
 
             // руины: у стены по состоянию, к краю охвата (35 м плюс половина высоты) — нуль
-            foreach (RuinField.Ruin ruin in RuinField.All)
+            foreach (RuinField.Ruin ruin in ruins)
             {
                 float peak = ruin.state >= GeoWorld.GeoConditionState.Destroyed ? 0.95f : ruin.state >= GeoWorld.GeoConditionState.HeavilyDamaged ? 0.7f : 0.35f;
                 float reach = 35f + 0.5f * ruin.height;
@@ -225,18 +272,13 @@ namespace _Game.Scripts.World
                 }
             }
 
+            // a new byte array each time: readers on other threads (ForestFloor) may still hold the previous snapshot
             var bytes = new byte[Texels * Texels];
 
             for (int i = 0; i < bytes.Length; i++)
                 bytes[i] = (byte)Mathf.Clamp(Mathf.RoundToInt(value[i] * 255f), 0, 255);
 
-            _map.SetPixelData(bytes, 0);
-            _map.Apply(false, false);
-            _cpu = new Snapshot { bytes = bytes, origin = origin };
-            Version++;
-            Shader.SetGlobalTexture(MapId, _map);
-            Shader.SetGlobalVector(RectId, new Vector4(origin.x, origin.y, 1f / Window, Texels));
-            Shader.SetGlobalFloat(OnId, 1f);
+            return new Snapshot { bytes = bytes, origin = origin };
         }
     }
 }

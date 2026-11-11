@@ -282,6 +282,7 @@ namespace _Game.Scripts.World
 
             if (tile.Changed > 0)
             {
+                DropUnusedVariants(tile, data.treePrototypes.Length);
                 data.treePrototypes = tile.Prototypes;
                 data.SetTreeInstances(tile.Trees, false);
             }
@@ -289,6 +290,41 @@ namespace _Game.Scripts.World
             ProcessedTiles++;
             ChangedTrees += tile.Changed;
             return true;
+        }
+
+        // The variants of the profile that no tree of the tile took: Nature Renderer set up a renderer for every prototype of a
+        // terrain. The tile's own prototypes keep their places (GeoTreeHeights and the takeoff point use their indices).
+        private static void DropUnusedVariants(Tile tile, int ownPrototypes)
+        {
+            var used = new bool[tile.Prototypes.Length];
+
+            foreach (TreeInstance tree in tile.Trees)
+                if (tree.prototypeIndex >= 0 && tree.prototypeIndex < used.Length)
+                    used[tree.prototypeIndex] = true;
+
+            var remap = new int[tile.Prototypes.Length];
+            var kept = new List<TreePrototype>(tile.Prototypes.Length);
+
+            for (int i = 0; i < tile.Prototypes.Length; i++)
+            {
+                if (i < ownPrototypes || used[i])
+                {
+                    remap[i] = kept.Count;
+                    kept.Add(tile.Prototypes[i]);
+                }
+                else
+                {
+                    remap[i] = -1;
+                }
+            }
+
+            if (kept.Count == tile.Prototypes.Length)
+                return;
+
+            for (int i = 0; i < tile.Trees.Length; i++)
+                tile.Trees[i].prototypeIndex = remap[tile.Trees[i].prototypeIndex];
+
+            tile.Prototypes = kept.ToArray();
         }
 
         private static bool IsRuntimeData(TerrainData data) =>
@@ -319,8 +355,8 @@ namespace _Game.Scripts.World
 
                     context.Variants[s].Add(new SpeciesChoice
                     {
-                        Prototype = index, Height = GeoTreeHeights.PrefabHeight(prefab),
-                        Footprint = _profile.species[s].lying ? LyingFootprint(prefab) : Vector4.zero
+                        Prototype = index, Height = CachedPrefabHeight(prefab),
+                        Footprint = _profile.species[s].lying ? CachedLyingFootprint(prefab) : Vector4.zero
                     });
                 }
             }
@@ -584,6 +620,26 @@ namespace _Game.Scripts.World
         }
 
         // Ящик LOD0 префаба по xz его корня (min x, min z, max x, max z), с масштабом корня.
+        // A model's height and lying footprint walk its hierarchy and LODs; every tile asked again for all of the profile's variants.
+        private static readonly Dictionary<GameObject, float> PrefabHeights = new Dictionary<GameObject, float>();
+        private static readonly Dictionary<GameObject, Vector4> LyingFootprints = new Dictionary<GameObject, Vector4>();
+
+        private static float CachedPrefabHeight(GameObject prefab)
+        {
+            if (!PrefabHeights.TryGetValue(prefab, out float height))
+                PrefabHeights[prefab] = height = GeoTreeHeights.PrefabHeight(prefab);
+
+            return height;
+        }
+
+        private static Vector4 CachedLyingFootprint(GameObject prefab)
+        {
+            if (!LyingFootprints.TryGetValue(prefab, out Vector4 footprint))
+                LyingFootprints[prefab] = footprint = LyingFootprint(prefab);
+
+            return footprint;
+        }
+
         private static Vector4 LyingFootprint(GameObject prefab)
         {
             LODGroup lod = prefab.GetComponentInChildren<LODGroup>();

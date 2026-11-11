@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+Streaming a package world without long frames. Measured in Komandor's map viewer over a generated 4.8 × 4.8 km Bakhmut battlefield (36 tiles), a fixed 13.4 km flight at 70 m/s and 80 m above the ground, in the editor: frames over 100 ms 150 → 43, over 250 ms 8 → 3, the 99th percentile 160 → 89 ms, the longest frame 756 → 432 ms.
+
+- The war map is counted on a worker thread (`WarMap`): its craters and ruins took 140-200 ms of one frame whenever the camera moved 1 km or a tile came or went (8.3 s of long frames in that flight). The ruins are copied for the worker; the texture is filled when the count is done, a frame or two later.
+- A tile's terrain data is made over several steps of the load budget (`GeoWorldPackageFormat`): the heights and layer weights are decoded on the reading thread in bands of 128 rows, the heights go in band by band without their levels of detail (`SetHeightsDelayLOD`), then the levels of detail at once (`SyncHeightmap`), the weights band by band, then the trees. A 1025 battlefield grid made in one step took 100-135 ms of a frame; the longest step is now about 30 ms.
+- The road map's mesh is built on a worker thread (`RoadMap`): a window of a city's road segments took 40-100 ms when it moved. One window at a time; it is drawn when its mesh is ready.
+- New ruins next to a dressed tile recount its grass in the background, and the new layers go into the copy the tile keeps wearing (`GroundDressing`). Taking the copy off and putting it on again rebuilt the terrain, its collider and Nature Renderer's grass twice, up to 300-400 ms for the neighbours of every city tile that loaded, and the tile stood without grass until it was dressed again. A copy made for another set of grass kinds is still taken off and dressed again.
+- Nature Renderer on a package tile starts a few frames after the tile, one terrain at a time (`PackageTiles` adds `GeoNatureRendererStart`): its setup with a city tile's trees, 100-300 ms, landed in the frame the tile was switched on.
+- The tree species of a tile keep only the profile's variants its trees took (`TileTreeSpecies`): Nature Renderer set up a renderer for every prototype of a terrain. A model's height and lying footprint are measured once, not for every tile.
+- `NatureRendererSettings` sets only the values that changed, and the tree shadow distance alone when `ShadowRange` moves it: a setting given its own value again made Nature Renderer reload its renderers, about 250 ms of one frame.
+
 ## 1.22.0
 
 World-only assets are out of `Resources`. A `Resources` folder goes into every player of a project, and these, with what they refer to, put some 1.2 GB into players that show no Geo World: in the FPV Drones Defence game the VR player grew from about 650 MB to 1.3 GB, and with them out of `Resources` it is 536 MB, the tablet player 239 MB instead of 549 MB.

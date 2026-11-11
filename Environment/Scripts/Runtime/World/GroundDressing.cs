@@ -104,6 +104,7 @@ namespace _Game.Scripts.World
 
         private readonly Dictionary<Terrain, Tile> _tiles = new();
         private readonly List<Terrain> _gone = new();
+        private readonly HashSet<Terrain> _redressQueue = new();
         private readonly List<Tile> _running = new();
         // тайлов, чей спутник ещё читается с GPU (расчёт начнётся по готовности)
         private int _reading;
@@ -146,6 +147,8 @@ namespace _Game.Scripts.World
             public bool Failed;
             // руины у тайла (с полосой 25 м), с которыми он посчитан (KeyOf): руины соседа приходят с его тайлом позже
             public int RuinKey;
+            // the tile is recounted for new ruins while it keeps wearing its copy: the new layers go into that copy
+            public bool Redress;
         }
 
         // Всё, что нужно расчёту в фоновом потоке: без объектов Unity.
@@ -328,9 +331,56 @@ namespace _Game.Scripts.World
 
             // за проверку — один новый расчёт: его подготовка читает землю тайла в главном потоке (не в одном кадре со
             // сборкой травы тайла)
-            if (!changed && _running.Count + _reading < MaxParallelJobs)
-                StartNearestTile();
+            if (!changed && _running.Count + _reading < MaxParallelJobs && !StartNearestTile())
+                StartNextRedress();
         }
+
+        // The nearest tile waiting to be recounted for new ruins (RedressForRuins): prepared like a new tile, keeping its copy.
+        private void StartNextRedress()
+        {
+            Terrain nearest = null;
+            float nearestDistance = float.MaxValue;
+            _gone.Clear();
+
+            foreach (Terrain terrain in _redressQueue)
+            {
+                if (terrain == null || !_tiles.TryGetValue(terrain, out Tile queued) || queued.Job != null || queued.Copy == null || terrain.terrainData != queued.Copy ||
+                    queued.Counts != null)
+                {
+                    _gone.Add(terrain);
+                    continue;
+                }
+
+                float distance = _hasEye ? DistanceToTile(terrain, _eye) : 0f;
+
+                if (distance < nearestDistance)
+                {
+                    nearestDistance = distance;
+                    nearest = terrain;
+                }
+            }
+
+            foreach (Terrain terrain in _gone)
+                _redressQueue.Remove(terrain);
+
+            if (nearest == null)
+                return;
+
+            _redressQueue.Remove(nearest);
+            Tile old = _tiles[nearest];
+            Tile tile = Prepare(nearest, old.Source, readSatellite: false);
+            tile.Copy = old.Copy;
+            tile.StaleCopy = old.StaleCopy;
+            tile.Redress = true;
+            _tiles[nearest] = tile;
+            _frameMilliseconds += tile.MainMilliseconds;
+
+            if (!RequestSatellite(tile))
+                StartJob(tile);
+        }
+
+        // The data a tile wears while it is being built: its source, or the copy it keeps while it is recounted for new ruins.
+        private static TerrainData BuiltOn(Tile tile) => tile.Redress ? tile.Copy : tile.Source;
 
         // Рендерер травы — только у одетых тайлов рядом: ближнему без него собираем, дальнему снимаем, по одному за
         // проверку. Есть ли он — спрашиваем у Nature Renderer: если тот перезапустится и соберёт траву сам, снимем снова.
@@ -513,6 +563,16 @@ namespace _Game.Scripts.World
                     tile.Counts != null || RuinKeyOf(pair.Key) == tile.RuinKey)
                     continue;
 
+                // Recounted in the background, the new layers laid into the copy the tile keeps wearing (StartNextRedress):
+                // putting the original data back and the copy on again rebuilt the terrain, its collider and Nature Renderer's
+                // grass twice, up to 300 ms of one frame for the neighbours of every city tile that loaded. A copy made for
+                // another set of grass kinds is taken off and dressed again as before.
+                if (tile.Copy.detailPrototypes.Length == ValidDetails().Length)
+                {
+                    _redressQueue.Add(pair.Key);
+                    continue;
+                }
+
                 NatureRendererTerrain.SwapGrass(pair.Key, tile.Source);
                 TerrainCollider collider = pair.Key.GetComponent<TerrainCollider>();
 
@@ -632,6 +692,14 @@ namespace _Game.Scripts.World
             if (tile.Job.IsFaulted)
             {
                 Debug.LogWarning($"[GroundDressing] Tile dressing failed: {tile.Job.Exception?.GetBaseException().Message}");
+
+                if (tile.Redress)
+                {
+                    tile.Redress = false;
+                    tile.Job = null;
+                    return;
+                }
+
                 _tiles.Remove(tile.Terrain);
                 return;
             }
@@ -650,7 +718,7 @@ namespace _Game.Scripts.World
             foreach (Tile tile in _tiles.Values)
             {
                 // считается, выгружен, уже одет или его держит генератор точки
-                if (tile.Job != null || tile.Terrain == null || tile.Terrain.terrainData != tile.Source)
+                if (tile.Job != null || tile.Terrain == null || tile.Terrain.terrainData != BuiltOn(tile))
                     continue;
 
                 if (tile.Counts == null && tile.Copy == null)
@@ -673,7 +741,7 @@ namespace _Game.Scripts.World
         private void ContinueBuild(Tile tile)
         {
             // тайл выгружен или его взял генератор точки: собранное подождёт
-            if (tile.Terrain == null || tile.Terrain.terrainData != tile.Source)
+            if (tile.Terrain == null || tile.Terrain.terrainData != BuiltOn(tile))
             {
                 _building = null;
                 return;
@@ -695,6 +763,7 @@ namespace _Game.Scripts.World
                 else
                 {
                     Bind(tile.Terrain, tile.Copy, NearForGrass(tile));
+                    tile.Redress = false;
                     bound = true;
                 }
             }
@@ -1622,7 +1691,8 @@ namespace _Game.Scripts.World
             {
                 byte[] layer = tile.Counts[tile.AppliedLayers];
 
-                if (!HasDetail(layer))
+                // a new copy's layers start empty; a recounted one may hold grass where the layer has none now
+                if (!HasDetail(layer) && !tile.Redress)
                     continue;
 
                 tile.Copy.SetDetailLayer(0, 0, tile.AppliedLayers, ToGrid(layer, n, _grid));

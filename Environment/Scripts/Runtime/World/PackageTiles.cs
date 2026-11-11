@@ -59,8 +59,10 @@ namespace _Game.Scripts.World
             // Nature Renderer рисует деревья, с которыми начал: уже стоящий — заново
             if (GeoWorld.GeoNatureRenderer.Of(terrain) != null)
                 GeoNatureRenderer.Refresh(terrain);
-            else
-                GeoNatureRenderer.Ensure(terrain);
+            else if (GeoNatureRenderer.Ensure(terrain) != null && terrain.GetComponent<GeoNatureRendererStart>() == null)
+                // Nature Renderer sets a terrain up on its first LateUpdate (100-300 ms with a city tile's trees): held back to
+                // a later frame, one terrain at a time, instead of the frame the tile is switched on
+                terrain.gameObject.AddComponent<GeoNatureRendererStart>();
         }
 
         // Куски дорог и перекрёстков тайла (GeoWorldBuild: «Roads x_z | материал», «Junctions x_z | материал» в группе дорог)
