@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 1.22.1
+
 Streaming a package world without long frames. Measured in Komandor's map viewer over a generated 4.8 × 4.8 km Bakhmut battlefield (36 tiles), a fixed 13.4 km flight at 70 m/s and 80 m above the ground, in the editor: frames over 100 ms 150 → 43, over 250 ms 8 → 3, the 99th percentile 160 → 89 ms, the longest frame 756 → 432 ms.
 
 - The war map is counted on a worker thread (`WarMap`): its craters and ruins took 140-200 ms of one frame whenever the camera moved 1 km or a tile came or went (8.3 s of long frames in that flight). The ruins are copied for the worker; the texture is filled when the count is done, a frame or two later.
