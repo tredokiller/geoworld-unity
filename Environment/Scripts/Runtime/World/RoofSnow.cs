@@ -87,7 +87,7 @@ namespace _Game.Scripts.World
         private void Scan()
         {
             if (_home == null)
-                _home = GeoRuntimeAssets.Shader(HomeShader);
+                _home = GeoAssets.Shader(HomeShader);
 
             if (_home == null)
             {
