@@ -7,12 +7,11 @@ namespace _Game.Scripts.World
     /// Фактуры полотна дорог (RoadMap → GroundRoads.hlsl), которым нужен свой массив: асфальт — полосы поперёк дороги
     /// GeoWorld (GeoRoadTextures: u — ширина stripWidthMetres, v — длина stripLengthMetres, тайлится вдоль дороги; от почти
     /// нового к разбитому — колеи, заплаты с тёмными швами, трещины, сетка трещин, выбоины, пыль с обочин; без разметки).
-    /// Текстуры лежат в пакете; набор их держит, чтобы они попали в билд. Строит Tools/Environment/Build Road Surface Set
-    /// (RoadSurfaceSetBuilder).
+    /// Текстуры лежат в пакете; набор их держит, чтобы они попали в бандлы мира (Addressables, GeoAddressableAssets). Строит
+    /// Tools/Environment/Build Road Surface Set (RoadSurfaceSetBuilder).
     /// </summary>
     public sealed class RoadSurfaceSet : ScriptableObject
     {
-        public const string ResourcePath = "Terrain/RoadSurfaceSet";
 
         public Texture2D[] asphaltAlbedo = Array.Empty<Texture2D>();
         public Texture2D[] asphaltNormal = Array.Empty<Texture2D>();

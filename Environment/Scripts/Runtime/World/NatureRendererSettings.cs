@@ -142,7 +142,11 @@ namespace _Game.Scripts.World
                 return;
 
             treeShadowDistance = distance;
-            Apply();
+
+            if (_defaultSettings != null)
+                SetProperty(_defaultSettings.GetType(), _defaultSettings, "TreeShadowDistance", treeShadowDistance);
+            else
+                Apply();
         }
 
         private void OnValidate()
@@ -239,8 +243,15 @@ namespace _Game.Scripts.World
         {
             PropertyInfo property = type.GetProperty(propertyName, Members);
 
+            // a setting given its own value again still made Nature Renderer reload its renderers (ShadowRange moving the tree
+            // shadows by a step took ~250 ms of one frame), so only changed values are set
             if (property != null && property.CanWrite)
+            {
+                if (property.CanRead && Equals(property.GetValue(target), value))
+                    return;
+
                 property.SetValue(target, value);
+            }
             else
                 Debug.LogWarning($"[NatureRendererSettings] {type.Name}.{propertyName} not found");
         }

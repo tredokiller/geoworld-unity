@@ -7,7 +7,7 @@ namespace _Game.Scripts.World
     /// Какие деревья где растут на тайлах GeoWorld (TileTreeSpecies): виды с вариантами префабов и смесь видов по месту —
     /// лес хвойный (OSM leaf_type=needleleaved или песок вокруг: сосновые боры на песчаных террасах Северского Донца), лес
     /// лиственный (дубравы с ясенем, клёном, липой), лесополосы, посёлки, берега. Общий для всех карт, лежит в
-    /// Resources/World/TreeSpeciesProfile; контуры лесов с типом листвы — свои у каждого мира (TreeLeafAreas на его
+    /// Environment/Profiles/TreeSpeciesProfile (Addressables, GeoAddressableAssets); контуры лесов с типом листвы — свои у каждого мира (TreeLeafAreas на его
     /// WorldMapData).
     /// </summary>
     [CreateAssetMenu(menuName = "Configs/World/Tree Species Profile", fileName = "TreeSpeciesProfile")]

@@ -9,7 +9,7 @@ namespace _Game.Scripts.World
     /// Набор фото-текстур земли для фактуры вблизи камеры (GroundDetail, GroundDetail.hlsl): слои (альбедо, нормали, маска —
     /// R высота, G AO, B гладкость; все одного размера и сжатия — из них собираются массивы текстур) и какие слои у каждого
     /// класса земли GeoWorld. Собирает его Tools/Environment/Build Ground Detail Set (GroundDetailSetBuilder) из
-    /// Environment/Textures/Ground пакета; лежит в его Resources/Terrain/GroundDetailSet.
+    /// Environment/Textures/Ground пакета; лежит в его Environment/Profiles/GroundDetailSet (Addressables, GeoAddressableAssets).
     /// </summary>
     [CreateAssetMenu(menuName = "Configs/World/Ground Detail Set", fileName = "GroundDetailSet")]
     public sealed class GroundDetailSet : ScriptableObject

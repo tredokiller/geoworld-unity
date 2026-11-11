@@ -77,7 +77,6 @@ namespace _Game.Scripts.Locations
         private const float TreeLoaderTimeout = 10f;
         private const int ReattachCheckFrames = 15;
         private const float RuntimeDataDestroyDelay = 2f;
-        private const string TerrainMaterialResource = "Terrain/TakeoffTerrainLit";
         // листва кустов (ива, клён) — на шейдере NatureManufacture без поры года; ей — его вариант с порой года
         private const string NatureManufactureFoliageShader = "NatureManufacture/URP/Foliage/Foliage";
         private const string SeasonalFoliageShader = "NatureManufacture/URP/Foliage/Foliage (Nature Renderer)";
@@ -818,13 +817,14 @@ namespace _Game.Scripts.Locations
         /// Материал и шейдер террейна тайла приходят из бандла Addressables, а сборка оставляет в шейдере только
         /// варианты для материалов из бандлов: один спутниковый слой, без _NORMALMAP и _MASKMAP. Трава, грунт и
         /// гравий точки взлёта в билде рисовались мылом (в редакторе бандлов нет — там было нормально).
-        /// Террейн получает копию игрового материала Resources/Terrain/TakeoffTerrainLit (URP Terrain Lit с этими
-        /// ключевыми словами и instancing): его варианты попадают в билд. RestoreRuntimeTerrainData возвращает прежний.
+        /// Террейн получает копию игрового материала TakeoffTerrainLit (URP Terrain Lit с этими ключевыми словами и
+        /// instancing; из Addressables, GeoAddressableAssets): его варианты попадают в бандлы мира.
+        /// RestoreRuntimeTerrainData возвращает прежний.
         /// </summary>
         private void EnableLayerMaps(Terrain terrain)
         {
             Material original = terrain.materialTemplate;
-            Material template = Resources.Load<Material>(TerrainMaterialResource);
+            Material template = GeoAddressableAssets.Load<Material>(GeoAddressableAssets.TakeoffTerrainLit);
 
             if (original == null || template == null)
                 return;

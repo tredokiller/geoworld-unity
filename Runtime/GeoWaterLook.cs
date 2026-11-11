@@ -20,11 +20,13 @@ namespace GeoWorld
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void ResetState() { shared = null; }
 
-        // The shared water material: the project's, or the package's (null if both are missing: the tile keeps its own).
+        // The shared water material: the game's (GeoAddressableAssets.ProjectWater, by address), the project's, or the package's
+        // (null if all are missing: the tile keeps its own).
         public static Material Material
         {
             get
             {
+                if (!shared) shared = GeoAddressableAssets.Load<Material>(GeoAddressableAssets.ProjectWater);
                 if (!shared) shared = Resources.Load<Material>(ProjectResource);
                 if (!shared) shared = Resources.Load<Material>(Resource);
                 return shared;

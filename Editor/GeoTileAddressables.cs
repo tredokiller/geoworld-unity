@@ -74,7 +74,9 @@ namespace GeoWorld.Editor
         // pictures, tree prefabs, the shaders of every material) go into a group of their own, one bundle. An asset in no group
         // is copied by Addressables into every bundle that uses it: each tile's bundle had its own copy of the URP shaders and
         // of every home model and texture it shows, which in a town tile is most of its bundle. Assets in a Resources folder
-        // are left alone (they are in the player already). Returns how many assets were added.
+        // are left alone (they are in the player already). The assets a player loads by address (GeoAddressableAssets: tree
+        // species, ground detail, wet terrain and water materials, the tiles' tree data) go into it too. Returns how many
+        // assets were added.
         public static int ShareDependencies(GeoTiledWorld world)
         {
             var settings = AddressableAssetSettingsDefaultObject.GetSettings(true);
@@ -103,6 +105,27 @@ namespace GeoWorld.Editor
                 string guid = AssetDatabase.AssetPathToGUID(pair.Key);
                 if (string.IsNullOrEmpty(guid) || settings.FindAssetEntry(guid) != null) continue; // in a group already (this or the user's)
                 settings.CreateOrMoveEntry(guid, group, false, false);
+                added++;
+            }
+            var addressed = new List<string>(GeoAddressableAssets.All);
+            // the tiles' tree data: named by the hash of the folder of the tile's assets (GeoTreeDataExporter.ResourceKey),
+            // where the tile scenes are too
+            var folders = new HashSet<string>();
+            foreach (var tile in world.tiles)
+                foreach (string path in new[] { tile.assetPath, tile.scenePath })
+                    if (!string.IsNullOrEmpty(path)) folders.Add(UnityEngine.Hash128.Compute(Path.GetDirectoryName(path).Replace('\\', '/')) + "_");
+            if (AssetDatabase.IsValidFolder(GeoTreeDataExporter.Folder))
+                foreach (string guid in AssetDatabase.FindAssets("t:GeoTreeData", new[] { GeoTreeDataExporter.Folder }))
+                {
+                    string path = AssetDatabase.GUIDToAssetPath(guid), name = Path.GetFileName(path);
+                    foreach (string folder in folders)
+                        if (name.StartsWith(folder)) { addressed.Add(path); break; }
+                }
+            foreach (string path in addressed)
+            {
+                string guid = AssetDatabase.AssetPathToGUID(path, AssetPathToGUIDOptions.OnlyExistingAssets);
+                if (string.IsNullOrEmpty(guid) || settings.FindAssetEntry(guid) != null) continue;
+                settings.CreateOrMoveEntry(guid, group, false, false).address = path;
                 added++;
             }
             if (added > 0) settings.SetDirty(AddressableAssetSettings.ModificationEvent.BatchModification, null, true, true);

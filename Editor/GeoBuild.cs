@@ -132,7 +132,7 @@ namespace GeoWorld.Editor
             }
             if (sharedBundles.Count > 0) text.AppendLine($"  shared bundle     {Size(sharedBundles.Sum(f => f.Length)),10}  the models, pictures and shaders the tiles share");
             if (otherBundles.Count > 0) text.AppendLine($"  other bundles     {Size(otherBundles.Sum(f => f.Length)),10}  {otherBundles.Count} bundles");
-            if (resources.Count > 0) text.AppendLine($"  Resources         {Size(resources.Sum(f => f.Length)),10}  the tiles' tree data (Assets/Resources/TerrainChunker/TreeData) and other Resources");
+            if (resources.Count > 0) text.AppendLine($"  Resources         {Size(resources.Sum(f => f.Length)),10}  the project's Resources (in every player, with a world or without)");
             text.AppendLine($"  player data       {Size(data.Sum(f => f.Length)),10}  scenes in Build Settings, the engine, scripts");
             text.AppendLine($"  executable etc.   {Size(total - bundles.Sum(f => f.Length) - resources.Sum(f => f.Length) - data.Sum(f => f.Length)),10}");
             return text.ToString();

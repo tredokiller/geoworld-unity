@@ -414,6 +414,8 @@ namespace GeoWorld
         {
             public string name; public int resolution, alphamapResolution, baseMapResolution, detailResolution, detailPerPatch; public Vector3 size; public byte[] heights; public RefData[] layers; public byte[] weights;
             public (RefData prefab, float bend, int lod)[] prototypes; public TreeInstance[] trees;
+            // decoded on the reading thread, in bands of rows the builder gives the terrain one step at a time
+            public List<(int row, float[,] values)> heightBands; public List<(int row, float[,,] values)> weightBands;
         }
         internal sealed class HomeSetData { public string name; public float cull; public List<(string name, List<(string name, RefData mesh, RefData[] materials, Vector3 position, Vector3 scale, Quaternion rotation)> parts)> homes = new List<(string, List<(string, RefData, RefData[], Vector3, Vector3, Quaternion)>)>(); }
         internal sealed class NodeData { public string name; public int parent; public Vector3 position, scale; public Quaternion rotation; public bool active; public int layer; public readonly List<ComponentData> components = new List<ComponentData>(); }
@@ -538,7 +540,37 @@ namespace GeoWorld
                 d.trees[i] = new TreeInstance { position = RVec(r), widthScale = r.ReadSingle(), heightScale = r.ReadSingle(), rotation = r.ReadSingle(),
                     color = RC32(r), lightmapColor = RC32(r), prototypeIndex = r.ReadInt32() };
             d.detailResolution = r.ReadInt32(); d.detailPerPatch = r.ReadInt32();
+            DecodeTerrainBands(d);
             return d;
+        }
+
+        const int TerrainBandRows = 128;
+
+        // The heights and the layer weights as the floats the terrain takes, in bands of rows: a 1025 battlefield grid decoded
+        // and set in one step on the main thread took 100-135 ms of one frame.
+        static void DecodeTerrainBands(TerrainDataData d)
+        {
+            int n = d.resolution;
+            d.heightBands = new List<(int, float[,])>();
+            for (int row = 0; row < n; row += TerrainBandRows)
+            {
+                int rows = Math.Min(TerrainBandRows, n - row);
+                var band = new float[rows, n];
+                for (int z = 0, k = row * n * 2; z < rows; z++) for (int x = 0; x < n; x++, k += 2) band[z, x] = (d.heights[k] | d.heights[k + 1] << 8) / 65535f;
+                d.heightBands.Add((row, band));
+            }
+            d.heights = null;
+            if (d.layers.Length == 0 || d.weights == null) return;
+            int a = d.alphamapResolution, layers = d.layers.Length;
+            d.weightBands = new List<(int, float[,,])>();
+            for (int row = 0; row < a; row += TerrainBandRows)
+            {
+                int rows = Math.Min(TerrainBandRows, a - row);
+                var band = new float[rows, a, layers];
+                for (int z = 0, k = row * a * layers; z < rows; z++) for (int x = 0; x < a; x++) for (int l = 0; l < layers; l++, k++) band[z, x, l] = d.weights[k] / 255f;
+                d.weightBands.Add((row, band));
+            }
+            d.weights = null;
         }
 
         static HomeSetData ReadHomeSet(BinaryReader r)
@@ -641,6 +673,7 @@ namespace GeoWorld
             readonly GeoTileLoadOptions options;
             int nextObject, nextNode, nextComponentNode;
             readonly List<(LODGroup group, ComponentData data)> lods = new List<(LODGroup, ComponentData)>();
+            TerrainData terrainInProgress; int terrainStage, terrainBand;
             public readonly List<string> missing = new List<string>();
             public GameObject Root => gameObjects.Length > 0 ? gameObjects[0] : null;
 
@@ -671,12 +704,78 @@ namespace GeoWorld
             // Does one piece of work; false when everything is made.
             public bool Step()
             {
+                if (nextObject < data.objects.Count && data.objects[nextObject] is TerrainDataData terrainData)
+                {
+                    TerrainData finished = StepTerrain(terrainData);
+                    if (finished == null) return true;
+                    made[nextObject] = finished; created.Add(finished); nextObject++; return true;
+                }
                 if (nextObject < data.objects.Count) { Last = data.objects[nextObject].GetType().Name.Replace("Data", "") + " " + Name(data.objects[nextObject]); made[nextObject] = MakeObject(data.objects[nextObject]); if (made[nextObject]) created.Add(made[nextObject]); nextObject++; return true; }
                 if (nextNode < data.nodes.Count) { Last = "node " + data.nodes[nextNode].name; MakeNode(nextNode++); return true; }
                 if (nextComponentNode < data.nodes.Count) { Last = "components of " + data.nodes[nextComponentNode].name; MakeComponents(nextComponentNode++); return true; }
                 Last = "levels of detail";
                 if (lods.Count > 0) { foreach (var (group, d) in lods) SetLods(group, d); lods.Clear(); return true; }
                 return false;
+            }
+
+            string TerrainStageName() => terrainStage switch { 0 => "Create", 1 => "Heights", 2 => "Sync", 3 => "Weights", _ => "Trees" };
+
+            // One stage of the terrain per step: the heights band by band without their levels of detail, then the levels of
+            // detail and bounds at once, the layer weights band by band, then the trees. The finished terrain, or null.
+            TerrainData StepTerrain(TerrainDataData d)
+            {
+                Last = "Terrain " + TerrainStageName() + " " + d.name;
+                switch (terrainStage)
+                {
+                    case 0:
+                        terrainInProgress = new TerrainData { name = d.name };
+                        terrainInProgress.heightmapResolution = d.resolution;
+                        terrainInProgress.size = d.size;
+                        terrainStage = 1; terrainBand = 0;
+                        return null;
+                    case 1:
+                    {
+                        var (row, values) = d.heightBands[terrainBand];
+                        terrainInProgress.SetHeightsDelayLOD(0, row, values);
+                        if (++terrainBand >= d.heightBands.Count) terrainStage = 2;
+                        return null;
+                    }
+                    case 2:
+                        terrainInProgress.SyncHeightmap();
+                        terrainInProgress.size = d.size;
+                        if (d.layers.Length > 0)
+                        {
+                            var layers = new TerrainLayer[d.layers.Length];
+                            for (int i = 0; i < layers.Length; i++) layers[i] = Get<TerrainLayer>(d.layers[i]);
+                            terrainInProgress.alphamapResolution = d.alphamapResolution;
+                            terrainInProgress.terrainLayers = layers;
+                        }
+                        terrainStage = d.weightBands != null && d.weightBands.Count > 0 ? 3 : 4; terrainBand = 0;
+                        return null;
+                    case 3:
+                    {
+                        var (row, values) = d.weightBands[terrainBand];
+                        terrainInProgress.SetAlphamaps(0, row, values);
+                        if (++terrainBand >= d.weightBands.Count) terrainStage = 4;
+                        return null;
+                    }
+                    default:
+                    {
+                        var terrain = terrainInProgress;
+                        terrain.baseMapResolution = d.baseMapResolution;
+                        if (d.prototypes.Length > 0)
+                        {
+                            var prototypes = new TreePrototype[d.prototypes.Length];
+                            for (int i = 0; i < prototypes.Length; i++) prototypes[i] = new TreePrototype { prefab = Get<GameObject>(d.prototypes[i].prefab), bendFactor = d.prototypes[i].bend, navMeshLod = d.prototypes[i].lod };
+                            terrain.treePrototypes = prototypes;
+                            terrain.SetTreeInstances(d.trees, false);
+                        }
+                        if (d.detailResolution > 0) terrain.SetDetailResolution(d.detailResolution, Mathf.Max(8, d.detailPerPatch));
+                        d.heightBands = null; d.weightBands = null;
+                        terrainInProgress = null; terrainStage = 0; terrainBand = 0;
+                        return terrain;
+                    }
+                }
             }
 
             static string Name(object o) => o is TextureData t ? t.name : o is MeshData m ? m.name : o is MaterialData x ? x.name : o is LayerData l ? l.name :
@@ -744,39 +843,6 @@ namespace GeoWorld
                             tileSize = l.tileSize, tileOffset = l.tileOffset, specular = l.specular, metallic = l.metallic, smoothness = l.smoothness, normalScale = l.normalScale,
                             diffuseRemapMin = l.remapMin, diffuseRemapMax = l.remapMax, maskMapRemapMin = l.maskMin, maskMapRemapMax = l.maskMax
                         };
-                    case TerrainDataData d:
-                    {
-                        var terrain = new TerrainData { name = d.name };
-                        terrain.heightmapResolution = d.resolution;
-                        terrain.size = d.size;
-                        int n = d.resolution;
-                        var heights = new float[n, n];
-                        for (int z = 0, k = 0; z < n; z++) for (int x = 0; x < n; x++, k += 2) heights[z, x] = (d.heights[k] | d.heights[k + 1] << 8) / 65535f;
-                        terrain.SetHeights(0, 0, heights);
-                        terrain.size = d.size;
-                        if (d.layers.Length > 0)
-                        {
-                            var layers = new TerrainLayer[d.layers.Length];
-                            for (int i = 0; i < layers.Length; i++) layers[i] = Get<TerrainLayer>(d.layers[i]);
-                            terrain.alphamapResolution = d.alphamapResolution;
-                            terrain.terrainLayers = layers;
-                            int a = d.alphamapResolution;
-                            var maps = new float[a, a, layers.Length];
-                            for (int z = 0, k = 0; z < a; z++) for (int x = 0; x < a; x++) for (int l = 0; l < layers.Length; l++, k++) maps[z, x, l] = d.weights[k] / 255f;
-                            terrain.SetAlphamaps(0, 0, maps);
-                        }
-                        terrain.baseMapResolution = d.baseMapResolution;
-                        if (d.prototypes.Length > 0)
-                        {
-                            var prototypes = new TreePrototype[d.prototypes.Length];
-                            for (int i = 0; i < prototypes.Length; i++) prototypes[i] = new TreePrototype { prefab = Get<GameObject>(d.prototypes[i].prefab), bendFactor = d.prototypes[i].bend, navMeshLod = d.prototypes[i].lod };
-                            terrain.treePrototypes = prototypes;
-                            terrain.SetTreeInstances(d.trees, false);
-                        }
-                        if (d.detailResolution > 0) terrain.SetDetailResolution(d.detailResolution, Mathf.Max(8, d.detailPerPatch));
-                        d.heights = null; d.weights = null;
-                        return terrain;
-                    }
                     case HomeSetData s:
                     {
                         var set = ScriptableObject.CreateInstance<GeoHomeSet>();
