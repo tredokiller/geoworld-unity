@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## 1.23.0
+
+Winter that can be read from a drone: landmarks under snow and snow on roofs, by the training's snow cover.
+
 - Landmarks under snow: cleared asphalt and paving (a dark wet strip between white snow banks), dirt and gravel packed over the whole carriageway with dark wheel ruts, fields that differ (winter crop white with dark tramlines, stubble poking through, autumn plough with dark crests; `FieldSnow`), field margins as a ragged strip of weeds, greyer snow under crowns (tree belts), dark ground greying the snow to 0.7 (was 0.8).
 - Snow on roofs in winter: `GeoWorld/Home` lays snow on every surface facing up by `_SnowCover` (`HomeSnow`: at full cover pitches to ~55° are white and steeper ones shed it, with less it lies in patches that grow with the cover and thin snow shows the roof; never in holes torn into a roof), and `RoofSnow` (added by `WorldEnvironment`) puts the URP Lit materials of the loaded buildings — merged city chunks, library homes, editable buildings — on that shader while snow lies, restoring URP Lit and its keywords without snow and on exit.
 
