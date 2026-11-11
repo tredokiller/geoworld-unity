@@ -86,6 +86,11 @@ namespace _Game.Scripts.World
         private readonly List<Vector4> _road = new();
         private readonly List<Vector2> _id = new();
         private readonly List<int> _indices = new();
+        private System.Threading.Tasks.Task _job;
+        private Window _jobWindow;
+        private Vector2 _jobOrigin;
+        private float _jobSize, _jobMargin;
+        private int _jobTexels;
         private readonly RenderTargetIdentifier[] _targets = new RenderTargetIdentifier[2];
         private readonly Window _near = new("Road map", "");
         private readonly Window _far = new("Road map far", "Far");
@@ -157,7 +162,19 @@ namespace _Game.Scripts.World
             Shader.SetGlobalVector(LayersId, _layers);
             Shader.SetGlobalVector(Layers2Id, _layers2);
             Shader.SetGlobalVector(AsphaltId, _asphalt);
-            UpdateWindow(_near, eye, windowSize, resolution, recentreDistance, 0f);
+
+            // a window's road mesh is built on a worker thread (a city's segments took 40-100 ms of one frame) and drawn here
+            // once it is ready; one window at a time
+            if (_job != null)
+            {
+                if (!_job.IsCompleted)
+                    return;
+
+                FinishDraw();
+            }
+
+            if (UpdateWindow(_near, eye, windowSize, resolution, recentreDistance, 0f))
+                return;
 
             if (HasFarWindow)
                 UpdateWindow(_far, eye, farWindowSize, farResolution, farRecentreDistance, farWindowSize / farResolution);
@@ -165,24 +182,52 @@ namespace _Game.Scripts.World
 
         private bool HasFarWindow => farWindowSize > windowSize && farResolution > 1;
 
-        private void UpdateWindow(Window window, Vector2 eye, float size, int texels, float recentre, float margin)
+        // true — the window is being drawn again
+        private bool UpdateWindow(Window window, Vector2 eye, float size, int texels, float recentre, float margin)
         {
             Vector2 centre = window.Origin + Vector2.one * (size * 0.5f);
 
             if (window.Drawn && window.Map.IsCreated() && (eye - centre).sqrMagnitude < recentre * recentre)
-                return;
+                return false;
 
-            Draw(window, eye, size, texels, margin);
+            StartDraw(window, eye, size, texels, margin);
+            return true;
         }
 
         // margin — запас на тексель окна сверх reach: полоса дороги не уже текселя, узкая не проваливается между ними.
-        private void Draw(Window window, Vector2 eye, float size, int texels, float margin)
+        private void StartDraw(Window window, Vector2 eye, float size, int texels, float margin)
         {
             float texel = size / texels;
             // начало окна — по сетке текселей: когда окно переезжает, дорога не дрожит
-            window.Origin = new Vector2(Mathf.Floor((eye.x - size * 0.5f) / texel) * texel, Mathf.Floor((eye.y - size * 0.5f) / texel) * texel);
+            Vector2 origin = new(Mathf.Floor((eye.x - size * 0.5f) / texel) * texel, Mathf.Floor((eye.y - size * 0.5f) / texel) * texel);
+            _jobWindow = window;
+            _jobOrigin = origin;
+            _jobSize = size;
+            _jobTexels = texels;
+            _jobMargin = margin;
+            RoadAreas areas = RoadAreas.Instance;
+            var area = new Rect(origin, Vector2.one * size);
+            float grow = reach + margin;
+            // the lists are the worker's until FinishDraw takes them
+            _job = System.Threading.Tasks.Task.Run(() => BuildLists(areas.SegmentsIn(area), grow));
+        }
+
+        private void FinishDraw()
+        {
+            System.Threading.Tasks.Task job = _job;
+            _job = null;
+
+            if (job.IsFaulted)
+            {
+                Debug.LogException(job.Exception);
+                return;
+            }
+
+            Window window = _jobWindow;
+            float size = _jobSize, margin = _jobMargin;
+            window.Origin = _jobOrigin;
             window.Drawn = true;
-            BuildMesh(window.Mesh, RoadAreas.Instance.SegmentsIn(new Rect(window.Origin, Vector2.one * size)), reach + margin);
+            ApplyMesh(window.Mesh);
 
             _commands.Clear();
             _targets[0] = window.Map;
@@ -206,12 +251,12 @@ namespace _Game.Scripts.World
             Shader.SetGlobalTexture(window.MapId, window.Map);
             Shader.SetGlobalTexture(window.InfoId, window.Info);
             Shader.SetGlobalTexture(window.JunctionId, window.Junction);
-            Shader.SetGlobalVector(window.RectId, new Vector4(window.Origin.x, window.Origin.y, 1f / size, texels));
+            Shader.SetGlobalVector(window.RectId, new Vector4(window.Origin.x, window.Origin.y, 1f / size, _jobTexels));
         }
 
         // Прямоугольник по полотну отрезка с запасом grow за кромкой — четыре вершины; в каждой — концы отрезка, полуширина,
-        // вдоль у A, до конца дороги и вид, фрагмент сам считает до оси.
-        private void BuildMesh(Mesh mesh, RoadAreas.Segment[] segments, float margin)
+        // вдоль у A, до конца дороги и вид, фрагмент сам считает до оси. Runs on a worker thread: no Unity objects here.
+        private void BuildLists(RoadAreas.Segment[] segments, float margin)
         {
             _positions.Clear();
             _a.Clear();
@@ -253,7 +298,10 @@ namespace _Game.Scripts.World
                 _indices.Add(first + 2);
                 _indices.Add(first + 3);
             }
+        }
 
+        private void ApplyMesh(Mesh mesh)
+        {
             mesh.Clear();
             mesh.indexFormat = _positions.Count > 65000 ? IndexFormat.UInt32 : IndexFormat.UInt16;
             mesh.SetVertices(_positions);
