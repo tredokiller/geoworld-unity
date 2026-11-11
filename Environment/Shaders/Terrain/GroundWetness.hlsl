@@ -15,7 +15,9 @@
 //    весной сочнее, зимой бурая, кроны леса на снимке осенью — в цветах осенних деревьев; под деревьями — лесная
 //    подстилка по поре (ForestFloor.hlsl); зимой снег (Snow.hlsl: текстура,
 //    надувы, земля сквозь снег, на грунтовках накатанный) по покрову _SnowCover, вода луж и болот подо льдом — тёмным,
-//    гладким, с белыми трещинами; поверх льда снег полосами по ветру.
+//    гладким, с белыми трещинами; поверх льда снег полосами по ветру. Ориентиры под снегом: асфальт расчищен (тёмная
+//    лента между валами), грунтовки — укатанная серая полоса с тёмными колеями, поля разные (озимь, стерня, зябь —
+//    FieldSnow), межи рваной полосой бурьяна, под кронами снег серее (лесополосы).
 #ifndef GAME_GROUND_WETNESS_INCLUDED
 #define GAME_GROUND_WETNESS_INCLUDED
 
@@ -128,6 +130,7 @@ void GroundWetness(inout InputData inputData, half3 geometryNormalWS, inout half
     // голая земля — по цвету самой земли, до поры года и снега: осенью пожелтевший луг и зимой солома и снег читались
     // «голыми» — лужи разливались по лугу, а трава вокруг них не оседала (PuddleSink решает по карте, без поры)
     half groundGreenness = (albedo.g - max(albedo.r, albedo.b)) / max(albedo.g, 0.02);
+    half groundLuminance = dot(albedo, half3(0.299, 0.587, 0.114));
     half bare = saturate(1 - groundGreenness * 4);
 
     // поля: рядки, колеи техники, борозды по направлению поля (FieldRows.hlsl) — до поры года и снега
@@ -156,7 +159,8 @@ void GroundWetness(inout InputData inputData, half3 geometryNormalWS, inout half
     half roadSurface;
     half roadHollow;
     half roadPaved;
-    GroundRoad(inputData, dpdx, dpdy, albedo, smoothness, occlusion, roadSurface, roadHollow, roadPaved);
+    half4 roadWinter;
+    GroundRoad(inputData, dpdx, dpdy, albedo, smoothness, occlusion, roadSurface, roadHollow, roadPaved, roadWinter);
     GroundRoadScars(inputData, dpdx, dpdy, roadPaved, albedo, smoothness, occlusion);
 
     // вокруг руин: цементная пыль, крошка бетона и кирпича, обломки у стены (GroundRuins.hlsl); голая — мокнет как земля
@@ -176,8 +180,9 @@ void GroundWetness(inout InputData inputData, half3 geometryNormalWS, inout half
 
     [branch] if (_SnowCover > 0.001)
     {
-        // на дорогах снег укатан и серее: по карте дорог, где она есть, иначе по карте земель
-        half packed = max(smoothstep(0.85, 0.95, land.r), roadSurface);
+        // на дорогах снег укатан и серее во всю ширину проезжей части: по карте дорог, где она есть, иначе по карте земель
+        // (грунтовки); расчищенный асфальт — каша по краям и между колёсами
+        half packed = max(max(smoothstep(0.85, 0.95, land.r), roadSurface), roadWinter.x);
         // земля для снега — без подстилки (на дорогах — с полотном)
         half3 snowGround = lerp(albedo, floorless, litter * (1 - roadSurface));
         SnowSurface surface = GetSnowSurface(positionWS, geometryNormalWS, snowGround, packed, distanceToCamera, dpdx, dpdy);
@@ -185,10 +190,46 @@ void GroundWetness(inout InputData inputData, half3 geometryNormalWS, inout half
         snowAlbedo = surface.albedo;
         snowSmoothness = surface.smoothness;
         snowNormal = surface.normalWS;
+
+        // ориентиры сквозь снег. Земля, что проступает (show), — та, что под снегом сейчас в albedo: зябь тёмная, стерня
+        // соломенная, полотно дороги своё. Глубина снега прячет поля немного (на полном покрове они всё равно читаются)
+        half depth = lerp(1.0, 0.8, saturate(_SnowCover));
+        half fieldShow;
+        float fieldTilt;
+        float2 fieldAcross;
+        FieldSnow(positionWS, dpdx, dpdy, groundGreenness, groundLuminance, footprint, fieldShow, fieldTilt, fieldAcross);
+        half show = fieldShow * depth * (1 - roadWinter.x);
+        // колеи колёс на укатанной дороге — снег разъезжен до полотна, тёмные полосы (с высоты — середина дороги серее)
+        show = max(show, roadWinter.y * lerp(0.35, 0.6, roadWinter.z));
+        // асфальт чистят: между колёсами и у кромки остаётся каша
+        half cleared = roadWinter.z * (0.7 + 0.2 * roadWinter.y) * (0.85 + 0.15 * PuddleNoise(positionWS.xz / 3.1 + 17.3));
+        show = max(show, cleared);
+        // под кронами (лесополосы, опушки): ветки, валежник, подрост торчат из снега; за дальностью теней кроны не
+        // затеняют снег — темним сами, иначе лесополоса с высоты — белая полоса с редкими прутьями
+        half crowns = ForestFloorMap(positionWS.xz).b * (1 - roadWinter.x);
+        show = max(show, crowns * 0.12);
+        half shadowFade = 1;
+#if defined(_MAIN_LIGHT_SHADOWS) || defined(_MAIN_LIGHT_SHADOWS_CASCADE) || defined(_MAIN_LIGHT_SHADOWS_SCREEN)
+        shadowFade = GetMainLightShadowFade(positionWS);
+#endif
+        snowAlbedo *= lerp(1, 0.72, crowns * shadowFade);
+        // вал снега за кромкой расчищенной дороги: чистый белый снег (не укатан), поперёк — бугор
+        half berm = roadWinter.w * smoothstep(0.55, 0.85, geometryNormalWS.y);
+        snow = max(snow * (1 - show), berm);
+        snowAlbedo = lerp(snowAlbedo, SEASON_SNOW_COLOR * (1 + (PuddleNoise(positionWS.xz / 2.3 + 5.1) - 0.5) * 0.08), berm);
+        snowSmoothness = lerp(snowSmoothness, 0.25, berm);
+
+        // открытая земля зимой — мёрзлая и сырая от тающего снега, темнее; расчищенный асфальт — мокрый, тёмный, блестит
+        albedo *= lerp(1, 0.85, show * (1 - cleared));
+        albedo *= lerp(1, 0.6, cleared);
+        smoothness = lerp(smoothness, 0.45, cleared);
+
         albedo = lerp(albedo, snowAlbedo, snow);
         smoothness = lerp(smoothness, snowSmoothness, snow);
-        occlusion = lerp(occlusion, 1, snow);
-        inputData.normalWS = normalize(lerp(inputData.normalWS, snowNormal, snow));
+        occlusion = lerp(occlusion, lerp(1, 0.75, crowns), snow);
+        // гребни зяби — наклон поперёк борозд там, где земля торчит
+        float3 groundNormal = normalize(inputData.normalWS + float3(fieldAcross.x, 0, fieldAcross.y) * (fieldTilt * fieldShow));
+        inputData.normalWS = normalize(lerp(groundNormal, snowNormal, snow));
     }
 
     // берег у воды мокрый и в сухую погоду: полоса над урезом темнее и блестит (грунт сильнее травы); под снегом нет

@@ -288,13 +288,18 @@ float AsphaltVariant(float block, half wear)
 }
 
 // Полотно дороги поверх земли. road — доля полотна (снег на нём укатан), hollow — где на нём собирается вода (лужи),
-// paved — доля асфальта и плитки (их рвут воронки, GroundRoadScars).
+// paved — доля асфальта и плитки (их рвут воронки, GroundRoadScars). winter — дорога зимой (снег кладёт GroundWetness):
+// x — проезжая часть любой дороги (снег на ней укатан во всю ширину, а не только по колеям), y — колеи колёс (в них
+// снег разъезжен до земли), z — расчищенное полотно (асфальт и плитку чистят: тёмная мокрая лента), w — снежный вал
+// за кромкой расчищенной дороги (снег, отброшенный плугом). С высоты дорога зимой — тёмная лента между белыми валами
+// или серая укатанная полоса с тёмными колеями, а не снег поля.
 void GroundRoad(inout InputData inputData, float2 dpdx, float2 dpdy, inout half3 albedo, inout half smoothness, inout half occlusion,
-    out half road, out half hollow, out half paved)
+    out half road, out half hollow, out half paved, out half4 winter)
 {
     road = 0;
     hollow = 0;
     paved = 0;
+    winter = 0;
     half pavedShare = 0;
     float2 xz = inputData.positionWS.xz;
     RoadPoint r = SampleRoad(xz);
@@ -314,6 +319,7 @@ void GroundRoad(inout InputData inputData, float2 dpdx, float2 dpdy, inout half3
     half bareSatellite = 1 - smoothstep(-0.05, 0.15, greenness);
 
     half cover = 0;
+    half4 snowRoad = 0;
     half3 colour = albedo;
     half surfaceSmoothness = smoothness;
     half3 normalTS = half3(0, 0, 1);
@@ -337,6 +343,7 @@ void GroundRoad(inout InputData inputData, float2 dpdx, float2 dpdy, inout half3
         worn = max(worn, r.junction * (0.7 + 0.3 * PuddleNoise(xz / 2.1 + 4.7)));
         rut *= 1 - r.junction * 0.4;
         cover = max(rut, worn);
+        snowRoad.xy = half2(carriageway, rut);
 
         RoadTexel dry = RoadTexture(_RoadLayers2.x, xz, dpdx, dpdy);
         RoadTexel mud = RoadTexture(_RoadLayers.z, xz, dpdx, dpdy);
@@ -377,6 +384,8 @@ void GroundRoad(inout InputData inputData, float2 dpdx, float2 dpdy, inout half3
         ao = surface.ao;
         slope = rutOffset > 0 ? RutSlope(x, rutOffset, 0.28, 0.03) * saturate(1 - footprint / 0.4) : 0;
         hollow = rutOffset > 0 ? (1 - smoothstep(0.08, 0.25, d)) * smoothstep(0.35, 0.85, PuddleNoise(float2(r.along / 6.1, x * 0.7 + 2.1))) * 0.8 : 0;
+        // зимой у узкой гравийки одна колея посередине
+        snowRoad.xy = half2(cover, rutOffset > 0 ? rut : RoadStripe(ax, min(0.35, h * 0.5), footprint, saturate(0.7 / max(h * 2, 0.5))));
     }
     else if (r.kind == ROAD_ASPHALT)
     {
@@ -387,6 +396,11 @@ void GroundRoad(inout InputData inputData, float2 dpdx, float2 dpdy, inout half3
         half open = 1 - r.junction;
         cover = carriageway;
         pavedShare = carriageway;
+        // зимой: полотно расчищено, по колёсам (~h/2 от оси) до асфальта, между ними и у кромки — серая каша; за кромкой
+        // вал снега от плуга ~1.5 м (рваный; у бордюра — на тротуаре)
+        half wheels = RoadStripe(abs(ax - h * 0.45), 0.45, footprint, saturate(0.9 / max(h, 0.5)));
+        half berm = smoothstep(h - 0.05, h + 0.3, ax) * (1 - smoothstep(h + 0.9, h + 1.8, ax + ragged * 1.5)) * (1 - r.junction);
+        snowRoad = half4(carriageway, wheels * carriageway, carriageway, berm);
 
         [branch] if (_RoadAsphalt.z > 0.5)
         {
@@ -487,11 +501,13 @@ void GroundRoad(inout InputData inputData, float2 dpdx, float2 dpdy, inout half3
         surfaceSmoothness = paving.smoothness * 0.6;
         normalTS = paving.normalTS;
         ao = paving.ao;
+        snowRoad = half4(cover, 0, cover * 0.8, 0);
     }
     else
     {
         // рельсы: щебень насыпи, шпалы через 0.55 м, рельсы колеи 1520 мм; на переезде — бетонный настил
         cover = max(1 - smoothstep(h - 0.2, h + 0.2, ax + ragged * 0.5), r.junction);
+        snowRoad.x = cover;
         RoadTexel ballast = RoadTexture(_RoadLayers.y, xz, dpdx, dpdy);
         colour = RoadTone(ballast, _RoadLayers.y, half3(0.16, 0.16, 0.165));
         surfaceSmoothness = ballast.smoothness * 0.5;
@@ -513,6 +529,7 @@ void GroundRoad(inout InputData inputData, float2 dpdx, float2 dpdy, inout half3
     }
 
     cover *= r.window * r.fade;
+    winter = snowRoad * (r.window * r.fade);
     road = cover;
     paved = r.kind == ROAD_PAVING ? cover : pavedShare * r.window * r.fade;
     hollow *= cover;

@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Landmarks under snow: cleared asphalt and paving (a dark wet strip between white snow banks), dirt and gravel packed over the whole carriageway with dark wheel ruts, fields that differ (winter crop white with dark tramlines, stubble poking through, autumn plough with dark crests; `FieldSnow`), field margins as a ragged strip of weeds, greyer snow under crowns (tree belts), dark ground greying the snow to 0.7 (was 0.8).
+- Snow on roofs in winter: `GeoWorld/Home` lays snow on every surface facing up by `_SnowCover` (`HomeSnow`: at full cover pitches to ~55° are white and steeper ones shed it, with less it lies in patches that grow with the cover and thin snow shows the roof; never in holes torn into a roof), and `RoofSnow` (added by `WorldEnvironment`) puts the URP Lit materials of the loaded buildings — merged city chunks, library homes, editable buildings — on that shader while snow lies, restoring URP Lit and its keywords without snow and on exit.
+
 ## 1.22.1
 
 Streaming a package world without long frames. Measured in Komandor's map viewer over a generated 4.8 × 4.8 km Bakhmut battlefield (36 tiles), a fixed 13.4 km flight at 70 m/s and 80 m above the ground, in the editor: frames over 100 ms 150 → 43, over 250 ms 8 → 3, the 99th percentile 160 → 89 ms, the longest frame 756 → 432 ms.
