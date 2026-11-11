@@ -56,10 +56,12 @@ float SnowNoise(float2 p, uint salt)
     return lerp(lerp(a, b, u.x), lerp(d, e, u.x), u.y);
 }
 
-// Насколько снег сереет от земли под ним (1 — чистый): тёмное (лес, кусты, пашня) проступает, светлое поле — нет.
+// Насколько снег сереет от земли под ним (1 — чистый): тёмное (лес, кусты, пашня) проступает, светлое поле — нет. Было
+// 0.8..1 — под полным снегом лес, пашня и луг сливались в одну белую равнину; на зимних снимках тёмная земля под тонким
+// снегом заметно серее.
 half SnowOverGround(half3 ground)
 {
-    return lerp(0.8, 1.0, smoothstep(0.03, 0.22, SeasonLuminance(ground)));
+    return lerp(0.7, 1.0, smoothstep(0.03, 0.22, SeasonLuminance(ground)));
 }
 
 struct SnowSurface

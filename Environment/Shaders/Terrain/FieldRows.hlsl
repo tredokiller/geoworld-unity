@@ -141,4 +141,102 @@ void FieldRows(float3 positionWS, float2 dpdx, float2 dpdy, half greenness, inou
         normalWS = normalize(normalWS + float3(across.x, 0.0, across.y) * (tilt * weight));
 }
 
+// Поле под снегом (зимой; GroundWetness после SnowCoverAt): show — доля земли, что проступает сквозь снег в точке,
+// tilt — наклон нормали поперёк рядков (гребни зяби), acrossWS — поперёк рядков в мире. Зимний снимок степи с высоты —
+// лоскутное одеяло, а не ровная белая равнина:
+//  - озимь — почти ровно белая, по ней тёмные пары технологических колей;
+//  - стерня торчит из снега — поле серо-соломенное, полосами прохода комбайна, с рядками вблизи;
+//  - зябь (осенняя пахота, по снимку — тёмная и не зелёная земля, как у FieldRows) — снег в бороздах, гребни и проходы
+//    плуга тёмными штрихами: самое тёмное поле;
+//  - межи — граница поля с не-полем или с другим полем (иной байт карты): бурьян и кусты торчат рваной полосой.
+// Озимь или стерня — по хешу поля, поэтому соседние поля разные, а одно поле одинаково по всей площади. Рисунки сходятся
+// к своим средним, как у FieldRows, но не гаснут с расстоянием: с высоты поля и межи и нужны.
+void FieldSnow(float3 positionWS, float2 dpdx, float2 dpdy, half greenness, half luminance, float footprint,
+    out half show, out float tilt, out float2 acrossWS)
+{
+    show = 0;
+    tilt = 0;
+    acrossWS = float2(1, 0);
+
+    if (_FieldRowsOff > 0.5)
+        return;
+
+    float2 xz = positionWS.xz;
+    float2 warp = (float2(PuddleNoise(xz / 23.0), PuddleNoise(xz / 23.0 + 13.1)) - 0.5) * 8.0;
+    float2 c = xz + warp;
+    uint value = FieldDirectionByte(c);
+    // межа ~4 м у камеры, шире там, где пиксель накрывает метры (с высоты её видно)
+    float reach = clamp(footprint * 1.5, 2.0, 6.0);
+    uint n0 = FieldDirectionByte(c + float2(0.9, 0.45) * reach);
+    uint n1 = FieldDirectionByte(c + float2(-0.45, 0.9) * reach);
+    uint n2 = FieldDirectionByte(c + float2(-0.9, -0.45) * reach);
+    uint n3 = FieldDirectionByte(c + float2(0.45, -0.9) * reach);
+    float fields = (value > 0u ? 1.0 : 0.0) + (n0 > 0u ? 1.0 : 0.0) + (n1 > 0u ? 1.0 : 0.0) + (n2 > 0u ? 1.0 : 0.0) + (n3 > 0u ? 1.0 : 0.0);
+
+    if (fields < 0.5)
+        return;
+
+    float other = (n0 != value ? 1.0 : 0.0) + (n1 != value ? 1.0 : 0.0) + (n2 != value ? 1.0 : 0.0) + (n3 != value ? 1.0 : 0.0);
+    // за ближним окном карты (8 м) — дальнее (32 м): там граница ступенчатая, межа слабее
+    float2 nearUV = (xz - _PuddleLandRect.xy) * _PuddleLandRect.z;
+    half nearMap = _PuddleLandRect.w > 0.5 && all(nearUV > 0.0) && all(nearUV < 1.0) ? 1.0 : 0.5;
+    // бурьян пучками: рваная полоса, местами кусты гуще, местами межа тонет в снегу
+    half tufts = smoothstep(0.25, 0.75, PuddleNoise(xz / 1.7 + 41.3)) * 0.6 + smoothstep(0.3, 0.7, PuddleNoise(xz / 9.0 + 3.7)) * 0.4;
+    half margin = saturate(other * 0.5) * (0.3 + 0.35 * tufts) * nearMap;
+
+    half inside = 0;
+
+    [branch] if (value > 0u)
+    {
+        float bearing = (value - 1.0) / 254.0 * PI;
+        float2 along = float2(sin(bearing), cos(bearing));
+        float2 across = float2(along.y, -along.x);
+        acrossWS = across;
+        float s = dot(xz, across);
+        float fs = abs(dot(dpdx, across)) + abs(dot(dpdy, across)) + 1e-4;
+
+        // те же хеши, что у FieldRows: колеи и проходы на снегу там же, где на земле
+        float h1 = FieldHash(value, 71u), h2 = FieldHash(value, 72u), h3 = FieldHash(value, 73u);
+        half crop = smoothstep(0.0, 0.1, greenness);
+        half plough = (1.0 - crop) * (1.0 - smoothstep(0.06, 0.12, luminance));
+        half stubble = (1.0 - plough) * (FieldHash(value, 91u) < 0.5 ? 1.0 : 0.0);
+
+        // колеи техники: снег в них продавлен до земли — на любом поле, с высоты пары тёмных линий через 18–36 м
+        float spray = h1 < 0.25 ? 18.0 : h1 < 0.55 ? 24.0 : h1 < 0.8 ? 28.0 : 36.0;
+        float u = s + h2 * spray;
+        float tracks = FieldLines(u + 0.9, spray, 0.45, fs) + FieldLines(u - 0.9, spray, 0.45, fs);
+        inside = tracks * 0.55;
+
+        // надувы: где снега больше, земли видно меньше (пятна в десятки метров, вытянуты по ветру зимы)
+        half drift = 0.65 + 0.7 * PuddleNoise(float2(dot(xz, float2(0.8, -0.6)) / 41.0, dot(xz, float2(0.6, 0.8)) / 13.0) + 7.9);
+
+        [branch] if (stubble > 0.01)
+        {
+            float header = lerp(6.0, 9.0, h3);
+            float swath = FieldLines(s + h2 * 37.0, header * 2.0, header, fs);
+            float rowSpacing = h3 < 0.7 ? 0.15 : lerp(0.45, 0.7, h1);
+            float rowFade = saturate(1.0 - fs / (rowSpacing * 0.5));
+            float row = cos(s * (2.0 * PI / rowSpacing)) * 0.5 + 0.5;
+            half stalks = (0.24 + swath * 0.1 + (row - 0.5) * 0.2 * rowFade) * drift;
+            inside = max(inside, stubble * stalks);
+        }
+
+        [branch] if (plough > 0.01)
+        {
+            // гребни зяби над снегом в бороздах; проходы плуга — сваленные гребни темнее
+            float furrow = lerp(0.35, 0.45, h2) * 2.0;
+            float furrowFade = saturate(1.0 - fs / (furrow * 0.5));
+            float phase = s * (2.0 * PI / furrow);
+            float crest = lerp(0.35, smoothstep(0.2, 0.9, cos(phase)), furrowFade);
+            float ploughPass = FieldLines(s + h1 * 11.0, lerp(1.4, 1.9, h3), 0.3, fs);
+            half clods = (0.12 + crest * 0.32 + ploughPass * 0.15) * drift;
+            inside = max(inside, plough * clods);
+            tilt = plough * sin(phase) * 0.35 * furrowFade;
+        }
+    }
+
+    // глубокий снег прячет больше, но и на полном покрове поля читаются
+    show = saturate(max(inside, margin));
+}
+
 #endif
