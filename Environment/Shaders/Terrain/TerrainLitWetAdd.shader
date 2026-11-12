@@ -39,7 +39,8 @@ Shader "Hidden/Game/Terrain Lit (Wet) (Add Pass)"
 
     HLSLINCLUDE
 
-    #pragma multi_compile_fragment __ _ALPHATEST_ON
+    // No _ALPHATEST_ON (terrain holes): Geo World terrains have no holes, and the keyword doubles the variants of the
+    // slowest shader of a build. URP strips it for its own terrain shaders only (the Terrain Holes setting).
 
     ENDHLSL
 

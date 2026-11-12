@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Fixed: generating a world in a player failed on the first tile with water (`Texture 'T_RAM_River_Normalmap' is not readable`) when the project has `Water (project)` in Addressables. A package refers to the water material by its key in `GeoRuntimeAssets`, and `GeoWaterLook.Material` returned the copy loaded by address, another object, which the package writer took for a generated material. In a player `GeoWaterLook.Material` takes the registry's copy first (Prepare runtime assets lists it); the editor is unchanged.
+- `Game/Terrain Lit (Wet)` and its Add and Base passes have no `_ALPHATEST_ON` (terrain holes) variants: Geo World terrains have no holes, URP strips the keyword only for its own terrain shaders, and it doubled the variants of the slowest shader of a build (Komandor builds 256 forward fragment variants of the three shaders, each about 100 s of CPU on a cold shader cache; without the keyword it is half of them).
+
 ## 1.23.0
 
 Winter that can be read from a drone: landmarks under snow and snow on roofs, by the training's snow cover.
