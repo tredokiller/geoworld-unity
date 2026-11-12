@@ -26,6 +26,10 @@ namespace GeoWorld
         {
             get
             {
+                // In a player the registry copy first: a package refers to the water material by its registry key, and the copy
+                // loaded by address is another object, which the package writer takes for a generated material (it then fails
+                // on the material textures, which are not readable).
+                if (!shared && GeoAssets.UseRegistry) shared = GeoAssets.Load<Material>(GeoAddressableAssets.ProjectWater);
                 if (!shared) shared = GeoAddressableAssets.Load<Material>(GeoAddressableAssets.ProjectWater);
                 if (!shared) shared = Resources.Load<Material>(ProjectResource);
                 if (!shared) shared = Resources.Load<Material>(Resource);
