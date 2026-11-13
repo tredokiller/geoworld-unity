@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using GeoWorld;
 #if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
@@ -11,7 +10,10 @@ namespace _Game.Scripts.World
     /// <summary>
     /// Фактура земли вблизи камеры поверх спутника тайлов (рисует шейдер террейна, GroundDetail.hlsl). Отдаёт шейдерам:
     ///  - массивы текстур набора (GroundDetailSet из Addressables, GeoAddressableAssets): собираются при старте копией на GPU из текстур
-    ///    набора — так в проекте и билде лежат только сами текстуры, без второй копии в массиве; после копии они выгружаются;
+    ///    набора — так в проекте и билде лежат только сами текстуры, без второй копии в массиве; после копии они выгружаются.
+    ///    Массивы собираются один раз и живут до конца игры: набор загружен из бандла один раз и навсегда
+    ///    (GeoAddressableAssets), его выгруженные текстуры в билде не возвращаются, и второй мир за запуск (второй бой,
+    ///    бой после просмотра карты) собрать их заново не мог — земля оставалась без фактуры, дороги без покрытия;
     ///  - параметры слоёв (повтор, контраст, нормали, AO, средний цвет) и слои каждого класса земли;
     ///  - окно классов земли GeoWorld вокруг камеры (_GroundDetailClasses: клетки карты земель, ~10 м, 128 × 128 — ~1.3 км;
     ///    фактура видна до ~280 м, окно переезжает, когда камера отходит от его центра на 320 м). Строится по строкам за
@@ -38,7 +40,10 @@ namespace _Game.Scripts.World
         private static readonly int RuinLayersId = Shader.PropertyToID("_RuinLayers");
         private static readonly int ClassId = Shader.PropertyToID("_GroundDetailClass");
 
-        private readonly List<Texture2DArray> _arrays = new();
+        private static Texture2DArray _albedo;
+        private static Texture2DArray _normal;
+        private static Texture2DArray _mask;
+
         private byte[] _ready = new byte[Cells * Cells];
         private byte[] _next = new byte[Cells * Cells];
         private Texture2D _classes;
@@ -66,7 +71,7 @@ namespace _Game.Scripts.World
 
         private bool _visible = true;
 
-        public string Stats => $"layers={_arrays.Count > 0} window={(_has ? _origin.ToString("F0") : "none")} cell={_cell:F1} building={_buildingRow}";
+        public string Stats => $"layers={_albedo != null} window={(_has ? _origin.ToString("F0") : "none")} cell={_cell:F1} building={_buildingRow}";
 
         private void Awake()
         {
@@ -96,14 +101,8 @@ namespace _Game.Scripts.World
         private void OnDestroy()
         {
             Shader.SetGlobalVector(RectId, Vector4.zero);
-            // массивов больше нет: грунт окопов — вид террейна
+            // фактуры больше нет: грунт окопов — вид террейна; массивы остаются следующему миру
             Shader.SetGlobalFloat(TrenchSoilOnId, 0f);
-
-            foreach (Texture2DArray array in _arrays)
-            {
-                if (array != null)
-                    Destroy(array);
-            }
 
             if (_classes != null)
                 Destroy(_classes);
@@ -124,26 +123,57 @@ namespace _Game.Scripts.World
         // скопирует); слой, что не сходится, берёт текстуру первого.
         private bool BuildArrays(GroundDetailSet set)
         {
-            Texture2DArray albedo = BuildArray(set, layer => layer.albedo, "Ground detail albedo");
-            Texture2DArray normal = BuildArray(set, layer => layer.normal, "Ground detail normal");
-            Texture2DArray mask = BuildArray(set, layer => layer.mask, "Ground detail mask");
-
-            if (albedo == null || normal == null || mask == null)
-                return false;
-
-            Shader.SetGlobalTexture(AlbedoId, albedo);
-            Shader.SetGlobalTexture(NormalId, normal);
-            Shader.SetGlobalTexture(MaskId, mask);
-
-            // текстуры набора больше не нужны: всё уже в массивах
-            foreach (GroundDetailSet.Layer layer in set.layers)
+            if (_albedo == null || _normal == null || _mask == null)
             {
-                Unload(layer.albedo);
-                Unload(layer.normal);
-                Unload(layer.mask);
+                DestroyArrays();
+                _albedo = BuildArray(set, layer => layer.albedo, "Ground detail albedo");
+                _normal = BuildArray(set, layer => layer.normal, "Ground detail normal");
+                _mask = BuildArray(set, layer => layer.mask, "Ground detail mask");
+
+                if (_albedo == null || _normal == null || _mask == null)
+                {
+                    DestroyArrays();
+                    return false;
+                }
+
+                // текстуры набора больше не нужны: всё уже в массивах
+                foreach (GroundDetailSet.Layer layer in set.layers)
+                {
+                    Unload(layer.albedo);
+                    Unload(layer.normal);
+                    Unload(layer.mask);
+                }
             }
 
+            Shader.SetGlobalTexture(AlbedoId, _albedo);
+            Shader.SetGlobalTexture(NormalId, _normal);
+            Shader.SetGlobalTexture(MaskId, _mask);
             return true;
+        }
+
+        // В редакторе без перезагрузки домена массивы прошлой игры остались бы в статике: их текстуры редактор вернёт,
+        // массивы собираются заново.
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetState() => DestroyArrays();
+
+        private static void DestroyArrays()
+        {
+            DestroyArray(ref _albedo);
+            DestroyArray(ref _normal);
+            DestroyArray(ref _mask);
+        }
+
+        private static void DestroyArray(ref Texture2DArray array)
+        {
+            if (array != null)
+            {
+                if (Application.isPlaying)
+                    Destroy(array);
+                else
+                    DestroyImmediate(array);
+            }
+
+            array = null;
         }
 
         private Texture2DArray BuildArray(GroundDetailSet set, System.Func<GroundDetailSet.Layer, Texture2D> pick, string arrayName)
@@ -180,7 +210,6 @@ namespace _Game.Scripts.World
                 Graphics.CopyTexture(fits ? source : first, 0, array, i);
             }
 
-            _arrays.Add(array);
             return array;
         }
 
