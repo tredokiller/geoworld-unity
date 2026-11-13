@@ -151,11 +151,6 @@ namespace _Game.Scripts.World
             return true;
         }
 
-        // В редакторе без перезагрузки домена массивы прошлой игры остались бы в статике: их текстуры редактор вернёт,
-        // массивы собираются заново.
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ResetState() => DestroyArrays();
-
         private static void DestroyArrays()
         {
             DestroyArray(ref _albedo);
@@ -321,7 +316,13 @@ namespace _Game.Scripts.World
                 : Vector4.zero);
         }
 
+        // В редакторе без перезагрузки домена массивы прошлой игры остались бы в статике: их текстуры редактор вернёт,
+        // массивы собираются заново.
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ResetState() => Shader.SetGlobalVector(RectId, Vector4.zero);
+        private static void ResetState()
+        {
+            Shader.SetGlobalVector(RectId, Vector4.zero);
+            DestroyArrays();
+        }
     }
 }
